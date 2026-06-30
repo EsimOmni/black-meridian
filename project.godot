@@ -1,0 +1,35 @@
+; Engine configuration file.
+; OMNI: BLACK MERIDIAN — mafia empire management strategy game.
+; See docs/OMNI-BLACK-MERIDIAN-brief.pdf for the full design + production brief.
+
+config_version=5
+
+[application]
+
+config/name="OMNI: BLACK MERIDIAN"
+config/description="Single-player real-time-with-pause mafia empire management strategy."
+config/version="0.1.0-m1"
+run/main_scene="res://scenes/bootstrap/bootstrap.tscn"
+config/features=PackedStringArray("4.7", "Forward Plus")
+config/icon="res://icon.svg"
+
+[autoload]
+
+GameState="*res://src/core/game_state.gd"
+TimeService="*res://src/simulation/time_service.gd"
+EconomyService="*res://src/simulation/economy_service.gd"
+
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[rendering]
+
+renderer/rendering_method="forward_plus"
+
+[physics]
+
+common/physics_ticks_per_second=60

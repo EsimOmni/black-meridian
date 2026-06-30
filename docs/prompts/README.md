@@ -31,37 +31,37 @@ Claude Code (or Codex) and it knows exactly what to build, what's in scope, and 
 
 ### Month 1 — Architecture & risk spikes
 - ✅ **P00** — Repo + data model + GameState + TimeService + EconomyService + greybox + camera + HUD (done; the initial commit)
-- ⬜ **P01** — GDGS splat technical spike + `CinematicWorldProvider` interface + mesh fallback (the kill criterion)
-- ⬜ **P02** — SaveService: save/load the full GameState across transitions
-- ⬜ **P03** — Fixer-job lifecycle skeleton (Intake → Preparation → Intervention → Cover-up), one placeholder job
-- ⬜ **P04** — Month-1 gate: a 15-minute greybox loop, end to end
+- ⬜ [**P01**](P01-splat-spike.md) — GDGS splat technical spike + `CinematicWorldProvider` interface + mesh fallback (the kill criterion)
+- ⬜ [**P02**](P02-save-load.md) — SaveService: save/load the full GameState across transitions
+- ⬜ [**P03**](P03-fixer-job-skeleton.md) — Fixer-job lifecycle skeleton (Intake → Preparation → Intervention → Cover-up), one placeholder job
+- ⬜ [**P04**](P04-month1-gate.md) — Month-1 gate: a 15-minute greybox loop, end to end
 
 ### Month 2 — Complete core loop
-- ⬜ **P05** — Rackets/fronts/laundering UI + assign operatives + fund operations
-- ⬜ **P06** — Heat + Evidence chain prototype (named investigations, removable links)
-- ⬜ **P07** — RivalDirector: utility AI (action scoring, imperfect info, memory)
-- ⬜ **P08** — JobDirector: systemic fixer jobs generated from sim state + resolution dimensions
-- ⬜ **P09** — Night Cycle phase machine (Council → Operations → Crisis → Reckoning)
-- ⬜ **P10** — RelationshipService: motive network + telegraphed betrayal
-- ⬜ **P11** — First-pass UI theme + month-2 gate (fun with cubes)
+- ⬜ [**P05**](P05-rackets-fronts-ui.md) — Rackets/fronts/laundering UI + assign operatives + fund operations
+- ⬜ [**P06**](P06-heat-evidence.md) — Heat + Evidence chain prototype (named investigations, removable links)
+- ⬜ [**P07**](P07-rival-ai.md) — RivalDirector: utility AI (action scoring, imperfect info, memory)
+- ⬜ [**P08**](P08-job-director.md) — JobDirector: systemic fixer jobs generated from sim state + resolution dimensions
+- ⬜ [**P09**](P09-night-cycle.md) — Night Cycle phase machine (Council → Operations → Crisis → Reckoning)
+- ⬜ [**P10**](P10-loyalty-betrayal.md) — RelationshipService: motive network + telegraphed betrayal
+- ⬜ [**P11**](P11-first-ui-month2-gate.md) — First-pass UI theme + month-2 gate (fun with cubes)
 
 ### Month 3 — Art pipeline & character proof
-- ⬜ **P12** — Glass Wharf art-direction master + modular building kit pipeline (Blender→GLB→Godot)
-- ⬜ **P13** — Rain/wet-surface VFX + traffic + crowd proxy (MultiMesh, spline traffic)
-- ⬜ **P14** — Aiko canonical references + 4 character base models + shared animation prototype + roster screen
-- ⬜ **P15** — GLB import-validation tooling + asset naming/folder standard
+- ⬜ [**P12**](P12-building-pipeline.md) — Glass Wharf art-direction master + modular building kit pipeline (Blender→GLB→Godot)
+- ⬜ [**P13**](P13-city-life-vfx.md) — Rain/wet-surface VFX + traffic + crowd proxy (MultiMesh, spline traffic)
+- ⬜ [**P14**](P14-characters-roster.md) — Aiko canonical references + 4 character base models + shared animation prototype + roster screen
+- ⬜ [**P15**](P15-asset-validation.md) — GLB import-validation tooling + asset naming/folder standard
 
 ### Month 4 — Narrative & cinematic integration
-- ⬜ **P16** — NarrativeDirector + 3 authored jobs + complete evidence chain + first loyalty crisis
-- ⬜ **P17** — Final Marble cinematic world + collider + anchors.json + Aiko first-person controller
-- ⬜ **P18** — Splat sequence wiring: pause→checkpoint→load→interact→write consequences→resume (must persist)
+- ⬜ [**P16**](P16-narrative-authored-jobs.md) — NarrativeDirector + 3 authored jobs + complete evidence chain + first loyalty crisis
+- ⬜ [**P17**](P17-cinematic-world.md) — Final Marble cinematic world + collider + anchors.json + Aiko first-person controller
+- ⬜ [**P18**](P18-cinematic-integration.md) — Splat sequence wiring: pause→checkpoint→load→interact→write consequences→resume (must persist)
 
 ### Month 5 — Content completion & polish
-- ⬜ **P19** — Complete vertical-slice narrative + final rival behavior + city-state visual variations
-- ⬜ **P20** — Onboarding, settings, rebinding, subtitles/text-size, performance tiers, 500k/2M toggle, sound mix
-- ⬜ **P21** — Playtest gate: 3 external players explain the systems unaided
+- ⬜ [**P19**](P19-content-polish.md) — Complete vertical-slice narrative + final rival behavior + city-state visual variations
+- ⬜ [**P20**](P20-onboarding-settings.md) — Onboarding, settings, rebinding, subtitles/text-size, performance tiers, 500k/2M toggle, sound mix
+- ⬜ [**P21**](P21-playtest-gate.md) — Playtest gate: 3 external players explain the systems unaided
 
 ### Month 6 — Steam-quality vertical slice
-- ⬜ **P22** — Polished 45–60 min build + Windows export + crash/log + smoke-test suite + regression checklist
-- ⬜ **P23** — Steam store assets + honest gameplay trailer + public demo config + license/provenance manifest
-- ⬜ **P24** — Final acceptance pass (brief §18 criteria) + delivery package
+- ⬜ [**P22**](P22-build-qa.md) — Polished 45–60 min build + Windows export + crash/log + smoke-test suite + regression checklist
+- ⬜ [**P23**](P23-steam-store-demo.md) — Steam store assets + honest gameplay trailer + public demo config + license/provenance manifest
+- ⬜ [**P24**](P24-acceptance-delivery.md) — Final acceptance pass (brief §18 criteria) + delivery package

@@ -135,7 +135,17 @@ Subscription discipline:
   Godot bridge with animation transfer). Output is input to Blender, not a game-ready asset.
 - **Tripo** — $0 initially; local Hunyuan3D/TripoSR cover proxies. Only swap in for a benchmarked
   geometry win. Never pay Meshy + Tripo simultaneously.
-- Total targeted external spend for the 6-month slice: ~$55–90.
+- **Sketchfab (free tier, via Epic Games account — added 2026-07-03).** Free GLB downloads for
+  **proxy/greybox enrichment only** — NOT hero assets that carry the game's identity. Two hard rules:
+  1. **License-check every download before use.** Sketchfab "free" is mixed: CC0 (free), CC-BY
+     (attribution required — track it), and **CC-BY-NC (commercial use FORBIDDEN)**. Black Meridian
+     ships on Steam = commercial; a CC-BY-NC asset is a legal liability, never use one. Record each
+     used asset's URL + license + required attribution in `assets/ATTRIBUTIONS.md` (create on first use).
+  2. **Does NOT bypass the gates.** Free geometry is not an excuse to enter asset production early.
+     Brief §12 still governs: no GLB — Sketchfab or otherwise — replaces a cube until the Month-2
+     "fun with cubes" gate passes. Treat Sketchfab GLBs like any provisional geometry: input to
+     Blender cleanup + Godot validation, not a game-ready asset.
+- Total targeted external spend for the 6-month slice: ~$55–90 (Sketchfab free tier adds $0).
 
 ## Conventions
 

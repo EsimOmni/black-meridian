@@ -75,6 +75,23 @@ better than screenshot-guessing for UI QA. Editor-side `recent_errors` can be st
 (`recent_errors_may_predate_run: true`) — trust headless boot + the running game, not editor parse spam
 from before a filesystem rescan.
 
+### Editor-launched games eat the editor's debug shortcuts — F8 KILLS the game, F10 is swallowed
+Binding quick-load to F8 made "load" terminate the process instantly with zero script error (F8 = the
+editor's Stop Running Project shortcut, forwarded into the debug session); F10 events never arrive at all.
+No SAVEDBG print ever ran — the process died before any game code. Rule: dev/debug bindings use plain keys
+(F9 save + L load here); if a key "crashes" or "does nothing" with no log, suspect the editor shortcut
+layer before suspecting the handler. Injected-key QA can also wedge the game loop via the debugger —
+for save/load-class verification, a programmatic integration runner that instantiates the REAL bootstrap
+scene (`tests/integration/bootstrap_smoke_runner`) beats key injection: same listeners, deterministic, CI-able.
+
+### Save files use var_to_str, not JSON — float precision IS the determinism guarantee
+A JSON round-trip truncates float digits, so save→load→same-tick→same-state fails in late decimals
+(heat/motive floats drift from their never-serialized twins). `var_to_str`/`str_to_var` keep full float
+precision and native StringName/Color/Vector2/typed-Dictionary keys, and `str_to_var` can't instantiate
+objects (safe). Saves store the source of truth only; jobs store runtime state + are rebuilt from the
+authored registry by id (`PlaceholderJobs.by_id`). Proven by `tests/integration/save_roundtrip_runner`
+(byte-for-byte restore + deterministic replay + clean version refusal).
+
 ## Splat / GDGS
 
 ### P01 kill-criterion verdict: SPLAT_OK — 542k splats @ 483 avg / 420 1%-low fps, 1080p, 5060 Ti

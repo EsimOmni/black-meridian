@@ -31,10 +31,10 @@ Claude Code (or Codex) and it knows exactly what to build, what's in scope, and 
 
 ### Month 1 — Architecture & risk spikes
 - ✅ **P00** — Repo + data model + GameState + TimeService + EconomyService + greybox + camera + HUD (done; the initial commit)
-- 🔨 [**P01**](P01-splat-spike.md) — GDGS splat technical spike + `CinematicWorldProvider` interface + mesh fallback (the kill criterion) — **benchmark DONE, verdict SPLAT_OK** (542k @ 483 fps avg on 5060 Ti, see [notes/P01-splat-benchmark.md](notes/P01-splat-benchmark.md)); provider interface + fallback flag deferred
-- ⬜ [**P02**](P02-save-load.md) — SaveService: save/load the full GameState across transitions
+- 🔨 [**P01**](P01-splat-spike.md) — GDGS splat technical spike + `CinematicWorldProvider` interface + mesh fallback (the kill criterion) — **benchmark DONE, verdict SPLAT_OK** (542k @ 483 fps avg on 5060 Ti, see [notes/P01-splat-benchmark.md](notes/P01-splat-benchmark.md)); provider interface + fallback flag deferred to Month 4 (build with P17)
+- ✅ [**P02**](P02-save-load.md) — SaveService: save/load the full GameState across transitions (done 2026-07-02; SaveCodec var_to_str format, version gate, F9/L quick keys, deterministic round-trip proven by `tests/integration/save_roundtrip_runner`)
 - ✅ [**P03**](P03-fixer-job-skeleton.md) — Fixer-job lifecycle skeleton (Intake → Preparation → Intervention → Cover-up), one placeholder job (done 2026-07-02; JobData/JobLifecycle/JobResolution/JobDirector + "Intercepted Shipment" + job panel, unit-tested + played end-to-end via godot-ai MCP)
-- ⬜ [**P04**](P04-month1-gate.md) — Month-1 gate: a 15-minute greybox loop, end to end
+- 🔨 [**P04**](P04-month1-gate.md) — Month-1 gate: a 15-minute greybox loop, end to end (prepared 2026-07-02 — tuning + nudge + smoke test done; awaiting Cem's 15-min gate session, see [notes/P04-month1-gate.md](notes/P04-month1-gate.md))
 
 ### Month 2 — Complete core loop
 - ⬜ [**P05**](P05-rackets-fronts-ui.md) — Rackets/fronts/laundering UI + assign operatives + fund operations

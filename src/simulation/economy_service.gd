@@ -49,11 +49,13 @@ func _settle_faction(faction: FactionData) -> void:
 	faction.clean_capital += clean_gain
 
 	# Local heat rises with exposure where the faction operates (visualized by the city later).
+	# 0.05 (P04 tuning): unmanaged laundering overflow climbs Glass Wharf ~10%→~60% across a
+	# 15-minute session at 1x — the Month-1 gate needs the squeeze to be visible (brief §7.2).
 	if exposure > 0.0:
 		for district in GameState.districts:
 			for venue in district.venues:
 				if venue.owner_faction == faction.id and venue.type == BM.VenueType.RACKET:
-					district.local_heat = clampf(district.local_heat + exposure * 0.01, 0.0, 1.0)
+					district.local_heat = clampf(district.local_heat + exposure * 0.05, 0.0, 1.0)
 					break
 
 	economy_settled.emit(faction.id, dirty_delta, clean_gain, exposure)

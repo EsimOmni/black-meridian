@@ -48,6 +48,7 @@ func _render() -> void:
 			_render_resolved()
 
 func _render_intake() -> void:
+	_text("FIRST DECISION — the city is paused. Read the situation, take the job, commit to a path. (SPACE resumes time.)")
 	_text(_job.apparent_problem)
 	_text("Known evidence:\n  • " + "\n  • ".join(_job.known_evidence))
 	_text("Stakes: %s" % _job.visible_stakes)

@@ -47,7 +47,7 @@ func _ready() -> void:
 	_hint_label = Label.new()
 	_hint_label.add_theme_font_size_override("font_size", 11)
 	_hint_label.modulate = Color(0.7, 0.74, 0.8)
-	_hint_label.text = "SPACE pause/resume   X cycle speed   WASD pan   wheel zoom   click venue"
+	_hint_label.text = "SPACE pause/resume   X cycle speed   WASD pan   wheel zoom   click venue   F9 save   L load"
 	vb.add_child(_hint_label)
 
 	# Live updates.
@@ -55,6 +55,8 @@ func _ready() -> void:
 	TimeService.strategic_tick.connect(func(_t): _refresh())
 	EconomyService.economy_settled.connect(func(_f, _d, _c, _e): _refresh())
 	JobDirector.job_resolved.connect(func(_j): _refresh())  # outcome shows even while paused
+	GameState.districts_changed.connect(_refresh)  # save/load rebuilds state while paused
+	GameState.factions_changed.connect(_refresh)
 	_refresh()
 
 func _row(parent: Node) -> Label:

@@ -67,6 +67,10 @@ func _build_jobs() -> void:
 	# Month-1: one hand-offered placeholder job. Systemic generation is P08.
 	JobDirector.offer(PlaceholderJobs.intercepted_shipment())
 
+func _quick_load() -> void:
+	if SaveService.load_game("quick"):
+		print("Quick-loaded.")
+
 func _on_venue_clicked(venue: VenueData) -> void:
 	if _hud:
 		_hud.show_selection(venue)
@@ -78,3 +82,11 @@ func _unhandled_input(event: InputEvent) -> void:
 				TimeService.toggle_pause()
 			KEY_X:
 				TimeService.cycle_speed()
+			KEY_F9:
+				SaveService.save_game("quick")
+				print("Quick-saved.")
+			KEY_L:
+				# NOT F8/F10: editor-launched games receive the editor's debug shortcuts —
+				# F8 stops the game process outright, F10 is swallowed by the debugger.
+				# Deferred so the world rebuild happens outside the input flush.
+				_quick_load.call_deferred()

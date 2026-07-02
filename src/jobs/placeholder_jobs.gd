@@ -3,6 +3,14 @@ extends RefCounted
 ## Month-1 authored placeholder job (brief §7.5, P03). Built in code for now;
 ## migrates to data/jobs/ typed resources with the P08 job generation work.
 
+## Job registry: rebuild an authored job definition by id (saves store runtime state only).
+static func by_id(job_id: StringName) -> JobData:
+	match job_id:
+		&"job_intercepted_shipment":
+			return intercepted_shipment()
+		_:
+			return null
+
 ## "Intercepted shipment at the Cargo Terminal" — tied to gw_contraband (WorldSeed).
 ## Apparent problem: a contraband run got stopped at the wharf gates and a dock
 ## inspector is sitting on the manifest. Some stakes are deliberately hidden.

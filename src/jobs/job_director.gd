@@ -18,6 +18,14 @@ func offer(job: JobData) -> void:
 	active_jobs.append(job)
 	job_offered.emit(job)
 
+## Replace active jobs from a loaded save (SaveService). Does NOT reset stage/deadline —
+## the save's runtime state is already applied. Re-announces unresolved jobs so UI re-binds.
+func restore_jobs(jobs: Array[JobData]) -> void:
+	active_jobs = jobs
+	for job in active_jobs:
+		if job.stage != BM.JobStage.RESOLVED:
+			job_offered.emit(job)
+
 func get_job(job_id: StringName) -> JobData:
 	for j in active_jobs:
 		if j.id == job_id:

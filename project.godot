@@ -24,6 +24,7 @@ TimeService="*res://src/simulation/time_service.gd"
 EconomyService="*res://src/simulation/economy_service.gd"
 _mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 JobDirector="*res://src/jobs/job_director.gd"
+SaveService="*res://src/save/save_service.gd"
 
 [display]
 

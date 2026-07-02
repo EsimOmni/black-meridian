@@ -9,11 +9,11 @@ a duplicate; delete entries that turn out wrong.
 
 ## Setup / environment
 
-### Godot 4.7 binary lives at `C:\Users\User\Godot\` — the Downloads copy was broken
+### Godot 4.7 binary lives at `D:\Godot\` (moved off C: 2026-07-02) — the Downloads copy was broken
 The `Downloads\Godot_v4.7-stable_win64.exe` is a *directory* holding only the 198KB console launcher; the
-real ~170MB editor was missing. Downloaded 4.7-stable from GitHub, extracted, and moved the real binary to
-`C:\Users\User\Godot\Godot_v4.7-stable_win64.exe` (+ `_console.exe`). Use that path for all headless runs.
-Desktop shortcut "BLACK MERIDIAN (Godot)" opens the project directly.
+real ~170MB editor was missing. Downloaded 4.7-stable from GitHub, extracted; the binary now lives at
+`D:\Godot\Godot_v4.7-stable_win64.exe` (+ `_console.exe`) — the old `C:\Users\User\Godot\` path is gone.
+Use `D:/Godot/...` for all headless runs. Desktop shortcut "BLACK MERIDIAN (Godot)" opens the project.
 
 ### Repo is on the D: drive: `D:\black-meridian` (moved off C: 2026-07-01)
 The project was created under `C:\Users\User\Desktop\vs_code\black-meridian`, then moved to `D:\black-meridian`.
@@ -32,6 +32,51 @@ test import. Rule: **any unit-testable logic goes in a `class_name` helper, neve
 `--import` (registers scripts, catches parse errors) → `-s tests/unit/<t>.gd` (exit 0 = pass) →
 `--quit-after 120` + grep for `SCRIPT ERROR|ERROR:|Nonexistent` (empty = clean boot). A new `class_name`
 script needs a fresh `--import` before tests see it.
+
+## Pipeline / asset production (YouTuber-pipeline doctrine, adopted 2026-07-02)
+
+### Concept first, then split into assets — never generate assets piecemeal
+Generate a full concept image (keyframe/scene) for a location or set, approve the look, THEN split it into
+individual assets (buildings, props, characters) generated to match that concept. One coherent art
+direction; "does this asset fit?" becomes a mechanical check against the master instead of per-generation
+taste-testing. Applies to P12+ (Glass Wharf art-direction master → modular kit) and all hero prop/char work.
+
+### AI does ~90%, the human does the last 10% — budget the 10% deliberately
+AI generates geometry/textures/code/first-pass everything; the human 10% is curation, Blender cleanup,
+integration, taste. Don't automate the last 10% (that's where quality lives) and don't hand-do the first
+90% (that's where time dies). Plan every asset task as 90/10 up front.
+
+### Godot AI MCP is the Unreal-MCP equivalent — primary code/scene rail from P03 onward
+The `godot-ai` MCP server (persistent editor integration: node/scene/script/signal/test tools) is this
+project's equivalent of Unreal-MCP in the proven AI-game-dev pipelines. From P03 onward, prefer it for
+creating scenes, wiring nodes/signals and attaching scripts — it validates against the live editor at write
+time. Plain file edits remain fine for pure logic + unit tests (headless verify still the truth).
+
+### Prefer ready plugins/templates over building from scratch
+GDGS for splats, existing controller/camera templates, asset-library addons: adopt, then adapt. A maintained
+plugin beats bespoke code for anything not core to the game's identity — the strategic sim IS core;
+rendering/input plumbing is not.
+
+## Splat / GDGS
+
+### P01 kill-criterion verdict: SPLAT_OK — 542k splats @ 483 avg / 420 1%-low fps, 1080p, 5060 Ti
+GDGS v2.2.0 (ReconWorldLab) renders 542,246 real capture splats ~8× above the brief's threshold on the
+target GPU. `SplatWorldProvider` stays the default; mesh fallback is insurance only. Numbers + method:
+`docs/prompts/notes/P01-splat-benchmark.md`. Bench scene: `scenes/cinematic/splat_bench.tscn` (self-quits,
+prints BENCH_RESULT, saves a proof PNG).
+
+### GDGS on Godot 4.7 needs the push-constant exact-size patch — re-apply on every plugin update
+Stock GDGS pads push constants to 16 bytes; Godot 4.7 validates the exact per-shader block size
+(upsweep 8B / spine 4B / downsweep 12B) → per-frame error storm, broken render, fake ~16 fps. Patched
+`create_push_constant()` (no padding) + per-stage push constants in `_rasterize_state()`. If GDGS is ever
+updated from upstream, re-apply or upstream this patch first — an "invalid" benchmark number from an error
+storm looks like a real perf number if you don't grep the log for ERROR.
+
+### Windowed Godot benchmark runs: never pipe stdout through grep/head — write to a file
+The first bench run "hung" for 4 minutes: parse errors kept the app alive on an empty scene while
+`| grep | head` buffering hid every line. Run windowed benchmarks with `> file 2>&1`, then grep the file.
+Also: GDScript strict typing — `Array[float].duplicate()` returns untyped `Array`; `:=` inference fails on
+its elements (declare the type explicitly).
 
 ## Model / Fable
 

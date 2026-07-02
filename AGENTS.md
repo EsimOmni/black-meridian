@@ -13,7 +13,7 @@ read `AGENTS.md` (a synced mirror of this file). The authoritative design + prod
 > it at the start of each slice.
 
 > **Repo location:** `D:\black-meridian` (moved off C: on 2026-07-01). Remote: `EsimOmni/black-meridian`
-> (private). Godot 4.7 binary: `C:\Users\User\Godot\Godot_v4.7-stable_win64.exe`.
+> (private). Godot 4.7 binary: `D:\Godot\Godot_v4.7-stable_win64.exe` (moved off C: 2026-07-02).
 
 ## What this is
 
@@ -44,8 +44,10 @@ Corollary: **never put authoritative simulation state inside city-scene nodes.**
 - **Milestone:** Month 1 (Architecture + Risk Spikes). Done: repo, data model, GameState, TimeService
   (strategic tick + 3 speeds + pause), EconomyService + EconomyMath (the §7.2 formulas, unit-tested),
   WorldSeed (Glass Wharf slice), greybox city, management camera, minimal HUD, bootstrap.
-- **Open (Month 1):** GDGS splat benchmark (the kill-criterion risk spike), save/load, one placeholder
-  fixer job. See `docs/prompts/` for the ordered build slices.
+- **Splat kill criterion: RESOLVED → SPLAT_OK** (2026-07-02). GDGS v2.2.0 + Godot-4.7 push-constant patch
+  renders 542k splats at 483 avg / 420 low fps @1080p on the 5060 Ti (`docs/prompts/notes/P01-splat-benchmark.md`).
+- **Open (Month 1):** `CinematicWorldProvider` interface + mesh-fallback flag (P01 remainder), save/load,
+  one placeholder fixer job. See `docs/prompts/` for the ordered build slices.
 
 ## Architecture (brief §13.2–§13.4)
 
@@ -117,7 +119,17 @@ Do NOT migrate the whole project to Unity to preserve one cinematic technique.
 ## AI asset pipeline (brief §10, §16) — buy nothing by default
 
 HYBRID route. Local generation + Blender for control; cloud only where it earns its place. Generated
-geometry is **provisional** until Blender cleanup + Godot validation. Subscription discipline:
+geometry is **provisional** until Blender cleanup + Godot validation.
+
+Production doctrine (adopted 2026-07-02, see `tasks/lessons.md`):
+- **Concept → asset-split.** Approve a full concept image (keyframe) for a location/set first, THEN
+  generate individual assets to match it. Never generate assets piecemeal without a master.
+- **AI ~90% / human ~10%.** AI does first-pass everything; the human 10% is curation, Blender cleanup,
+  integration, taste. Budget every asset task as 90/10.
+- **Prefer ready plugins/templates** (GDGS, controller/camera templates, asset-library addons) over
+  bespoke code for anything that isn't the game's identity. The sim is core; plumbing is not.
+
+Subscription discipline:
 - **Marble Pro** (~$35/mo) only during cinematic production months (splat worlds). Not for objects.
 - **Meshy Pro** (~$20/mo) one production-burst month for hero character bases + hero props (has a
   Godot bridge with animation transfer). Output is input to Blender, not a game-ready asset.
@@ -129,6 +141,9 @@ geometry is **provisional** until Blender cleanup + Godot validation. Subscripti
 
 - GDScript, typed where practical. `class_name` for reusable data/util scripts; autoloads stay
   script-only and are referenced by their autoload name (`GameState`, `TimeService`, `EconomyService`).
+- **From P03 onward, the `godot-ai` MCP server is the primary rail** for creating scenes, wiring
+  nodes/signals and attaching scripts (the Unreal-MCP equivalent for Godot — it validates against the
+  live editor at write time). Plain file edits stay fine for pure logic + unit tests.
 - **Pure logic gets unit tests** under `tests/unit/` (run headless, exit 0 = pass). Keep testable math
   out of autoloads (see `EconomyMath` — split from `EconomyService` precisely so it's testable; an
   autoload script referenced via `preload` resolves to the singleton and static calls fail).

@@ -1,0 +1,15 @@
+[remap]
+
+importer="gaussian.splat.importer"
+importer_version=5
+type="Resource"
+uid="uid://b1qk8we235s0d"
+path="res://.godot/imported/bench_542k.ply-ff3188ec93a408dc868ac96d9f086751.res"
+
+[deps]
+
+source_file="res://assets/splat/bench_542k.ply"
+dest_files=["res://.godot/imported/bench_542k.ply-ff3188ec93a408dc868ac96d9f086751.res"]
+
+[params]
+

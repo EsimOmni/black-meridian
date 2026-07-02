@@ -31,7 +31,7 @@ Claude Code (or Codex) and it knows exactly what to build, what's in scope, and 
 
 ### Month 1 — Architecture & risk spikes
 - ✅ **P00** — Repo + data model + GameState + TimeService + EconomyService + greybox + camera + HUD (done; the initial commit)
-- ⬜ [**P01**](P01-splat-spike.md) — GDGS splat technical spike + `CinematicWorldProvider` interface + mesh fallback (the kill criterion)
+- 🔨 [**P01**](P01-splat-spike.md) — GDGS splat technical spike + `CinematicWorldProvider` interface + mesh fallback (the kill criterion) — **benchmark DONE, verdict SPLAT_OK** (542k @ 483 fps avg on 5060 Ti, see [notes/P01-splat-benchmark.md](notes/P01-splat-benchmark.md)); provider interface + fallback flag deferred
 - ⬜ [**P02**](P02-save-load.md) — SaveService: save/load the full GameState across transitions
 - ⬜ [**P03**](P03-fixer-job-skeleton.md) — Fixer-job lifecycle skeleton (Intake → Preparation → Intervention → Cover-up), one placeholder job
 - ⬜ [**P04**](P04-month1-gate.md) — Month-1 gate: a 15-minute greybox loop, end to end

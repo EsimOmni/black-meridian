@@ -40,7 +40,7 @@ Corollary: **never put authoritative simulation state inside city-scene nodes.**
 
 ## Current status
 
-- **Engine binary:** `C:\Users\User\Godot\Godot_v4.7-stable_win64.exe` (+ `_console.exe` for headless).
+- **Engine binary:** `D:\Godot\Godot_v4.7-stable_win64.exe` (+ `_console.exe` for headless).
 - **Milestone:** Month 1 (Architecture + Risk Spikes). Done: repo, data model, GameState, TimeService
   (strategic tick + 3 speeds + pause), EconomyService + EconomyMath (the §7.2 formulas, unit-tested),
   WorldSeed (Glass Wharf slice), greybox city, management camera, minimal HUD, bootstrap.
@@ -155,7 +155,7 @@ Subscription discipline:
 Headless is the truth. After any change:
 
 ```sh
-GODOT="C:/Users/User/Godot/Godot_v4.7-stable_win64.exe"
+GODOT="D:/Godot/Godot_v4.7-stable_win64.exe"
 "$GODOT" --headless --path . --import                       # registers scripts, catches parse errors
 "$GODOT" --headless --path . -s tests/unit/test_economy.gd  # unit tests (exit 0 = pass)
 "$GODOT" --headless --path . --quit-after 120 2>&1 | grep -iE "SCRIPT ERROR|ERROR:|Nonexistent"  # boot smoke (empty = clean)

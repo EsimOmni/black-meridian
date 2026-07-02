@@ -81,10 +81,19 @@ func _render_resolved() -> void:
 	for dim in JobResolution.DIMENSIONS:
 		var v: float = _job.outcome.get(dim, 0.0)
 		if absf(v) > 0.001:
-			_text("  %s: %+.2f" % [String(dim).replace("_", " "), v])
+			_text("  " + _dimension_label(dim, v))
 	_button("Dismiss", func():
 		_panel.visible = false
 		_job = null)
+
+## Negative on the net axes means the player suppressed/mitigated — word it as intent,
+## not as a signed number that reads like an error.
+func _dimension_label(dim: StringName, v: float) -> String:
+	if dim == &"evidence_generated" and v < 0.0:
+		return "evidence suppressed: %.2f" % absf(v)
+	if dim == &"operative_injury" and v < 0.0:
+		return "operatives protected: %.2f" % absf(v)
+	return "%s: %+.2f" % [String(dim).replace("_", " "), v]
 
 # --- Widget helpers -----------------------------------------------------------
 

@@ -49,7 +49,10 @@ func _test_full_lifecycle_applies_dimensions() -> void:
 	_check(job.stage == BM.JobStage.INTAKE, "job starts at INTAKE")
 	_check(JobLifecycle.begin(job), "begin() from INTAKE")
 	_check(job.stage == BM.JobStage.PREPARATION, "stage is PREPARATION")
-	_check(JobLifecycle.choose_prep(job, &"prep_lookouts"), "prep action accepted")
+	# prep_scout, not prep_lookouts: since P04b, lookouts' operative_injury -0.2 legitimately
+	# outweighs scapegoat's collateral 0.2 in the grievance delta — this test wants a path
+	# where collateral raises grievance, so pick a prep with no injury mitigation.
+	_check(JobLifecycle.choose_prep(job, &"prep_scout"), "prep action accepted")
 	_check(JobLifecycle.choose_approach(job, &"appr_deal"), "approach accepted")
 	_check(job.stage == BM.JobStage.INTERVENTION, "stage is INTERVENTION")
 	_check(JobLifecycle.choose_coverup(job, &"cover_scapegoat"), "coverup accepted")

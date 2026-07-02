@@ -7,14 +7,23 @@ extends RefCounted
 ## The nine resolution dimensions (brief §7.5). All accumulate from chosen options.
 const DIMENSIONS: Array[StringName] = [
 	&"objective_achieved",   ## 0..1 — did the apparent problem get solved
-	&"evidence_generated",   ## 0..1 — feeds Heat/Evidence (P06)
+	&"evidence_generated",   ## -1..1 — net trace; negative = suppressed (cover-ups drive it down; P06 consumes)
 	&"collateral_damage",    ## 0..1 — bystander/asset harm
-	&"operative_injury",     ## 0..1 — harm to your people
+	&"operative_injury",     ## -1..1 — net harm to your people; negative = protected/mitigated
 	&"rival_suspicion",      ## 0..1 — rival attention drawn (P07 consumes)
 	&"public_fear",          ## 0..1 — district fear shift
 	&"relationship_change",  ## -1..1 — net shift on involved characters
 	&"new_leverage",         ## 0..1 — leverage gained (P10 consumes)
 	&"delayed_consequence",  ## 0..1 — deferred fallout weight (P08 consumes)
+]
+
+## Net axes (production − suppression): authored data feeds these negative on purpose
+## ("I left no trace", "I protected my people") — they clamp -1..1, the rest 0..1.
+## Splitting production vs suppression into separate axes is P06 work, not here.
+const SIGNED_DIMENSIONS: Array[StringName] = [
+	&"evidence_generated",
+	&"operative_injury",
+	&"relationship_change",
 ]
 
 ## Sum every chosen option's effect contributions into a full dimension dictionary.
@@ -51,7 +60,7 @@ static func _accumulate(out: Dictionary, choice: JobChoiceData) -> void:
 
 static func _clamp(out: Dictionary) -> void:
 	for d in DIMENSIONS:
-		if d == &"relationship_change":
+		if d in SIGNED_DIMENSIONS:
 			out[d] = clampf(out[d], -1.0, 1.0)
 		else:
 			out[d] = clampf(out[d], 0.0, 1.0)

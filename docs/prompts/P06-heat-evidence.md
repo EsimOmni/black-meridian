@@ -23,6 +23,10 @@ problems to architect around.
 
 - Pressure rises from accumulated exposure + failed jobs + uncontained evidence — never opaquely.
 - Each evidence link should be *manipulable*, not just deletable.
+- **Carried in from P04b:** `evidence_generated` and `operative_injury` are currently single *net*
+  axes clamped -1..1 (negative = suppressed/mitigated — see `JobResolution.SIGNED_DIMENSIONS`).
+  When this slice wires job outcomes into heat/evidence, decide whether to split each into separate
+  production vs suppression axes; the net-axis clamp was the minimal Month-1 gate fix, not the model.
 
 ## Verify
 

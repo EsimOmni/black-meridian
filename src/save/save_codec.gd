@@ -38,6 +38,8 @@ static func encode_faction(f: FactionData) -> Dictionary:
 		"accent_color": f.accent_color,
 		"aggression": f.aggression, "caution": f.caution, "cunning": f.cunning,
 		"dirty_cash": f.dirty_cash, "clean_capital": f.clean_capital,
+		"intent_action": f.intent_action, "intent_venue_id": f.intent_venue_id,
+		"intent_ticks_until_land": f.intent_ticks_until_land,
 	}
 
 static func encode_character(c: CharacterData) -> Dictionary:
@@ -75,6 +77,7 @@ static func encode_venue(v: VenueData) -> Dictionary:
 		"operational_staff": v.operational_staff, "disruption": v.disruption,
 		"racket_risk": v.racket_risk, "map_position": v.map_position,
 		"paused": v.paused,
+		"sabotage_disruption": v.sabotage_disruption, "sabotage_ticks": v.sabotage_ticks,
 	}
 
 ## Jobs store runtime state only — authored content (text, choice pools) is rebuilt
@@ -122,6 +125,9 @@ static func decode_faction(d: Dictionary) -> FactionData:
 	f.cunning = d["cunning"]
 	f.dirty_cash = d["dirty_cash"]
 	f.clean_capital = d["clean_capital"]
+	f.intent_action = d.get("intent_action", -1)                    # additive since P07
+	f.intent_venue_id = d.get("intent_venue_id", &"")
+	f.intent_ticks_until_land = d.get("intent_ticks_until_land", 0)
 	return f
 
 static func decode_character(d: Dictionary) -> CharacterData:
@@ -180,6 +186,8 @@ static func decode_venue(d: Dictionary) -> VenueData:
 	v.racket_risk = d["racket_risk"]
 	v.map_position = d["map_position"]
 	v.paused = d.get("paused", false)  # additive since P05; pre-P05 saves default to running
+	v.sabotage_disruption = d.get("sabotage_disruption", 0.0)  # additive since P07
+	v.sabotage_ticks = d.get("sabotage_ticks", 0)
 	return v
 
 ## Overlay saved runtime state onto a freshly authored job (from the registry).

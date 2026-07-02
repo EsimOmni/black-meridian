@@ -19,3 +19,9 @@ extends Resource
 ## Resources the faction can spend on actions.
 @export var dirty_cash: int = 0
 @export var clean_capital: int = 0
+
+## P07 rival intent — the telegraph→land window survives ticks and saves (additive
+## save fields). intent_action is a BM.RivalAction, or -1 when the rival has no plan.
+@export var intent_action: int = -1
+@export var intent_venue_id: StringName = &""
+@export var intent_ticks_until_land: int = 0  ## in rival-ticks (~10 strategic each)

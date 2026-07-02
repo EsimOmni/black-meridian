@@ -12,6 +12,7 @@ var _income_label: Label
 var _launder_label: Label
 var _overflow_label: Label
 var _inspection_label: Label
+var _rival_label: Label
 var _venue_stats: RichTextLabel
 var _venue_actions: VBoxContainer
 var _hint_label: Label
@@ -53,6 +54,9 @@ func _ready() -> void:
 	_inspection_label = _row(vb)
 	_inspection_label.modulate = Color(0.95, 0.45, 0.35)
 	_inspection_label.visible = false
+	_rival_label = _row(vb)
+	_rival_label.modulate = Color(0.62, 0.72, 0.95)  # rival intent reads petrol-blue (Corvine accent)
+	_rival_label.visible = false
 
 	vb.add_child(HSeparator.new())
 
@@ -79,6 +83,8 @@ func _ready() -> void:
 	JobDirector.job_resolved.connect(func(_j): _refresh())  # outcome shows even while paused
 	EconomyService.inspection_started.connect(func(_d): _refresh())
 	EconomyService.inspection_ended.connect(func(_d): _refresh())
+	RivalDirector.rival_intent_telegraphed.connect(func(_f, _v, _a): _refresh())
+	RivalDirector.rival_action_landed.connect(func(_f, _v, _a): _refresh())
 	GameState.districts_changed.connect(_refresh)  # save/load rebuilds state while paused
 	GameState.factions_changed.connect(_refresh)
 	_refresh()
@@ -125,8 +131,24 @@ func _refresh() -> void:
 		_refresh_inspection(d)
 	_cycle_label.text = "Night Cycle %d  ·  Tick %d" % [GameState.night_cycle, TimeService.tick_index]
 	_speed_label.text = "Speed:  %s" % _speed_name(TimeService.speed)
+	_refresh_rival_intent()
 	_refresh_squeeze()
 	_refresh_venue()
+
+## The rival telegraph (brief §7.6): a committed move is visible before it lands.
+func _refresh_rival_intent() -> void:
+	for faction in GameState.factions:
+		if faction.is_player or faction.intent_action < 0:
+			continue
+		var target := "?"
+		for district in GameState.districts:
+			for venue in district.venues:
+				if venue.id == faction.intent_venue_id:
+					target = venue.display_name
+		_rival_label.visible = true
+		_rival_label.text = "⚠ %s is moving on %s" % [faction.display_name, target]
+		return
+	_rival_label.visible = false
 
 ## The inspection beat is telegraphed before it fires (brief §7.6 — never a surprise).
 func _refresh_inspection(d: DistrictData) -> void:

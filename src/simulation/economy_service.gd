@@ -144,8 +144,16 @@ func _update_district_heat() -> void:
 			district.inspection_armed = true
 
 		# Heat disrupts every venue in the district — police attention doesn't pick sides.
+		# A rival hit (P07) rides on top as a per-venue component that decays over its
+		# sabotage_ticks; this pass stays the single writer of venue.disruption.
 		var disruption := EconomyMath.disruption_from_heat(district.local_heat)
 		if district.inspection_ticks > 0:
 			disruption = maxf(disruption, INSPECTION_DISRUPTION)
 		for venue in district.venues:
-			venue.disruption = disruption
+			var venue_disruption := disruption
+			if venue.sabotage_ticks > 0:
+				venue.sabotage_ticks -= 1
+				venue_disruption = clampf(venue_disruption + venue.sabotage_disruption, 0.0, 1.0)
+				if venue.sabotage_ticks == 0:
+					venue.sabotage_disruption = 0.0
+			venue.disruption = venue_disruption

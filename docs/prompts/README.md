@@ -39,7 +39,7 @@ Claude Code (or Codex) and it knows exactly what to build, what's in scope, and 
 ### Month 2 — Complete core loop
 - ✅ [**P05**](P05-rackets-fronts-ui.md) — Rackets/fronts/laundering UI: squeeze surfaced on HUD (overflow indicator), pause-a-racket + pressure-a-front verbs, interactive venue panel (done 2026-07-02; operative pool + buy-front → P05b)
 - ✅ [**P06**](P06-heat-evidence.md) — Heat consequence loop closed: heat→disruption→income, slow decay, deterministic inspection beat @0.45 (done 2026-07-03; P04b net-axis debt resolved — no split; evidence chains → P06b, Central Pressure → P06c)
-- ⬜ [**P07**](P07-rival-ai.md) — RivalDirector: utility AI (action scoring, imperfect info, memory)
+- ✅ [**P07**](P07-rival-ai.md) — RivalDirector: deterministic utility AI, PROBE/SABOTAGE, telegraph→land window (done 2026-07-03; noise/tie-break → P07b, other 9 actions → P07b+, memory → P07c)
 - ⬜ [**P08**](P08-job-director.md) — JobDirector: systemic fixer jobs generated from sim state + resolution dimensions
 - ⬜ [**P09**](P09-night-cycle.md) — Night Cycle phase machine (Council → Operations → Crisis → Reckoning)
 - ⬜ [**P10**](P10-loyalty-betrayal.md) — RelationshipService: motive network + telegraphed betrayal

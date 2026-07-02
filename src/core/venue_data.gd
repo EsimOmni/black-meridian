@@ -29,7 +29,13 @@ extends Resource
 @export var paused: bool = false
 
 ## Disruption 0..1 — heat/raids/rival sabotage reduce yield (brief §7.2 DisruptionModifier).
+## Written each tick by EconomyService (heat base + inspection floor + sabotage component).
 @export_range(0.0, 1.0) var disruption: float = 0.0
+
+## P07 rival-hit component: composed on top of the heat-driven disruption by the
+## economy's single-writer pass, decaying over sabotage_ticks. Additive save fields.
+@export var sabotage_disruption: float = 0.0
+@export var sabotage_ticks: int = 0
 
 ## Per-venue risk feeding ExposureGain (brief §7.2). Higher = more exposure per unlaundered cash.
 @export_range(0.0, 1.0) var racket_risk: float = 0.3

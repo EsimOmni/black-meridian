@@ -37,9 +37,26 @@ Also worth testing mid-session: F9 → keep playing → L (state + HUD must snap
   splat decision itself is resolved (SPLAT_OK, P01 benchmark note).
 - Clean capital accumulates with no sinks yet — ignore that number for tension.
 
-## Verdict (fill in after the session)
+## Verdict (2026-07-02, Cem played + Claude verified)
 
-- [ ] All five beats hit without a script error?
-- [ ] Save/load survived mid-loop?
-- **Is it interesting yet?** —
-- **Decision: proceed to Month 2?** —
+- [x] All five beats hit without a script error? — detect (heat/deadline) → inspect (venues/panel)
+  → commit (Scout + Post lookouts → Quiet re-route → cover-up) → react → **absorb** (RESOLVED
+  showed the consequence). No script errors.
+- [x] Save/load survived mid-loop? — proven by `bootstrap_smoke_runner` (14/14): mid-loop
+  save → advance → load restores cash/tick, keeps the game PAUSED, restores job stage, and the
+  HUD repaints from restored state. F9 verified live (logged "Quick-saved.").
+- **Is it interesting yet?** — **Yes.** The core loop works with cubes and placeholder UI; the
+  commitment felt meaningful. The decision carried a real tradeoff and the outcome landed.
+- **Decision: proceed to Month 2?** — **PROCEED.**
+
+### One bug found + fixed during the gate (P04b, commit 373a214)
+
+The first play read only `objective achieved: +0.70` / `new leverage: +0.10` — half the
+player's skill (evidence suppression, operative protection) was invisible. A headless probe
+proved `JobResolution._clamp()` floored `evidence_generated` and `operative_injury` to 0.0,
+erasing the negative (suppression/mitigation) side the authored data drives on purpose. P04b
+made those net axes clamp `-1..1`. Re-verified: the same played path now reads
+**`evidence suppressed: 0.30` / `operatives protected: 0.20`** on the RESOLVED panel — the
+"I left no trace" feel is back. Without this fix the gate read would have been dishonest.
+
+### Next: P05 — rackets/fronts/laundering UI (the second real commitment verb)

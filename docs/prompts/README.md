@@ -38,7 +38,7 @@ Claude Code (or Codex) and it knows exactly what to build, what's in scope, and 
 
 ### Month 2 — Complete core loop
 - ✅ [**P05**](P05-rackets-fronts-ui.md) — Rackets/fronts/laundering UI: squeeze surfaced on HUD (overflow indicator), pause-a-racket + pressure-a-front verbs, interactive venue panel (done 2026-07-02; operative pool + buy-front → P05b)
-- ⬜ [**P06**](P06-heat-evidence.md) — Heat + Evidence chain prototype (named investigations, removable links)
+- ✅ [**P06**](P06-heat-evidence.md) — Heat consequence loop closed: heat→disruption→income, slow decay, deterministic inspection beat @0.45 (done 2026-07-03; P04b net-axis debt resolved — no split; evidence chains → P06b, Central Pressure → P06c)
 - ⬜ [**P07**](P07-rival-ai.md) — RivalDirector: utility AI (action scoring, imperfect info, memory)
 - ⬜ [**P08**](P08-job-director.md) — JobDirector: systemic fixer jobs generated from sim state + resolution dimensions
 - ⬜ [**P09**](P09-night-cycle.md) — Night Cycle phase machine (Council → Operations → Crisis → Reckoning)

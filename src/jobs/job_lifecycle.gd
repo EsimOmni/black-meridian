@@ -72,6 +72,11 @@ static func apply_outcome(job: JobData, faction: FactionData, district: District
 	if out[&"objective_achieved"] >= 0.5:
 		faction.dirty_cash += job.reward_dirty
 	if district != null:
+		# P06 decision (closes the P04b deferral): evidence_generated stays a single SIGNED
+		# net axis — net trace left is exactly what police attention responds to, so a
+		# suppressed job (negative) legitimately LOWERS heat and an exposed one raises it.
+		# No production-vs-suppression split; if a future system needs the two sides
+		# separately, revisit then — don't silently split.
 		district.local_heat = clampf(
 			district.local_heat + 0.08 * out[&"evidence_generated"] + 0.04 * out[&"public_fear"], 0.0, 1.0)
 		district.fear = clampf(district.fear + 0.1 * out[&"public_fear"], 0.0, 1.0)

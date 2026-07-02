@@ -19,7 +19,8 @@ const DIMENSIONS: Array[StringName] = [
 
 ## Net axes (production − suppression): authored data feeds these negative on purpose
 ## ("I left no trace", "I protected my people") — they clamp -1..1, the rest 0..1.
-## Splitting production vs suppression into separate axes is P06 work, not here.
+## P06 decision: the net axis IS the model (no split) — heat responds to net trace,
+## grievance to net harm. See job_lifecycle.gd apply_outcome for the wiring rationale.
 const SIGNED_DIMENSIONS: Array[StringName] = [
 	&"evidence_generated",
 	&"operative_injury",

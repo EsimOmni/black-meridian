@@ -11,6 +11,7 @@ var _cycle_label: Label
 var _income_label: Label
 var _launder_label: Label
 var _overflow_label: Label
+var _inspection_label: Label
 var _venue_stats: RichTextLabel
 var _venue_actions: VBoxContainer
 var _hint_label: Label
@@ -49,6 +50,9 @@ func _ready() -> void:
 	_launder_label = _row(vb)
 	_overflow_label = _row(vb)
 	_overflow_label.modulate = Color(0.95, 0.45, 0.35)  # overflow reads as danger
+	_inspection_label = _row(vb)
+	_inspection_label.modulate = Color(0.95, 0.45, 0.35)
+	_inspection_label.visible = false
 
 	vb.add_child(HSeparator.new())
 
@@ -73,6 +77,8 @@ func _ready() -> void:
 	TimeService.strategic_tick.connect(func(_t): _refresh())
 	EconomyService.economy_settled.connect(func(_f, _d, _c, _e): _refresh())
 	JobDirector.job_resolved.connect(func(_j): _refresh())  # outcome shows even while paused
+	EconomyService.inspection_started.connect(func(_d): _refresh())
+	EconomyService.inspection_ended.connect(func(_d): _refresh())
 	GameState.districts_changed.connect(_refresh)  # save/load rebuilds state while paused
 	GameState.factions_changed.connect(_refresh)
 	_refresh()
@@ -116,10 +122,23 @@ func _refresh() -> void:
 	var d := GameState.get_district(&"glass_wharf")
 	if d:
 		_heat_label.text = "Local heat:  %d%%" % int(d.local_heat * 100.0)
+		_refresh_inspection(d)
 	_cycle_label.text = "Night Cycle %d  ·  Tick %d" % [GameState.night_cycle, TimeService.tick_index]
 	_speed_label.text = "Speed:  %s" % _speed_name(TimeService.speed)
 	_refresh_squeeze()
 	_refresh_venue()
+
+## The inspection beat is telegraphed before it fires (brief §7.6 — never a surprise).
+func _refresh_inspection(d: DistrictData) -> void:
+	if d.inspection_ticks > 0:
+		_inspection_label.visible = true
+		_inspection_label.text = "%s: INSPECTION — yields disrupted (%d ticks)" % [
+			d.display_name.to_upper(), d.inspection_ticks]
+	elif d.local_heat >= EconomyService.HEAT_INSPECTION_WARN and d.inspection_armed:
+		_inspection_label.visible = true
+		_inspection_label.text = "⚠ %s: inspection imminent — reduce heat" % d.display_name
+	else:
+		_inspection_label.visible = false
 
 func _refresh_squeeze() -> void:
 	var info: Dictionary = EconomyService.settle_info(GameState.player_faction_id)
@@ -145,6 +164,8 @@ func _refresh_venue() -> void:
 		_selected.display_name, type_name, owner_name, _control_name(_selected.control_state)]
 	if _selected.type == BM.VenueType.RACKET:
 		lines += "\nBase yield: %d · Staff: %d" % [_selected.base_yield, _selected.operational_staff]
+		if _selected.disruption > 0.0:
+			lines += "\n[color=#f2b06a]Disrupted: -%d%% income (heat)[/color]" % int(_selected.disruption * 100.0)
 		if _selected.paused:
 			lines += "\n[color=#f2b06a]PAUSED — earning nothing, creating no exposure[/color]"
 	elif _selected.type == BM.VenueType.FRONT:

@@ -17,6 +17,13 @@ extends Resource
 ## Local heat (brief §7.3) — per-district police attention, 0..1.
 @export_range(0.0, 1.0) var local_heat: float = 0.0
 
+## P06 inspection beat state (deterministic + telegraphed, brief §7.6 — no rolls).
+## inspection_ticks > 0 = an inspection is active (counts down each strategic tick);
+## inspection_armed re-arms only after heat falls below the re-arm level, so the
+## threshold fires once per excursion, not every tick above it.
+@export var inspection_ticks: int = 0
+@export var inspection_armed: bool = true
+
 ## Faction pressure: influence each dynasty exerts here. Keyed by faction id -> 0..1.
 @export var faction_pressure: Dictionary = {}
 

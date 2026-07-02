@@ -32,6 +32,17 @@ static func compute_front_clean(venue: VenueData) -> int:
 	var raw := float(venue.laundering_capacity) * venue.front_efficiency * (1.0 - venue.operating_cost)
 	return int(roundf(raw))
 
+## Heat → operational disruption (brief §7.3: patrols, inspections, scared customers).
+## No effect below a grace band, then a linear, legible ramp. Heat alone never fully
+## kills a venue (max 0.6) — the inspection beat does the spiking (EconomyService).
+const HEAT_DISRUPTION_GRACE := 0.3
+const HEAT_DISRUPTION_MAX := 0.6
+
+static func disruption_from_heat(local_heat: float) -> float:
+	if local_heat <= HEAT_DISRUPTION_GRACE:
+		return 0.0
+	return (local_heat - HEAT_DISRUPTION_GRACE) / (1.0 - HEAT_DISRUPTION_GRACE) * HEAT_DISRUPTION_MAX
+
 ## ExposureGain share for a racket from the faction's unlaundered overflow.
 static func compute_exposure(venue: VenueData, district: DistrictData, unlaundered_overflow: int) -> float:
 	if venue.type != BM.VenueType.RACKET:

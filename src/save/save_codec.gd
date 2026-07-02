@@ -61,6 +61,7 @@ static func encode_district(d: DistrictData) -> Dictionary:
 		"fear": d.fear, "visibility": d.visibility,
 		"institutional_presence": d.institutional_presence, "local_heat": d.local_heat,
 		"faction_pressure": d.faction_pressure.duplicate(),
+		"inspection_ticks": d.inspection_ticks, "inspection_armed": d.inspection_armed,
 		"venues": venues,
 	}
 
@@ -153,6 +154,8 @@ static func decode_district(d: Dictionary) -> DistrictData:
 	dist.institutional_presence = d["institutional_presence"]
 	dist.local_heat = d["local_heat"]
 	dist.faction_pressure = d["faction_pressure"].duplicate()
+	dist.inspection_ticks = d.get("inspection_ticks", 0)     # additive since P06
+	dist.inspection_armed = d.get("inspection_armed", true)  # pre-P06 saves: armed, no inspection
 	var venues: Array[VenueData] = []
 	for vd in d["venues"]:
 		venues.append(decode_venue(vd))

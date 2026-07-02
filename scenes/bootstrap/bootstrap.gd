@@ -6,6 +6,7 @@ extends Node3D
 const CityViewScript := preload("res://scenes/city/city_view.gd")
 const CameraScript := preload("res://scenes/city/management_camera.gd")
 const HudScript := preload("res://scenes/ui/hud.gd")
+const JobPanelScript := preload("res://scenes/ui/job_panel.gd")
 
 var _hud
 
@@ -15,6 +16,7 @@ func _ready() -> void:
 	_build_city()
 	_build_camera()
 	_build_hud()
+	_build_jobs()
 	# Start paused so the player makes the first decision (brief §5.1).
 	TimeService.set_speed(BM.Speed.PAUSED)
 
@@ -57,6 +59,13 @@ func _build_hud() -> void:
 	_hud = CanvasLayer.new()
 	_hud.set_script(HudScript)
 	add_child(_hud)
+
+func _build_jobs() -> void:
+	var panel := CanvasLayer.new()
+	panel.set_script(JobPanelScript)
+	add_child(panel)
+	# Month-1: one hand-offered placeholder job. Systemic generation is P08.
+	JobDirector.offer(PlaceholderJobs.intercepted_shipment())
 
 func _on_venue_clicked(venue: VenueData) -> void:
 	if _hud:

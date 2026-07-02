@@ -54,6 +54,7 @@ func _ready() -> void:
 	TimeService.speed_changed.connect(func(_s): _refresh())
 	TimeService.strategic_tick.connect(func(_t): _refresh())
 	EconomyService.economy_settled.connect(func(_f, _d, _c, _e): _refresh())
+	JobDirector.job_resolved.connect(func(_j): _refresh())  # outcome shows even while paused
 	_refresh()
 
 func _row(parent: Node) -> Label:

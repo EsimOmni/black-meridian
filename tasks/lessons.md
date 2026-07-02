@@ -57,6 +57,24 @@ GDGS for splats, existing controller/camera templates, asset-library addons: ado
 plugin beats bespoke code for anything not core to the game's identity — the strategic sim IS core;
 rendering/input plumbing is not.
 
+## Godot AI MCP (the P03+ primary rail)
+
+### An open editor CLOBBERS external project.godot edits — write settings through MCP `settings_set`
+Editing project.godot on disk (new autoload, plugin enable) while the editor is open gets silently
+reverted the next time the editor saves settings (e.g. `project_run(autosave=true)` / stop). The
+JobDirector autoload and the gdgs plugin registration both vanished this way. Rule: with the editor open,
+write ProjectSettings via `project_manage(op="settings_set")` — it updates memory AND disk in sync. Raw
+file edits to project.godot are only safe with the editor closed. (Game *processes* read disk at launch,
+so a run can look correct while the editor still holds — and later re-saves — stale settings.)
+
+### `game_manage input_mouse` needs a motion event before button events land on UI
+A bare button press/release at a coordinate does nothing; send `{event:"motion", position:...}` first to
+move the pointer, then press+release. With that, full UI flows are drivable end-to-end (P03's job panel
+was played through all four stages this way), and `get_ui_elements` gives exact button rects + texts —
+better than screenshot-guessing for UI QA. Editor-side `recent_errors` can be stale/pre-run
+(`recent_errors_may_predate_run: true`) — trust headless boot + the running game, not editor parse spam
+from before a filesystem rescan.
+
 ## Splat / GDGS
 
 ### P01 kill-criterion verdict: SPLAT_OK — 542k splats @ 483 avg / 420 1%-low fps, 1080p, 5060 Ti

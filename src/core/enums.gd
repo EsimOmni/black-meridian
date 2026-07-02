@@ -67,6 +67,28 @@ enum RivalAction {
 	EXPLOIT_GRIEVANCE,
 }
 
+## Fixer-job lifecycle stages (brief §7.5). The core verb: Intake → Preparation →
+## Intervention → Cover-up. RESOLVED is terminal; resolution is multi-dimensional, never binary.
+enum JobStage {
+	INTAKE,
+	PREPARATION,
+	INTERVENTION,
+	COVER_UP,
+	RESOLVED,
+}
+
+## Where a fixer job originated (brief §7.5).
+enum JobOrigin {
+	FAILED_RACKET,
+	WITNESS,
+	RIVAL_PROVOCATION,
+	INTERNAL_DISPUTE,
+	INSTITUTIONAL_PRESSURE,
+}
+
+## Max preparation actions per job (brief §7.5: Preparation ≤3 actions).
+const JOB_MAX_PREP_ACTIONS := 3
+
 ## Night Cycle phases (brief §5.2).
 enum Phase {
 	COUNCIL,    ## 3-5 min: review, priorities, allocate, assign

@@ -2,7 +2,7 @@
 
 This project is built with **Claude Fable 5** as the primary model. This file is the Fable-specific
 operating layer; `CLAUDE.md` remains the repo doctrine (what the game is, architecture, IP rules, gates).
-Read both. `AGENTS.md` / `CODEX.md` still apply to Codex / other agents.
+Read both. `AGENTS.md` / `CODEX.md` / `GEMINI.md` still apply to Codex / Gemini / other agents.
 
 Source: Anthropic's "Prompting Claude Fable 5" guide. This file adapts it to THIS repo.
 

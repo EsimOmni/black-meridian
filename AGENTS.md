@@ -2,8 +2,8 @@
 
 # CLAUDE.md — OMNI: BLACK MERIDIAN
 
-Guidance for Claude Code (and any AI agent) working in this repository. Codex / other agents
-read `AGENTS.md` (a synced mirror of this file). The authoritative design + production spec is
+Guidance for Claude Code (and any AI agent) working in this repository. Codex, Gemini, and other agents
+read `AGENTS.md` (and their respective synced mirrors `CODEX.md` and `GEMINI.md`). The authoritative design + production spec is
 **`docs/OMNI-BLACK-MERIDIAN-brief.pdf`** — read it before any non-trivial change.
 
 > **Primary model = Claude Fable 5.** Read **`docs/FABLE.md`** for the Fable operating layer (effort,

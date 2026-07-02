@@ -1,3 +1,5 @@
+<!-- This file mirrors CLAUDE.md as the repo doctrine, PLUS a Gemini-only operator section at the very bottom ("## Gemini operator layer — delegating to Codex and Claude"). Keep the mirrored body in sync with CLAUDE.md; the Gemini-only section is intentionally NOT in CLAUDE.md/AGENTS.md/CODEX.md and must not be synced away. -->
+
 # CLAUDE.md — OMNI: BLACK MERIDIAN
 
 Guidance for Claude Code (and any AI agent) working in this repository. Codex, Gemini, and other agents
@@ -167,3 +169,61 @@ and headless boot are not feature testing.
 Open in Godot 4.7 (desktop shortcut "BLACK MERIDIAN (Godot)" or `--editor --path .`). Main scene =
 `scenes/bootstrap/bootstrap.tscn`. In-game: SPACE pause/resume, X cycle speed, WASD pan, wheel zoom,
 click a venue to inspect.
+
+---
+
+## Gemini operator layer — delegating to Codex and Claude (Gemini-only; live-verified 2026-07-02)
+
+You (Gemini, running inside Antigravity in this workspace) have a **PowerShell 5.1 shell** and BOTH the
+`codex` CLI (`codex-cli 0.141.0`) and the `claude` CLI (`2.1.143`, Claude Code) on PATH — all three
+verified callable from your shell on 2026-07-02. So you are not limited to your own model: for a
+bounded, well-scoped sub-task you can hand work to **Codex** (billed to the ChatGPT subscription) or to
+**Claude** (billed to the Claude subscription). You stay the architect — you decide, verify, and
+integrate; the delegate does the grunt work and reports back.
+
+**Shell rule — you are PowerShell 5.1, NOT bash:**
+- `&&` is a parser error here. Chain with `;` (run sequentially) or `if ($?) { ... }` (run-if-success).
+- `< /dev/null` does not exist. To stop `codex exec` waiting on stdin, use `$null | codex exec ...`.
+- Quote paths with spaces; call exes with spaces via `& "C:\path\app.exe" args`.
+
+### Delegate to Codex (bounded/mechanical/vision/batch → ChatGPT budget, NOT your model)
+
+Codex is the little brother: reading & summarizing large files/logs, mechanical multi-file edits,
+"where is X" searches, draft-then-review, batch/vision triage. It can also drive **BlenderMCP (port
+9876)** and the **godot-ai MCP** live (both registered in `~/.codex/config.toml`).
+
+```powershell
+$null | codex exec --sandbox read-only "summarize d:\black-meridian\src\save\save_service.gd in 10 lines"
+$null | codex exec --sandbox workspace-write "via BlenderMCP on port 9876: <do X>, then export <Y>"
+```
+
+- PROMPT first, `-i <image>` flags AFTER the prompt (order matters — `-i` before prompt hangs).
+- Close stdin with `$null | ...` on any multi-`-i` or batch call, or it hangs on "Reading from stdin".
+- NEVER kill a running `codex exec` — it flushes output only on completion; a killed run = lost work.
+
+### Delegate to Claude (Sonnet / Haiku, headless → Claude budget; you pick the model + effort)
+
+For a self-contained coding/reasoning sub-task you can shell out to Claude Code headless. **You decide
+the model by task weight — default to the cheaper tier and only step up when the task earns it.** You
+also pick effort; if unsure, high is a safe default for Sonnet, but don't burn high-effort on trivial work.
+
+```powershell
+claude -p "rename symbol Foo to Bar across src/ and show the diff" --model haiku
+claude -p "implement the CinematicWorldProvider interface per docs/prompts/P01" --model sonnet
+```
+
+- `claude -p` does NOT need stdin closed — it waits 3s then proceeds on its own (harmless warning).
+  Only `codex exec` needs the `$null |` guard. (Both round-trips live-verified 2026-07-02: Haiku
+  returned clean; the Codex bridge spawned + reached the model, only blocked by a ChatGPT usage cap.)
+- `--model haiku` → cheap/mechanical (renames, format fixes, boilerplate, short summaries).
+- `--model sonnet` → real coding/reasoning (a feature slice, a non-trivial refactor, a tricky bug).
+- **This bills the Claude subscription — it is NOT free like Codex.** Prefer Codex for anything Codex
+  can do; reach for Claude only when you specifically want an Anthropic model's coding/reasoning.
+- You CANNOT make Codex or your own runtime call Sonnet/Haiku — only the `claude` CLI can. No API key
+  path is set up here; use the CLI, not a raw Anthropic API call.
+
+### When NOT to delegate
+
+Architectural decisions, IP-boundary judgment (brief §2), the splat-vs-mesh kill call, anything needing
+full conversation context, or work so small the round-trip costs more than doing it yourself. Delegate
+tasks, not decisions.

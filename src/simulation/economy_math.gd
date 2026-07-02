@@ -17,6 +17,8 @@ static func control_modifier(state: int) -> float:
 static func compute_dirty_income(venue: VenueData, district_demand: float) -> int:
 	if venue.type != BM.VenueType.RACKET:
 		return 0
+	if venue.paused:  # brief §7.2: a stopped racket earns nothing (and creates no exposure)
+		return 0
 	var staff_factor := float(maxi(0, venue.operational_staff))
 	var disruption_mod := 1.0 - venue.disruption
 	var raw := float(venue.base_yield) * district_demand * staff_factor \

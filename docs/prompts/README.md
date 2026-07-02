@@ -37,7 +37,7 @@ Claude Code (or Codex) and it knows exactly what to build, what's in scope, and 
 - 🔨 [**P04**](P04-month1-gate.md) — Month-1 gate: a 15-minute greybox loop, end to end (prepared 2026-07-02 — tuning + nudge + smoke test done; awaiting Cem's 15-min gate session, see [notes/P04-month1-gate.md](notes/P04-month1-gate.md))
 
 ### Month 2 — Complete core loop
-- ⬜ [**P05**](P05-rackets-fronts-ui.md) — Rackets/fronts/laundering UI + assign operatives + fund operations
+- ✅ [**P05**](P05-rackets-fronts-ui.md) — Rackets/fronts/laundering UI: squeeze surfaced on HUD (overflow indicator), pause-a-racket + pressure-a-front verbs, interactive venue panel (done 2026-07-02; operative pool + buy-front → P05b)
 - ⬜ [**P06**](P06-heat-evidence.md) — Heat + Evidence chain prototype (named investigations, removable links)
 - ⬜ [**P07**](P07-rival-ai.md) — RivalDirector: utility AI (action scoring, imperfect info, memory)
 - ⬜ [**P08**](P08-job-director.md) — JobDirector: systemic fixer jobs generated from sim state + resolution dimensions

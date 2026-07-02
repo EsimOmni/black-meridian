@@ -73,6 +73,7 @@ static func encode_venue(v: VenueData) -> Dictionary:
 		"front_efficiency": v.front_efficiency, "operating_cost": v.operating_cost,
 		"operational_staff": v.operational_staff, "disruption": v.disruption,
 		"racket_risk": v.racket_risk, "map_position": v.map_position,
+		"paused": v.paused,
 	}
 
 ## Jobs store runtime state only — authored content (text, choice pools) is rebuilt
@@ -175,6 +176,7 @@ static func decode_venue(d: Dictionary) -> VenueData:
 	v.disruption = d["disruption"]
 	v.racket_risk = d["racket_risk"]
 	v.map_position = d["map_position"]
+	v.paused = d.get("paused", false)  # additive since P05; pre-P05 saves default to running
 	return v
 
 ## Overlay saved runtime state onto a freshly authored job (from the registry).

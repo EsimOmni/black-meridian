@@ -5,8 +5,40 @@ extends Node
 
 signal economy_settled(faction_id: StringName, dirty_delta: int, clean_delta: int, exposure_delta: float)
 
+## "Pressure an existing front" (brief §7.2): clean capital buys laundering capacity.
+const FRONT_PRESSURE_STEP := 100    ## +capacity per pressure action
+const FRONT_PRESSURE_COST := 400    ## clean_capital spent per action
+const FRONT_CAPACITY_MAX := 1500    ## per-front ceiling — a front can only look so legitimate
+
+## Last settle per faction: {dirty_income, laundering_capacity, overflow, clean_gain}.
+## The HUD reads the squeeze from here — presentation never recomputes the economy.
+var _last_settle: Dictionary = {}
+
 func _ready() -> void:
 	TimeService.strategic_tick.connect(_on_strategic_tick)
+
+func settle_info(faction_id: StringName) -> Dictionary:
+	return _last_settle.get(faction_id, {})
+
+# --- Player verbs (brief §7.2) -------------------------------------------------
+
+func set_racket_paused(venue: VenueData, paused: bool) -> void:
+	if venue.type == BM.VenueType.RACKET:
+		venue.paused = paused
+
+## Spend clean_capital to raise a front's laundering capacity. Returns false (no-op,
+## never a negative pool) when the venue isn't the faction's front, the ceiling is
+## reached, or clean_capital can't cover the cost.
+func pressure_front(venue: VenueData, faction: FactionData) -> bool:
+	if faction == null or venue.type != BM.VenueType.FRONT or venue.owner_faction != faction.id:
+		return false
+	if venue.laundering_capacity >= FRONT_CAPACITY_MAX:
+		return false
+	if faction.clean_capital < FRONT_PRESSURE_COST:
+		return false
+	faction.clean_capital -= FRONT_PRESSURE_COST
+	venue.laundering_capacity = mini(venue.laundering_capacity + FRONT_PRESSURE_STEP, FRONT_CAPACITY_MAX)
+	return true
 
 func _on_strategic_tick(_tick: int) -> void:
 	for faction in GameState.factions:
@@ -47,6 +79,13 @@ func _settle_faction(faction: FactionData) -> void:
 	var dirty_delta := dirty_income - laundered
 	faction.dirty_cash += dirty_delta
 	faction.clean_capital += clean_gain
+
+	_last_settle[faction.id] = {
+		"dirty_income": dirty_income,
+		"laundering_capacity": laundering_capacity,
+		"overflow": unlaundered_overflow,
+		"clean_gain": clean_gain,
+	}
 
 	# Local heat rises with exposure where the faction operates (visualized by the city later).
 	# 0.05 (P04 tuning): unmanaged laundering overflow climbs Glass Wharf ~10%→~60% across a

@@ -24,6 +24,10 @@ extends Resource
 ## How many operatives are staffed here (scales dirty income).
 @export var operational_staff: int = 0
 
+## Player verb (brief §7.2 "temporarily stop a profitable racket"): a paused racket
+## yields 0 dirty income — the direct lever on laundering overflow. RACKET venues only.
+@export var paused: bool = false
+
 ## Disruption 0..1 — heat/raids/rival sabotage reduce yield (brief §7.2 DisruptionModifier).
 @export_range(0.0, 1.0) var disruption: float = 0.0
 

@@ -6,6 +6,15 @@ Guidance for Claude Code (and any AI agent) working in this repository. Codex / 
 read `AGENTS.md` (a synced mirror of this file). The authoritative design + production spec is
 **`docs/OMNI-BLACK-MERIDIAN-brief.pdf`** — read it before any non-trivial change.
 
+> **Primary model = Claude Fable 5.** Read **`docs/FABLE.md`** for the Fable operating layer (effort,
+> long-run behavior, subagents, memory, and the hard rule: never instruct the model to echo its reasoning
+> into responses — it triggers a `reasoning_extraction` refusal). On any `stop_reason: "refusal"`, fall
+> back to Claude Opus 4.8 for that call. Record cross-run lessons in **`tasks/lessons.md`** and reference
+> it at the start of each slice.
+
+> **Repo location:** `D:\black-meridian` (moved off C: on 2026-07-01). Remote: `EsimOmni/black-meridian`
+> (private). Godot 4.7 binary: `C:\Users\User\Godot\Godot_v4.7-stable_win64.exe`.
+
 ## What this is
 
 A single-player **real-time-with-pause mafia empire management strategy game** for Windows / Steam,

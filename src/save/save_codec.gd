@@ -80,8 +80,9 @@ static func encode_venue(v: VenueData) -> Dictionary:
 		"sabotage_disruption": v.sabotage_disruption, "sabotage_ticks": v.sabotage_ticks,
 	}
 
-## Jobs store runtime state only — authored content (text, choice pools) is rebuilt
-## from the job registry by id on load (PlaceholderJobs for now, data/jobs later).
+## Jobs store runtime state only — authored content (text, choice pools) is rebuilt on
+## load from the id: JobTemplates.by_id for authored jobs, JobGenerator.rebuild for
+## generated ("gen@…") ids whose targeting is encoded in the id itself (P08).
 static func encode_job(j: JobData) -> Dictionary:
 	return {
 		"id": j.id, "stage": j.stage,

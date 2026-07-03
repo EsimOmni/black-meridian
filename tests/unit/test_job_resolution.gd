@@ -25,7 +25,7 @@ func _check(cond: bool, msg: String) -> void:
 
 ## Drive a fresh placeholder job through the lifecycle with the given choices and resolve.
 func _resolve(preps: Array[StringName], approach: StringName, coverup: StringName) -> Dictionary:
-	var job := PlaceholderJobs.intercepted_shipment()
+	var job := JobTemplates.intercepted_shipment()
 	JobLifecycle.begin(job)
 	for p in preps:
 		JobLifecycle.choose_prep(job, p)
@@ -56,7 +56,7 @@ func _test_relationship_change_still_clamped() -> void:
 
 ## Sweep every prep subset (<=3 of 4) x approach x cover-up: no dimension may leave [-1, 1].
 func _test_no_dimension_exceeds_unit_range() -> void:
-	var template := PlaceholderJobs.intercepted_shipment()
+	var template := JobTemplates.intercepted_shipment()
 	var prep_ids: Array[StringName] = []
 	for c in template.prep_actions:
 		prep_ids.append(c.id)

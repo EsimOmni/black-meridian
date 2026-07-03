@@ -120,7 +120,7 @@ func _test_evidence_sign_drives_heat() -> void:
 	var d := DistrictData.new()
 	d.local_heat = 0.5
 	var f := FactionData.new()
-	var job := PlaceholderJobs.intercepted_shipment()
+	var job := JobTemplates.intercepted_shipment()
 	var involved: Array[CharacterData] = []
 
 	job.outcome = JobResolution.blank()

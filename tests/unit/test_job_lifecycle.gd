@@ -43,7 +43,7 @@ func _make_world() -> Dictionary:
 
 func _test_full_lifecycle_applies_dimensions() -> void:
 	var w := _make_world()
-	var job := PlaceholderJobs.intercepted_shipment()
+	var job := JobTemplates.intercepted_shipment()
 	job.ticks_remaining = job.deadline_ticks
 
 	_check(job.stage == BM.JobStage.INTAKE, "job starts at INTAKE")
@@ -74,7 +74,7 @@ func _test_full_lifecycle_applies_dimensions() -> void:
 		"dimension 3 (collateral_damage) raised grievance")
 
 func _test_prep_limit_and_toggle() -> void:
-	var job := PlaceholderJobs.intercepted_shipment()
+	var job := JobTemplates.intercepted_shipment()
 	JobLifecycle.begin(job)
 	_check(JobLifecycle.choose_prep(job, &"prep_scout"), "prep 1")
 	_check(JobLifecycle.choose_prep(job, &"prep_bribe_clerk"), "prep 2")
@@ -85,7 +85,7 @@ func _test_prep_limit_and_toggle() -> void:
 	_check(not JobLifecycle.choose_prep(job, &"appr_force"), "non-prep id rejected")
 
 func _test_invalid_transitions() -> void:
-	var job := PlaceholderJobs.intercepted_shipment()
+	var job := JobTemplates.intercepted_shipment()
 	_check(not JobLifecycle.choose_approach(job, &"appr_quiet"), "no approach from INTAKE")
 	_check(not JobLifecycle.choose_coverup(job, &"cover_paper"), "no coverup from INTAKE")
 	JobLifecycle.begin(job)
@@ -94,7 +94,7 @@ func _test_invalid_transitions() -> void:
 
 func _test_deadline_expiry() -> void:
 	var w := _make_world()
-	var job := PlaceholderJobs.intercepted_shipment()
+	var job := JobTemplates.intercepted_shipment()
 	job.ticks_remaining = 2
 	JobLifecycle.begin(job)
 	_check(not JobLifecycle.tick(job), "tick 1 does not expire")

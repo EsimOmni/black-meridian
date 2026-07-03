@@ -82,9 +82,17 @@ func _render_resolved() -> void:
 		var v: float = _job.outcome.get(dim, 0.0)
 		if absf(v) > 0.001:
 			_text("  " + _dimension_label(dim, v))
+	# Since P08 several jobs can be live at once — dismissing a resolved one falls back
+	# to the next unresolved job instead of hiding an in-flight problem (a proper job
+	# list/switcher is P11 UI work).
 	_button("Dismiss", func():
-		_panel.visible = false
-		_job = null)
+		_job = null
+		for j in JobDirector.active_jobs:
+			if j.stage != BM.JobStage.RESOLVED:
+				_job = j
+				break
+		_panel.visible = _job != null
+		_render())
 
 ## Negative on the net axes means the player suppressed/mitigated — word it as intent,
 ## not as a signed number that reads like an error.

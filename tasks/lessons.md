@@ -89,8 +89,21 @@ A JSON round-trip truncates float digits, so save→load→same-tick→same-stat
 (heat/motive floats drift from their never-serialized twins). `var_to_str`/`str_to_var` keep full float
 precision and native StringName/Color/Vector2/typed-Dictionary keys, and `str_to_var` can't instantiate
 objects (safe). Saves store the source of truth only; jobs store runtime state + are rebuilt from the
-authored registry by id (`PlaceholderJobs.by_id`). Proven by `tests/integration/save_roundtrip_runner`
+authored registry by id (`JobTemplates.by_id`; generated "gen@…" ids via `JobGenerator.rebuild`, whose
+id encodes template + targeting — P08). Proven by `tests/integration/save_roundtrip_runner`
 (byte-for-byte restore + deterministic replay + clean version refusal).
+
+### Autoload→autoload signal wiring: connect deferred when the emitter loads later
+Autoload singletons instantiate in project.godot order. JobDirector (`_ready` earlier) cannot touch
+RivalDirector (registered later) inside its own `_ready` — the singleton node doesn't exist yet at
+runtime, even though the identifier compiles. Pattern: `_connect_triggers.call_deferred()` in `_ready`;
+by the first idle frame every autoload exists. Tests that rely on the wiring must
+`await get_tree().process_frame` before emitting. (P08; will recur for P09/P10 directors.)
+
+### GDScript `as` binds looser than `==` — `x == [...] as Array[T]` casts the bool
+`restored.chosen_prep == [&"a"] as Array[StringName]` parses as `(x == [...]) as Array[...]` → parse
+error "cannot convert bool". Pre-declare a typed var (`var expected: Array[StringName] = [...]`) and
+compare against that.
 
 ## Splat / GDGS
 

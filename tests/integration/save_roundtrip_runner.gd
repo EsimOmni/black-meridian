@@ -18,7 +18,7 @@ func _ready() -> void:
 	TimeService.set_speed(BM.Speed.PAUSED)  # we pump ticks manually
 	TimeService.tick_index = 0
 	JobDirector.active_jobs = []
-	JobDirector.offer(PlaceholderJobs.intercepted_shipment())
+	JobDirector.offer(JobTemplates.intercepted_shipment())
 	JobDirector.begin(&"job_intercepted_shipment")
 	JobDirector.choose_prep(&"job_intercepted_shipment", &"prep_lookouts")
 

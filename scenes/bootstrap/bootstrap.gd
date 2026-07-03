@@ -64,8 +64,8 @@ func _build_jobs() -> void:
 	var panel := CanvasLayer.new()
 	panel.set_script(JobPanelScript)
 	add_child(panel)
-	# Month-1: one hand-offered placeholder job. Systemic generation is P08.
-	JobDirector.offer(PlaceholderJobs.intercepted_shipment())
+	# The authored seed job; further problems emerge systemically (P08 JobGenerator).
+	JobDirector.offer(JobTemplates.intercepted_shipment())
 
 func _quick_load() -> void:
 	if SaveService.load_game("quick"):

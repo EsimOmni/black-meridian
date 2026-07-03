@@ -19,6 +19,8 @@ func save_game(slot: String = "quick") -> bool:
 		"phase": GameState.phase,
 		"tick_index": TimeService.tick_index,
 		"saved_at_unix": int(Time.get_unix_time_from_system()),
+		# Additive since P08: scheduled delayed-consequence follow-ups (JobDirector).
+		"pending_followups": JobDirector.pending_followups.duplicate(true),
 	}
 	var data := SaveCodec.encode_state(
 		GameState.districts, GameState.factions, GameState.characters,
@@ -64,16 +66,22 @@ func load_game(slot: String = "quick") -> bool:
 	GameState.phase = meta["phase"]
 	TimeService.tick_index = meta["tick_index"]
 
-	# Rebuild in-flight jobs: authored content from the registry, runtime state from the save.
+	# Rebuild in-flight jobs: authored content from the registry (or, for generated ids,
+	# deterministically from JobGenerator.rebuild — P08), runtime state from the save.
 	var jobs: Array[JobData] = []
 	for jd in state["jobs"]:
-		var job := PlaceholderJobs.by_id(jd["id"])
+		var job := JobTemplates.by_id(jd["id"])
+		if job == null:
+			job = JobGenerator.rebuild(jd["id"], GameState.districts, GameState.factions)
 		if job == null:
 			push_warning("SaveService: unknown job id '%s' in save — skipped" % jd["id"])
 			continue
 		SaveCodec.apply_job_state(job, jd)
 		jobs.append(job)
-	JobDirector.restore_jobs(jobs)
+	var pending: Array[Dictionary] = []
+	for p in meta.get("pending_followups", []):  # additive since P08 — older saves: none
+		pending.append(p)
+	JobDirector.restore_jobs(jobs, pending)
 
 	GameState.districts_changed.emit()
 	GameState.factions_changed.emit()

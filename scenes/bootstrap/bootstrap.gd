@@ -9,12 +9,14 @@ const HudScript := preload("res://scenes/ui/hud.gd")
 const JobPanelScript := preload("res://scenes/ui/job_panel.gd")
 
 var _hud
+var _night_cycle: NightCycle
 
 func _ready() -> void:
 	WorldSeed.build()
 	_build_lighting()
 	_build_city()
 	_build_camera()
+	_build_night_cycle()
 	_build_hud()
 	_build_jobs()
 	# Start paused so the player makes the first decision (brief §5.1).
@@ -55,9 +57,17 @@ func _build_camera() -> void:
 	cam.current = true
 	add_child(cam)
 
+## The phase machine is a bootstrap-wired node, NOT an autoload — unit-test scenes of
+## other systems must never have phases advancing underneath them (P09).
+func _build_night_cycle() -> void:
+	_night_cycle = NightCycle.new()
+	_night_cycle.name = "NightCycle"
+	add_child(_night_cycle)
+
 func _build_hud() -> void:
 	_hud = CanvasLayer.new()
 	_hud.set_script(HudScript)
+	_hud.night_cycle_node = _night_cycle
 	add_child(_hud)
 
 func _build_jobs() -> void:

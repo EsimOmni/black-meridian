@@ -22,6 +22,11 @@ func _act(rival: FactionData) -> void:
 		if rival.intent_ticks_until_land <= 0:
 			_land(rival)
 		return
+	# P09 Council modulation (brief §5.2): the setup beat — no NEW telegraph opens
+	# mid-Council. An already-telegraphed intent (above) still counts down and lands;
+	# the promise made to the player stays deterministic (§7.6).
+	if GameState.phase == BM.Phase.COUNCIL:
+		return
 	var pick := RivalScoring.choose_move(GameState.districts, GameState.player_faction_id, rival)
 	if pick.is_empty():
 		return

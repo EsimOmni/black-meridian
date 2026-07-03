@@ -93,6 +93,13 @@ authored registry by id (`JobTemplates.by_id`; generated "gen@…" ids via `JobG
 id encodes template + targeting — P08). Proven by `tests/integration/save_roundtrip_runner`
 (byte-for-byte restore + deterministic replay + clean version refusal).
 
+### Game-loop drivers that mutate state under other systems: bootstrap-wired node, NOT autoload
+NightCycle (P09) advances GameState.phase every tick. As an autoload it would exist in EVERY unit-test
+scene and silently advance phases under P05–P08 tests (test_rival_ai would break: phase would hit COUNCIL
+gating and telegraphs would never open). As a bootstrap-wired `class_name` node it exists only in the real
+game + its own test, which instantiates it explicitly. Rule: a driver whose _ready/tick changes shared
+state belongs in the scene, not the autoload list, unless every test genuinely wants it running.
+
 ### Autoload→autoload signal wiring: connect deferred when the emitter loads later
 Autoload singletons instantiate in project.godot order. JobDirector (`_ready` earlier) cannot touch
 RivalDirector (registered later) inside its own `_ready` — the singleton node doesn't exist yet at

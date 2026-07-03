@@ -17,6 +17,7 @@ func save_game(slot: String = "quick") -> bool:
 		"player_faction_id": GameState.player_faction_id,
 		"night_cycle": GameState.night_cycle,
 		"phase": GameState.phase,
+		"phase_ticks": GameState.phase_ticks,  # additive since P09
 		"tick_index": TimeService.tick_index,
 		"saved_at_unix": int(Time.get_unix_time_from_system()),
 		# Additive since P08: scheduled delayed-consequence follow-ups (JobDirector).
@@ -64,6 +65,7 @@ func load_game(slot: String = "quick") -> bool:
 	GameState.player_faction_id = meta["player_faction_id"]
 	GameState.night_cycle = meta["night_cycle"]
 	GameState.phase = meta["phase"]
+	GameState.phase_ticks = meta.get("phase_ticks", 0)  # additive since P09
 	TimeService.tick_index = meta["tick_index"]
 
 	# Rebuild in-flight jobs: authored content from the registry (or, for generated ids,

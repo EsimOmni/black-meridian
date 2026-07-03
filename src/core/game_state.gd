@@ -18,6 +18,8 @@ var player_faction_id: StringName = &""
 ## --- Campaign clock ---
 var night_cycle: int = 1
 var phase: int = BM.Phase.OPERATIONS
+## Elapsed strategic ticks in the current phase (advanced by the NightCycle machine, P09).
+var phase_ticks: int = 0
 
 func _ready() -> void:
 	# Autoload order in project.godot guarantees GameState is ready before services use it.
@@ -64,3 +66,4 @@ func reset() -> void:
 	player_faction_id = &""
 	night_cycle = 1
 	phase = BM.Phase.OPERATIONS
+	phase_ticks = 0

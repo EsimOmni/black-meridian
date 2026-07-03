@@ -13,7 +13,11 @@ var _launder_label: Label
 var _overflow_label: Label
 var _inspection_label: Label
 var _rival_label: Label
+var _reckoning_label: Label
 var _venue_stats: RichTextLabel
+
+## The bootstrap-wired phase machine (P09) — read for the phase clock + Reckoning summary.
+var night_cycle_node: NightCycle
 var _venue_actions: VBoxContainer
 var _hint_label: Label
 
@@ -57,6 +61,12 @@ func _ready() -> void:
 	_rival_label = _row(vb)
 	_rival_label.modulate = Color(0.62, 0.72, 0.95)  # rival intent reads petrol-blue (Corvine accent)
 	_rival_label.visible = false
+	# The Reckoning framing beat (P09): what this cycle settled — shown only in RECKONING.
+	_reckoning_label = _row(vb)
+	_reckoning_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_reckoning_label.custom_minimum_size = Vector2(300, 0)
+	_reckoning_label.modulate = Color(0.85, 0.78, 0.55)  # ledger amber
+	_reckoning_label.visible = false
 
 	vb.add_child(HSeparator.new())
 
@@ -87,6 +97,7 @@ func _ready() -> void:
 	RivalDirector.rival_action_landed.connect(func(_f, _v, _a): _refresh())
 	GameState.districts_changed.connect(_refresh)  # save/load rebuilds state while paused
 	GameState.factions_changed.connect(_refresh)
+	GameState.night_cycle_advanced.connect(func(_c, _p): _refresh())
 	_refresh()
 
 func _row(parent: Node) -> Label:
@@ -129,11 +140,29 @@ func _refresh() -> void:
 	if d:
 		_heat_label.text = "Local heat:  %d%%" % int(d.local_heat * 100.0)
 		_refresh_inspection(d)
-	_cycle_label.text = "Night Cycle %d  ·  Tick %d" % [GameState.night_cycle, TimeService.tick_index]
+	_cycle_label.text = "Night Cycle %d  ·  %s (%s / %s)" % [
+		GameState.night_cycle, NightCycle.phase_name(GameState.phase),
+		_mmss(GameState.phase_ticks), _mmss(NightCycle.phase_budget(GameState.phase))]
 	_speed_label.text = "Speed:  %s" % _speed_name(TimeService.speed)
+	_refresh_reckoning()
 	_refresh_rival_intent()
 	_refresh_squeeze()
 	_refresh_venue()
+
+## The Reckoning summary (P09): frames what the per-tick systems already settled this
+## cycle — no new math, the HUD only reads the phase machine's tally (brief §5.2).
+func _refresh_reckoning() -> void:
+	if GameState.phase != BM.Phase.RECKONING or night_cycle_node == null:
+		_reckoning_label.visible = false
+		return
+	var s: Dictionary = night_cycle_node.summary()
+	_reckoning_label.visible = true
+	_reckoning_label.text = "RECKONING — the cycle settles: %+d dirty · %+d clean · heat %+d%%. Council convenes next." % [
+		s["dirty_earned"], s["clean_earned"], int(round(s["heat_delta"] * 100.0))]
+
+## A phase clock readout: 1 strategic tick = 1s at NORMAL speed.
+func _mmss(ticks: int) -> String:
+	return "%d:%02d" % [int(ticks / 60.0), ticks % 60]
 
 ## The rival telegraph (brief §7.6): a committed move is visible before it lands.
 func _refresh_rival_intent() -> void:

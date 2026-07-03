@@ -107,6 +107,19 @@ runtime, even though the identifier compiles. Pattern: `_connect_triggers.call_d
 by the first idle frame every autoload exists. Tests that rely on the wiring must
 `await get_tree().process_frame` before emitting. (P08; will recur for P09/P10 directors.)
 
+### Intent/window state lives ON the data Resource, not in the service node
+FactionData carries the rival intent (P07); CharacterData carries the betrayal intent (P10,
+`betrayal_ticks_until_land`, -1 = none). Payoff: the bootstrap-wired service stays stateless (survives
+not existing in test scenes), SaveCodec picks the field up as a normal additive encode/decode
+(`d.get(..., -1)`, SAVE_VERSION unchanged), and after a load the service just reads the restored
+Resources — no rewiring. Rule: a telegraph→land window's state belongs on the entity it's about.
+
+### Never park a test value exactly ON a float threshold
+A betrayal-pressure setup summing to exactly the 1.4 gate (0.7+0.8+0.4-0.3-0.2) can land a hair under
+in float64 and the telegraph never opens — a flaky-looking hard failure. Give boundary setups ≥0.05
+margin on both sides (arm to 1.5, defuse to 1.2). Exact-boundary behavior gets its own dedicated test
+with integers (see test_night_cycle's budget boundaries), never as a side effect of a scenario test.
+
 ### GDScript `as` binds looser than `==` — `x == [...] as Array[T]` casts the bool
 `restored.chosen_prep == [&"a"] as Array[StringName]` parses as `(x == [...]) as Array[...]` → parse
 error "cannot convert bool". Pre-declare a typed var (`var expected: Array[StringName] = [...]`) and

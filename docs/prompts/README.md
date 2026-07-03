@@ -42,7 +42,7 @@ Claude Code (or Codex) and it knows exactly what to build, what's in scope, and 
 - ✅ [**P07**](P07-rival-ai.md) — RivalDirector: deterministic utility AI, PROBE/SABOTAGE, telegraph→land window (done 2026-07-03; noise/tie-break → P07b, other 9 actions → P07b+, memory → P07c)
 - ✅ [**P08**](P08-job-director.md) — JobDirector: systemic fixer jobs generated from sim state — JobTemplates layer + pure JobGenerator, two deterministic triggers (rival sabotage → retaliation, delayed_consequence → follow-up), cadence gate ≤3 (done 2026-07-03; remaining 8 origins + template variety → P08b)
 - ✅ [**P09**](P09-night-cycle.md) — Night Cycle phase machine: deterministic tick budgets (4+18+6+2 min = 30 min/cycle), Council gates new rival telegraphs, HUD phase clock + Reckoning summary, per-tick settlement untouched (done 2026-07-03; rich phase content → later slices)
-- ⬜ [**P10**](P10-loyalty-betrayal.md) — RelationshipService: motive network + telegraphed betrayal
+- ✅ [**P10**](P10-loyalty-betrayal.md) — RelationshipService: the Opportunity term modeled from visible sim state, two-gate betrayal (pressure AND opportunity), telegraph→defuse/land window with tells + reassure verb, one bounded landed effect (venue defects to CONTESTED) (done 2026-07-03; hidden fields + multi-lieutenant → P10b, betrayal cinematic → Month 4)
 - ⬜ [**P11**](P11-first-ui-month2-gate.md) — First-pass UI theme + month-2 gate (fun with cubes)
 
 ### Month 3 — Art pipeline & character proof

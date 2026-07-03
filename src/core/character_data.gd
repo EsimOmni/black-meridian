@@ -25,6 +25,10 @@ extends Resource
 ## Relationship edges to other characters: target id -> affinity (-1..1).
 @export var relationships: Dictionary = {}
 
+## Open betrayal intent (P10, like FactionData's rival intent): rival ticks until the
+## betrayal lands; -1 = none. While ≥ 0 the tells are visible and the player can defuse.
+@export var betrayal_ticks_until_land: int = -1
+
 ## BetrayalPressure (brief §7.6). Betrayal also requires a viable opportunity, evaluated elsewhere.
 ## Telegraphed + deterministic — never an untelegraphed random roll.
 func betrayal_pressure() -> float:

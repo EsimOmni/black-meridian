@@ -18,6 +18,10 @@ var _venue_stats: RichTextLabel
 
 ## The bootstrap-wired phase machine (P09) — read for the phase clock + Reckoning summary.
 var night_cycle_node: NightCycle
+## The bootstrap-wired loyalty machine (P10) — the reassure verb routes through it.
+var relationship_node: RelationshipService
+var _betrayal_label: Label
+var _reassure_btn: Button
 var _venue_actions: VBoxContainer
 var _hint_label: Label
 
@@ -67,6 +71,17 @@ func _ready() -> void:
 	_reckoning_label.custom_minimum_size = Vector2(300, 0)
 	_reckoning_label.modulate = Color(0.85, 0.78, 0.55)  # ledger amber
 	_reckoning_label.visible = false
+	# The betrayal tells (P10, brief §7.6): visible only while an intent is open —
+	# the window in which the crisis is still preventable.
+	_betrayal_label = _row(vb)
+	_betrayal_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_betrayal_label.custom_minimum_size = Vector2(300, 0)
+	_betrayal_label.modulate = Color(0.88, 0.48, 0.58)  # bruised crimson — loyalty danger
+	_betrayal_label.visible = false
+	_reassure_btn = Button.new()
+	_reassure_btn.visible = false
+	_reassure_btn.pressed.connect(_on_reassure_pressed)
+	vb.add_child(_reassure_btn)
 
 	vb.add_child(HSeparator.new())
 
@@ -98,6 +113,10 @@ func _ready() -> void:
 	GameState.districts_changed.connect(_refresh)  # save/load rebuilds state while paused
 	GameState.factions_changed.connect(_refresh)
 	GameState.night_cycle_advanced.connect(func(_c, _p): _refresh())
+	if relationship_node:
+		relationship_node.betrayal_telegraphed.connect(func(_c): _refresh())
+		relationship_node.betrayal_defused.connect(func(_c): _refresh())
+		relationship_node.betrayal_committed.connect(func(_c, _v): _refresh())
 	_refresh()
 
 func _row(parent: Node) -> Label:
@@ -145,6 +164,7 @@ func _refresh() -> void:
 		_mmss(GameState.phase_ticks), _mmss(NightCycle.phase_budget(GameState.phase))]
 	_speed_label.text = "Speed:  %s" % _speed_name(TimeService.speed)
 	_refresh_reckoning()
+	_refresh_betrayal()
 	_refresh_rival_intent()
 	_refresh_squeeze()
 	_refresh_venue()
@@ -163,6 +183,31 @@ func _refresh_reckoning() -> void:
 ## A phase clock readout: 1 strategic tick = 1s at NORMAL speed.
 func _mmss(ticks: int) -> String:
 	return "%d:%02d" % [int(ticks / 60.0), ticks % 60]
+
+## The betrayal tells (P10, brief §7.6): while an intent is open the lieutenant reads
+## wrong — and the player has one concrete lever to pull. The HUD only reads the
+## intent state off CharacterData; the defusal decision stays in RelationshipService.
+func _refresh_betrayal() -> void:
+	for c in GameState.characters:
+		if c.betrayal_ticks_until_land < 0:
+			continue
+		_betrayal_label.visible = true
+		_betrayal_label.text = "⚠ %s: delayed responses · a missed check-in · a private meeting off the books" % c.display_name
+		var pf := GameState.player_faction()
+		_reassure_btn.visible = true
+		_reassure_btn.disabled = pf == null or pf.clean_capital < LoyaltyScoring.REASSURE_COST_CLEAN
+		_reassure_btn.text = "Address the grievance (+trust, -%d clean)" % LoyaltyScoring.REASSURE_COST_CLEAN
+		return
+	_betrayal_label.visible = false
+	_reassure_btn.visible = false
+
+func _on_reassure_pressed() -> void:
+	for c in GameState.characters:
+		if c.betrayal_ticks_until_land >= 0:
+			if relationship_node:
+				relationship_node.reassure(c)
+			_refresh()
+			return
 
 ## The rival telegraph (brief §7.6): a committed move is visible before it lands.
 func _refresh_rival_intent() -> void:

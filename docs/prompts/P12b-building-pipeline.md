@@ -76,6 +76,27 @@ milestone is a **validated grey gövde with correct topology/UV/LOD**, texture i
 4. **Accept**: commit the GLB + its validator report. The gövde becomes the reference the rest
    of the kit is built against.
 
+## Massing spec (two-eye: Codex read the master, control tower dimensioned it)
+
+Codex-vision read `glass_wharf_MASTER.jpg` and returned the warehouse's modelable massing;
+the control tower fixed it to metric numbers that satisfy the `building` spec and the §9.2
+camera. This is the modeling contract for the gövde:
+
+| Property | Value | Source |
+|---|---|---|
+| Height | 13.5 m (reads as 3 story-bands) | Codex "12–16 m, 2–3 stories" |
+| Footprint | 36 m × 9 m long bar, ~4:1, long axis = quay-parallel | Codex "4:1 bar" |
+| Roof | flat + low perimeter parapet, **stepped roofline at bay breaks** | Codex silhouette |
+| Facade rhythm | 8 bays on the 36 m long face (~4.5 m module), pilaster strip per bay, recessed panel between | Codex "narrow vertical bays + pilasters" |
+| Openings | ground-floor: 3 large loading doors on the dock/rail-facing long side; upper: regular row of small rectangular windows per bay | Codex openings |
+| Rooftop | a few box vents + a low utility housing + perimeter rail (LOD0 only) | Codex rooftop |
+| Plinth | heavier base plinth band (~1 m) along the base | Codex "heavier base plinth" |
+
+**The distinctive read** (must survive to LOD1): *long low waterfront bar with a stepped flat
+parapet silhouette and repetitive dock-bay face.* LOD1 keeps mass + parapet + stepped roofline;
+it flattens the pilasters and drops the rooftop props. Detail lives in the trim-sheet, not in
+polycount — target ~1–3k tris LOD0, well under the 15k soft cap.
+
 ## Codex delegation shape
 
 `codex exec --sandbox workspace-write "via BlenderMCP on port 9876: <model/retopo/UV/LOD/

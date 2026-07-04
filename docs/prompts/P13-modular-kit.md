@@ -42,6 +42,34 @@ extend. Each is its own GLB, `building` spec, LOD0+LOD1, base-center, UV1, ≤3 
 Naming (asset-standard.md): `glasswharf_dock_<module>_LOD0/_LOD1`, e.g.
 `glasswharf_dock_mid_floor_LOD0`. Output under `assets/city/glasswharf_dock/`.
 
+## Kit extension (P13b — the next 7, toward ~12)
+
+The first 5 proved the grid + one warehouse dialect. 300–500 buildings from ONE dialect reads as
+copy-paste under the camera. The next 7 close two gaps the master demands, on the SAME grid
+contract (4.5 m cell, base-center, integer footprint, LOD0+LOD1, `kit_tile`/`prop` spec):
+
+**Variation (kill the repeat — same slot, different read):**
+
+| Module | slot | differs from base by |
+|---|---|---|
+| `ground_frontage_b` | ground | shutter/roller door instead of the recessed loading door; no pilaster |
+| `mid_floor_b` | mid | 3 narrow windows instead of 2 wide; a service pipe run |
+| `roof_cap_b` | roof | stepped/raised parapet variant (carries the warehouse's stepped-silhouette read into the kit) |
+
+**New typology (master has more than warehouses — §9.1):**
+
+| Module | footprint | role |
+|---|---|---|
+| `tower_mid` | 1×1, 4.5 m | neo-deco waterfront tower floor — taller/leaner read, vertical mullions, setback lip |
+| `tower_cap` | 1×1, ~2 m | tower crown — deco stepped top, distinct from the flat warehouse cap |
+| `transit_pier` | 1×1, ~6 m | elevated-transit support pier — a column the rail deck sits on |
+| `transit_deck` | 1×N span, ~1 m | a spanning rail-deck segment that tiles along its long axis over piers |
+
+`transit_deck` tiles on its LONG axis (a span, not a stack) — the first non-stacking module, so
+its seam check is horizontal-along-length, not vertical. Naming: keep the `glasswharf_dock_`
+prefix for warehouse-family, use `glasswharf_tower_` and `glasswharf_transit_` for the new
+families so the assembler can pick a family per building.
+
 ## Assembly proof (the real deliverable — beyond individual validation)
 
 Individual GLBs passing the validator is necessary but NOT sufficient. The kit only works if the

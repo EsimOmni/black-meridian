@@ -53,3 +53,33 @@ granularity fix P13 surfaced, not a bypass. Validator unit test + full prior sui
 Grid + tiles + seams + replication + FPS-margin proven. The riskiest part of a modular kit — do
 the parts actually snap and tile — is answered YES. Ready to extend the kit (toward ~12 modules)
 and, separately, to build the data-driven runtime assembler.
+
+## P13b extension — 12 modules total (accepted 2026-07-04)
+
+Added 7 more, all `pass=true` on `kit_tile`/`prop`, all on the same grid contract:
+
+| Module | LOD0 | LOD1 | footprint | family |
+|---|---:|---:|---|---|
+| ground_frontage_b | 192 | 24 | 4.5 × 4.5 | warehouse (variation: shutter door) |
+| mid_floor_b | 264 | 60 | 4.5 × 4.5 | warehouse (variation: 3 narrow windows + pipe) |
+| roof_cap_b | 132 | 60 | 4.5 × 4.5 | warehouse (variation: stepped parapet) |
+| tower_mid | 204 | 72 | 4.5 × 4.5 | **tower** (deco mullions + setback) |
+| tower_cap | 72 | 36 | 4.5 × 4.5 | **tower** (stepped deco crown) |
+| transit_pier | 84 | 56 | ~2.8 in cell | **transit** (tapered support pier) |
+| transit_deck | 84 | 36 | 4.5 × 3.0 | **transit** (spanning rail deck) |
+
+New this pass:
+
+- **A second seam axis proven.** `transit_deck` tiles along its LONG axis (a span, not a stack):
+  4 segments butt end-to-end with gap 0.000 m. First non-stacking module — horizontal-along-length
+  seam works, not just vertical.
+- **Variation kills copy-paste.** A building mixing `mid_floor` / `mid_floor_b` / `roof_cap_b`
+  reads differently floor-to-floor (`extension.png`), and the tower + transit families give the
+  block more than one typology (§9.1: not only warehouses).
+- **Two more families** under distinct name prefixes intent (`tower_`, `transit_`) so a future
+  assembler picks a family per building. (Files currently all under `glasswharf_dock/`; split into
+  family folders when the assembler lands.)
+
+Open (added): the pier→deck vertical contact reads slightly gapped in `extension.png` (the span
+seam is horizontal and flush; the pier-top bearing vs deck-underside is eyeballed, not gated) —
+tighten when the transit assembler is built. Non-blocking.

@@ -55,10 +55,9 @@ to compile, and the headless boot smoke is clean. Not introduced by P14.
 
 ## Open (carried forward, non-blocking)
 
-- **Venue cluster overlap.** Venues sit in a ~13 m spread near origin (WorldSeed `map_position`), so
-  buildings overlap in plan under the management camera. A layout/spacing concern, NOT an assembler
-  defect (Codex flagged and excluded it). Fix when the slice needs a readable street grid — widen
-  `map_position` spacing or add a plot-layout pass.
+- ~~**Venue cluster overlap.**~~ RESOLVED (follow-up commit): WorldSeed `map_position` re-laid into a
+  single wharf frontage row along x (8 m spacing, ±1.5 m z stagger, span x∈[-20,20]). Two-eye BETTER —
+  reads as a separated dockside street, no piling. Save roundtrip green (layout is save-safe data).
 - **Single-cell footprint per venue.** P13's flush-seam proof is single-column; multi-cell plots
   (wider buildings) are a later extension.
 - **No texture.** Grey proxies + faction tint only — the shared trim-sheet toplu lap is still deferred.

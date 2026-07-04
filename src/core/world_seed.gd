@@ -93,20 +93,22 @@ static func _build_glass_wharf() -> void:
 	d.faction_pressure = {COMPACT: 0.4, CORVINE: 0.3}
 
 	# Four rackets (brief §12.1) — 3 player-held, 1 rival-held to make the district contested.
+	# Layout: a single wharf frontage along x, ~9 m spacing so the 4.5 m-wide assembled buildings
+	# (P14) read as a row of dockside buildings with clear gaps between them, not a pile. Rackets
+	# and fronts interleave along the frontage; a shallow z stagger gives the row some depth.
 	d.venues = [
 		_racket(&"gw_contraband", "Cargo Terminal Contraband", BM.RacketKind.CONTRABAND_LOGISTICS,
-			COMPACT, BM.ControlState.CONTROLLED, 220, 3, Vector2(-6, -4)),
-		_racket(&"gw_protection", "Wharfside Protection", BM.RacketKind.PROTECTION,
-			COMPACT, BM.ControlState.INFLUENCED, 140, 2, Vector2(4, -6)),
-		_racket(&"gw_gaming", "Underglass Gaming Den", BM.RacketKind.UNDERGROUND_GAMING,
-			COMPACT, BM.ControlState.CONTROLLED, 180, 2, Vector2(-3, 5)),
-		_racket(&"gw_clinic", "Backstreet Clinic", BM.RacketKind.ILLEGAL_CLINIC,
-			CORVINE, BM.ControlState.CONTROLLED, 160, 2, Vector2(7, 4)),
-		# Two fronts (brief §12.1) — player-held launderers.
+			COMPACT, BM.ControlState.CONTROLLED, 220, 3, Vector2(-20, -1.5)),
 		_front(&"gw_nightclub", "The Meridian Club", BM.FrontKind.NIGHTCLUB,
-			COMPACT, 600, 0.75, 0.18, Vector2(0, -2)),
+			COMPACT, 600, 0.75, 0.18, Vector2(-12, 1.5)),
+		_racket(&"gw_protection", "Wharfside Protection", BM.RacketKind.PROTECTION,
+			COMPACT, BM.ControlState.INFLUENCED, 140, 2, Vector2(-4, -1.5)),
+		_racket(&"gw_gaming", "Underglass Gaming Den", BM.RacketKind.UNDERGROUND_GAMING,
+			COMPACT, BM.ControlState.CONTROLLED, 180, 2, Vector2(4, 1.5)),
 		_front(&"gw_freight", "Glass Wharf Freight Co.", BM.FrontKind.FREIGHT_COMPANY,
-			COMPACT, 450, 0.7, 0.2, Vector2(2, 3)),
+			COMPACT, 450, 0.7, 0.2, Vector2(12, -1.5)),
+		_racket(&"gw_clinic", "Backstreet Clinic", BM.RacketKind.ILLEGAL_CLINIC,
+			CORVINE, BM.ControlState.CONTROLLED, 160, 2, Vector2(20, 1.5)),
 	]
 
 	GameState.districts = [d]

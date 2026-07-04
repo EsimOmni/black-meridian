@@ -32,6 +32,17 @@ const SPECS := {
 		"max_materials": 2, "max_materials_hard": 4,
 		"require_lods": 1, "collision": "allowed",
 	},
+	# A single grid tile is NOT a whole building — a roof cap or floor band is
+	# legitimately short. Tiles are validated for topology/pivot/UV/LOD and are
+	# assembled into a building; the assembled result is what carries the
+	# building-height read. No lower height bound; upper bound = one floor band.
+	&"kit_tile": {
+		"height_min_m": 0.0, "height_max_m": 6.0,
+		"max_tris": 3000, "max_tris_hard": 6000,
+		"max_surfaces": 3, "max_surfaces_hard": 6,
+		"max_materials": 3, "max_materials_hard": 6,
+		"require_lods": 2, "collision": "allowed",
+	},
 	&"vehicle": {
 		"height_min_m": 0.8, "height_max_m": 5.0,
 		"max_tris": 10000, "max_tris_hard": 20000,

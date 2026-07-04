@@ -14,6 +14,12 @@ const PROBE_DURATION_TICKS := 20
 const COMMIT_THRESHOLD := 0.3            ## below this best score, the rival waits
 const TELEGRAPH_LEAD_RIVAL_TICKS := 3    ## ~30 strategic ticks — the player's response window
 
+## P07c memory weights. Grudge (0..1) is the rival's memory of the player answering the
+## retaliation it provoked; it biases the score toward the player without a roll.
+const GRUDGE_SCORE_BONUS := 0.35         ## max score lift on a player venue at grudge = 1
+const GRUDGE_SABOTAGE_LEAN := 0.15       ## grudge favours the strike (SABOTAGE) over the poke
+const GRUDGE_DECAY_PER_TICK := 0.05      ## a grudge cools each rival tick (RivalDirector applies)
+
 ## Visible weakness only (fairness rule §7.4): the rival reads venue disruption,
 ## control posture and an active inspection — never hidden GameState internals.
 static func target_weakness(venue: VenueData, district: DistrictData) -> float:
@@ -35,13 +41,18 @@ static func target_weakness(venue: VenueData, district: DistrictData) -> float:
 
 ## Personality-weighted action score. Aggression drives the strike, cunning helps
 ## both, caution makes a hot district unattractive (getting caught in the sweep).
+## P07c: grudge (0..1) adds a memory bonus on player targets — it lifts every action
+## (the rival WANTS to act against the player) and leans extra toward the strike.
 static func score_action(action: int, weakness: float, rival: FactionData, district: DistrictData) -> float:
 	var heat_penalty := district.local_heat * rival.caution
+	var grudge_bonus := rival.grudge * GRUDGE_SCORE_BONUS
 	match action:
 		BM.RivalAction.SABOTAGE:
-			return weakness * (0.6 * rival.aggression + 0.5 * rival.cunning) - heat_penalty * 0.5
+			return weakness * (0.6 * rival.aggression + 0.5 * rival.cunning) - heat_penalty * 0.5 \
+				+ grudge_bonus + rival.grudge * GRUDGE_SABOTAGE_LEAN
 		BM.RivalAction.PROBE:
-			return (0.25 + weakness * 0.3) * (0.4 + 0.6 * rival.cunning) - heat_penalty * 0.25
+			return (0.25 + weakness * 0.3) * (0.4 + 0.6 * rival.cunning) - heat_penalty * 0.25 \
+				+ grudge_bonus
 		_:
 			return -INF  # other actions are P07b+
 

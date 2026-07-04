@@ -17,6 +17,9 @@ func _on_rival_tick(_tick: int) -> void:
 			_act(faction)
 
 func _act(rival: FactionData) -> void:
+	# P07c: a grudge cools each rival tick — leave a rival alone and it forgets. Decay runs
+	# every tick regardless of intent state (the memory fades whether or not it's mid-plan).
+	rival.grudge = maxf(0.0, rival.grudge - RivalScoring.GRUDGE_DECAY_PER_TICK)
 	if rival.intent_action >= 0:
 		rival.intent_ticks_until_land -= 1
 		if rival.intent_ticks_until_land <= 0:

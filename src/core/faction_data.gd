@@ -25,3 +25,8 @@ extends Resource
 @export var intent_action: int = -1
 @export var intent_venue_id: StringName = &""
 @export var intent_ticks_until_land: int = 0  ## in rival-ticks (~10 strategic each)
+
+## P07c rival memory — grudge toward the player, 0..1. Rises when the player resolves the
+## retaliation this rival provoked (the feud closes); decays each rival tick (a grudge cools
+## if left alone). Biases RivalScoring toward the player. Deterministic, save-additive.
+@export_range(0.0, 1.0) var grudge: float = 0.0

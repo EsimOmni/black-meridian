@@ -19,6 +19,10 @@ func _ready() -> void:
 	_test_calm_world_means_no_move()
 	_test_telegraph_then_land_window()
 	_test_intent_survives_save_load()
+	_test_grudge_lifts_player_score()
+	_test_grudge_crosses_commit_threshold()
+	_test_grudge_decays_over_ticks()
+	_test_grudge_survives_save_load()
 	if _failures == 0:
 		print("[PASS] all rival AI tests passed")
 		get_tree().quit(0)
@@ -140,3 +144,52 @@ func _test_intent_survives_save_load() -> void:
 	_check(corvine.intent_action == saved_action and corvine.intent_venue_id == saved_target
 		and corvine.intent_ticks_until_land == saved_window,
 		"telegraph->land window survives save/load")
+
+## P07c: a grudge-holding rival scores a player venue higher than the same rival with no grudge.
+func _test_grudge_lifts_player_score() -> void:
+	var d := _fresh_world()
+	var target: VenueData = d.venues[0]  # a player-owned venue
+	var weakness := RivalScoring.target_weakness(target, d)
+	var rival := _corvine()
+	rival.grudge = 0.0
+	var cold := RivalScoring.score_action(BM.RivalAction.SABOTAGE, weakness, rival, d)
+	rival.grudge = 1.0
+	var hot := RivalScoring.score_action(BM.RivalAction.SABOTAGE, weakness, rival, d)
+	_check(hot > cold, "grudge lifts the SABOTAGE score on a player target (%f > %f)" % [hot, cold])
+	rival.grudge = 0.0  # leave the world clean for the next test
+
+## P07c: grudge lifts a sub-threshold target over COMMIT_THRESHOLD — memory makes the rival act
+## when a stateless rival would have waited (calm world = no move, proved above).
+func _test_grudge_crosses_commit_threshold() -> void:
+	_fresh_world()  # calm: choose_move returns {} at grudge 0 (see _test_calm_world_means_no_move)
+	var rival := _corvine()
+	rival.grudge = 0.0
+	_check(RivalScoring.choose_move(GameState.districts, GameState.player_faction_id, rival).is_empty(),
+		"grudge 0 in a calm world: rival waits")
+	rival.grudge = 1.0
+	var pick := RivalScoring.choose_move(GameState.districts, GameState.player_faction_id, rival)
+	_check(not pick.is_empty(), "a full grudge makes the rival act in a world it would otherwise ignore")
+	rival.grudge = 0.0
+
+## P07c: grudge decays each rival tick toward 0 (a grudge cools if left alone).
+func _test_grudge_decays_over_ticks() -> void:
+	_fresh_world()
+	var rival := _corvine()
+	rival.grudge = 0.5
+	_pump(10)  # one rival tick
+	_check(rival.grudge < 0.5, "grudge decays after a rival tick (got %f)" % rival.grudge)
+	var after_one := rival.grudge
+	_pump(30)  # several more rival ticks
+	_check(rival.grudge < after_one, "grudge keeps cooling over ticks (%f -> %f)" % [after_one, rival.grudge])
+	_check(rival.grudge >= 0.0, "grudge never goes negative (got %f)" % rival.grudge)
+	rival.grudge = 0.0
+
+## P07c: a mid-feud grudge survives save/load (new save state).
+func _test_grudge_survives_save_load() -> void:
+	_fresh_world()
+	_corvine().grudge = 0.42
+	_check(SaveService.save_game("grudge_test"), "save mid-feud")
+	_corvine().grudge = 0.0  # clobber to prove load restores it, not that it lingered
+	_check(SaveService.load_game("grudge_test"), "load mid-feud")
+	_check(absf(_corvine().grudge - 0.42) < 0.0001, "grudge survives save/load (got %f)" % _corvine().grudge)
+	_corvine().grudge = 0.0

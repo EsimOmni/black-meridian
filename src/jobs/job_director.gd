@@ -132,6 +132,16 @@ func _apply_and_emit(job: JobData) -> void:
 				district = d
 				break
 	JobLifecycle.apply_outcome(job, GameState.player_faction(), district, involved)
+	# P07c: the feud closes. When the player resolves the retaliation a rival provoked, that
+	# rival remembers — its grudge rises by the job's rival_suspicion (the previously-orphaned
+	# outcome axis). Single writer of grudge upward; RivalDirector decays it. The provocateur is
+	# encoded in the generated id (gen@retaliation@<venue>@<rival>@<tick>).
+	if job.origin == BM.JobOrigin.RIVAL_PROVOCATION:
+		var suspicion: float = job.outcome.get(&"rival_suspicion", 0.0)
+		if suspicion > 0.0:
+			var rival := _provocateur_of(job)
+			if rival:
+				rival.grudge = clampf(rival.grudge + suspicion, 0.0, 1.0)
 	# P08 trigger 2 (schedule side): a heavy delayed_consequence finally spawns the
 	# follow-up problem apply_outcome had been holding — the loop never simply empties
 	# (brief §5.1: "a new problem is created rather than every problem disappearing").
@@ -146,3 +156,11 @@ func _find_venue(venue_id: StringName) -> VenueData:
 			if v.id == venue_id:
 				return v
 	return null
+
+## P07c: the rival that provoked a RIVAL_PROVOCATION job, from its generated id
+## (gen@retaliation@<venue>@<rival>@<tick>). Returns null for authored/unparseable ids.
+func _provocateur_of(job: JobData) -> FactionData:
+	var parts := String(job.id).split("@")
+	if parts.size() != 5 or parts[1] != "retaliation":
+		return null
+	return GameState.get_faction(StringName(parts[3]))

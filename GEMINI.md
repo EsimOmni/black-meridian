@@ -170,6 +170,40 @@ Subscription discipline:
      base-center pivot, trim-sheet UV, LOD0/LOD1, collider) → `GLBValidator` → Godot test.
 - Total targeted external spend for the 6-month slice: ~$55–90 (Sketchfab free tier adds $0).
 
+## Agent roles — who does what (updated 2026-07-04)
+
+Three agents work this repo. Roles are not interchangeable — pick by task shape, not availability.
+
+- **Claude (Fable 5, `claude` CLI) — the architect / head.** Owns brief-critical design, IP §2
+  judgment, splat-vs-mesh kill call, deterministic-sim invariants, cross-slice decisions, and
+  anything that changes the game's shape. Reads this file + the brief PDF as scripture.
+  Coordinates the task queue at `docs/tasks/gemini/` — writes briefs into `inbox/`, verifies
+  reports from `done/` before advancing.
+- **Gemini (3.5 Flash default, Antigravity in-workspace) — the operator / hands.** Executes
+  well-scoped briefs from `docs/tasks/gemini/inbox/`, runs PowerShell/MCP tools, routes work
+  to Codex/Claude via the `claude-bridge` skill (source at
+  `docs/tasks/gemini/skills/claude-bridge/SKILL.md`; Gemini installs it as an Antigravity
+  `/claude` workflow). Default = Flash for everything. Escalate to **Gemini 3.1 Pro** only for:
+  (a) full brief PDF cross-section synthesis, (b) subtle determinism-bug diagnosis where the
+  cause isn't obvious, (c) after Flash failed the same brief twice, (d) a direct hard
+  analytical question aimed at Gemini itself (not a routing call). Everything else = Flash.
+- **Codex (`codex exec`, ChatGPT-billed) — the little brother.** Mechanical multi-file edits,
+  batch vision triage (render folder review, frame drift check), "where is X" searches,
+  BlenderMCP (port 9876) and godot-ai MCP driving. Called by either Claude or Gemini for
+  token-heavy grunt work — never for architectural decisions. See the global `CLAUDE.md`
+  vision/QA delegate doctrine for command shapes and hard-won gotchas.
+
+### The bridge protocol (`@gemini:` prefix)
+
+Cem talks to Gemini through Antigravity; Gemini talks to Claude via
+`claude -r <session-id> "@gemini: ..."` — always `-r` (specific session), never `-c` (last
+session, drifts across windows). When you (Claude) see `@gemini:` at the start of a query,
+the message is coming through the operator bridge — before answering, read
+`docs/tasks/gemini/QUEUE.md` for the active pointer and `docs/tasks/gemini/README.md` for the
+full loop mechanics + brief/report schemas. The queue is authoritative; don't answer from
+memory. The coordinator-session ID that owns the queue is recorded at the top of `QUEUE.md`;
+if it goes stale, update it there.
+
 ## Conventions
 
 - GDScript, typed where practical. `class_name` for reusable data/util scripts; autoloads stay
@@ -260,3 +294,75 @@ claude -p "implement the CinematicWorldProvider interface per docs/prompts/P01" 
 Architectural decisions, IP-boundary judgment (brief §2), the splat-vs-mesh kill call, anything needing
 full conversation context, or work so small the round-trip costs more than doing it yourself. Delegate
 tasks, not decisions.
+
+### Interaction Protocol with Claude CLI
+
+When communicating with Claude Code via CLI commands:
+
+- **Prefix with `@gemini:`**: Every message you send Claude starts with `@gemini:`. That prefix tells Claude the query is coming through the operator bridge and to read `docs/tasks/gemini/QUEUE.md` before answering.
+- **Use `-r <session-id>`, NOT `-c`** (updated 2026-07-04). `-c` grabs "the last session", which drifts across Antigravity windows and other Claude launches — the query lands in the wrong chat. Use `-r <full-session-id>` to hit the specific coordinator chat Cem picked. The `claude-bridge` skill (`docs/tasks/gemini/skills/claude-bridge/SKILL.md`) does this for you: it lists the JSONL session files under `C:\Users\User\.claude\projects\d--black-meridian\` sorted by last-modified, Cem picks one, you send with `-r <that-id>`. The coordinator-session ID is also recorded at the top of `QUEUE.md`.
+- **Requesting the Next Task**: Once Cem picks the chat (via `/claude` slash or the skill), send `claude -r <id> "@gemini: bir sonraki taskım ne?"` — Claude reads the queue and points you at the active `QUEUED` brief in `inbox/`.
+- **`-c` fallback**: only if you know for a fact only one Claude session for this repo has been touched recently. Prefer `-r`. Always.
+
+### The shared task queue — `docs/tasks/gemini/`
+
+The delegation loop is **file-based and asynchronous**. Both you and Claude read/write this folder:
+
+```text
+docs/tasks/gemini/
+  QUEUE.md                  ← the ledger (one row/task, status, links, Active pointer)
+  README.md                 ← the full protocol + brief/report schemas — read it once
+  inbox/TASK-00X.md         ← Claude writes the brief (task spec) here
+  done/TASK-00X-report.md   ← YOU write the outcome report here when finished
+```
+
+Your side of the loop:
+
+1. `claude -c "@gemini: taskım ne?"` → Claude points you at the active `QUEUED` brief in `inbox/`.
+2. Read the brief. Flip its `QUEUE.md` row to `IN_PROGRESS`. Do the work per its **Verify** steps —
+   stay in scope (brief §12 gates, minimal footprint). Sub-delegate mechanical/vision parts to Codex
+   only if the brief's **Delegation hint** allows it.
+3. Write `done/TASK-00X-report.md` per the report schema (Outcome / What changed / **Verify result with
+   real output, not claims** / Deviations / Follow-ups). Flip the row to `DONE`.
+4. `claude -r <coordinator-id> "@gemini: TASK-00X bitti, sıradaki?"` → Claude verifies your report
+   independently, then queues the next brief. If it doesn't hold up, Claude re-opens the task with a
+   correction — expect that.
+
+### Model routing — Flash vs Pro FOR THIS REPO (updated 2026-07-04)
+
+You (Gemini) have two tiers: **3.5 Flash** and **3.1 Pro**. In this repo your job is *operator*, not
+*architect* — the mimari kararları Claude/Cem verir. So **Flash is the default for ~95% of what you
+do here.** Do not silently step up to Pro on Flash-shaped work — it costs more and doesn't help.
+
+**Stay on Flash for (this is nearly everything you do here):**
+
+- Running the `claude-bridge` skill (listing sessions, routing via `-r <id>`, sending prefixed messages).
+- Executing a brief from `docs/tasks/gemini/inbox/` when it's well-scoped (a single-file edit, a new
+  test, a small script, a well-defined GDScript slice like P08b-style additions).
+- Flipping `QUEUE.md` rows, writing reports into `done/`.
+- PowerShell shell work — `codex exec` invocations, dosya okuma/yazma, `claude -r ...` calls.
+- MCP tool orchestration — BlenderMCP (port 9876), godot-ai MCP, chrome-devtools MCP.
+- Reading a headless Godot log/grep result and declaring "clean" or "not clean".
+- Deciding whether to sub-delegate a chunk to Codex — the routing call itself is Flash.
+- Concept-image / render-folder triage → **actually delegate this to Codex** (ChatGPT-billed, better
+  vision for batch), don't burn Gemini tokens on it.
+- Mechanical multi-file renames / format fixes → **also delegate to Codex** by default.
+
+**Escalate to Pro ONLY in these four cases:**
+
+1. **Full brief PDF cross-section synthesis** — e.g. Cem asks "does §7 economy contradict §12 gates?"
+   Long-context reasoning, Pro's home turf (128k retrieval Pro 84.9 vs Flash 77.3).
+2. **Subtle determinism-bug diagnosis** — sim gives different results on the same seed and the cause
+   isn't obvious after one probe. Pro **for the diagnosis**; drop back to Flash for the fix once the
+   root cause is identified.
+3. **Flash failed the same brief twice** — hard eskalasyon kuralı; don't loop Flash a third time on
+   the same problem, escalate.
+4. **A direct hard analytical question aimed at you** — Cem asks Gemini itself for an opinion on
+   something like "is the P06b evidence chain math correct, can the chain break?" This is analytical
+   depth, not a routing call.
+
+**Never Pro for**: architectural decisions (those go to Claude), IP §2 judgment, splat-vs-mesh kill
+call, or anything Cem/Claude has already decided. Pro is for depth on your own analytical work,
+not for second-guessing the architect.
+
+One-line mental model: **you are the hands, Flash is your default speed. Claude is the head.**

@@ -168,6 +168,40 @@ Subscription discipline:
      base-center pivot, trim-sheet UV, LOD0/LOD1, collider) → `GLBValidator` → Godot test.
 - Total targeted external spend for the 6-month slice: ~$55–90 (Sketchfab free tier adds $0).
 
+## Agent roles — who does what (updated 2026-07-04)
+
+Three agents work this repo. Roles are not interchangeable — pick by task shape, not availability.
+
+- **Claude (Fable 5, `claude` CLI) — the architect / head.** Owns brief-critical design, IP §2
+  judgment, splat-vs-mesh kill call, deterministic-sim invariants, cross-slice decisions, and
+  anything that changes the game's shape. Reads this file + the brief PDF as scripture.
+  Coordinates the task queue at `docs/tasks/gemini/` — writes briefs into `inbox/`, verifies
+  reports from `done/` before advancing.
+- **Gemini (3.5 Flash default, Antigravity in-workspace) — the operator / hands.** Executes
+  well-scoped briefs from `docs/tasks/gemini/inbox/`, runs PowerShell/MCP tools, routes work
+  to Codex/Claude via the `claude-bridge` skill (source at
+  `docs/tasks/gemini/skills/claude-bridge/SKILL.md`; Gemini installs it as an Antigravity
+  `/claude` workflow). Default = Flash for everything. Escalate to **Gemini 3.1 Pro** only for:
+  (a) full brief PDF cross-section synthesis, (b) subtle determinism-bug diagnosis where the
+  cause isn't obvious, (c) after Flash failed the same brief twice, (d) a direct hard
+  analytical question aimed at Gemini itself (not a routing call). Everything else = Flash.
+- **Codex (`codex exec`, ChatGPT-billed) — the little brother.** Mechanical multi-file edits,
+  batch vision triage (render folder review, frame drift check), "where is X" searches,
+  BlenderMCP (port 9876) and godot-ai MCP driving. Called by either Claude or Gemini for
+  token-heavy grunt work — never for architectural decisions. See the global `CLAUDE.md`
+  vision/QA delegate doctrine for command shapes and hard-won gotchas.
+
+### The bridge protocol (`@gemini:` prefix)
+
+Cem talks to Gemini through Antigravity; Gemini talks to Claude via
+`claude -r <session-id> "@gemini: ..."` — always `-r` (specific session), never `-c` (last
+session, drifts across windows). When you (Claude) see `@gemini:` at the start of a query,
+the message is coming through the operator bridge — before answering, read
+`docs/tasks/gemini/QUEUE.md` for the active pointer and `docs/tasks/gemini/README.md` for the
+full loop mechanics + brief/report schemas. The queue is authoritative; don't answer from
+memory. The coordinator-session ID that owns the queue is recorded at the top of `QUEUE.md`;
+if it goes stale, update it there.
+
 ## Conventions
 
 - GDScript, typed where practical. `class_name` for reusable data/util scripts; autoloads stay

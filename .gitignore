@@ -23,6 +23,12 @@ assets/splat/**/*.ply
 assets/splat/**/*.spz
 assets/splat/**/*.glb
 
+# godot-ai MCP editor plugin — third-party tool, self-updates on launch (churns
+# ~220 files every version bump). Not game code; keep it out of the tree. The
+# working copy stays on disk; reinstall the plugin on a fresh clone. (gdgs is
+# NOT ignored — the splat plugin carries our Godot-4.7 push-constant patch.)
+addons/godot_ai/
+
 # OS / editor cruft
 .DS_Store
 Thumbs.db

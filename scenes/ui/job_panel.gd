@@ -1,7 +1,10 @@
 extends CanvasLayer
 ## Minimal fixer-job panel for the Month-1 skeleton (P03). Greybox-grade, built in code
-## like the HUD; the real UI theme lands in Month 5 (P11/P19). Renders the active job by
-## lifecycle stage and forwards choices to JobDirector. Reads state; never owns it.
+## like the HUD; first-pass theme applied Month 2 (P11, assets/ui/theme.tres), final UI
+## polish lands in P19. Renders the active job by lifecycle stage and forwards choices
+## to JobDirector. Reads state; never owns it.
+
+const UI_THEME := preload("res://assets/ui/theme.tres")
 
 var _panel: PanelContainer
 var _vb: VBoxContainer
@@ -9,6 +12,7 @@ var _job: JobData
 
 func _ready() -> void:
 	_panel = PanelContainer.new()
+	_panel.theme = UI_THEME  # theme inheritance: every child widget styles from here
 	_panel.anchor_left = 1.0
 	_panel.anchor_right = 1.0
 	_panel.offset_left = -396
@@ -84,7 +88,7 @@ func _render_resolved() -> void:
 			_text("  " + _dimension_label(dim, v))
 	# Since P08 several jobs can be live at once — dismissing a resolved one falls back
 	# to the next unresolved job instead of hiding an in-flight problem (a proper job
-	# list/switcher is P11 UI work).
+	# list/switcher is P19 UI work).
 	_button("Dismiss", func():
 		_job = null
 		for j in JobDirector.active_jobs:
@@ -108,14 +112,14 @@ func _dimension_label(dim: StringName, v: float) -> String:
 func _title(text: String) -> void:
 	var l := Label.new()
 	l.text = text
-	l.add_theme_font_size_override("font_size", 15)
+	l.theme_type_variation = &"TitleLabel"
 	_vb.add_child(l)
 
 func _text(text: String) -> void:
 	var l := Label.new()
 	l.text = text
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l.add_theme_font_size_override("font_size", 12)
+	l.theme_type_variation = &"BodyLabel"
 	_vb.add_child(l)
 
 func _button(label: String, on_pressed: Callable, tooltip: String = "") -> void:

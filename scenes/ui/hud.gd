@@ -1,7 +1,10 @@
 extends CanvasLayer
 ## Minimal management HUD for the Month-1 greybox loop. Shows the player faction's
 ## dirty/clean cash, district heat, speed, and the selected venue. Built entirely in
-## code so the slice runs without hand-authored UI scenes (real UI theme comes in Month 5).
+## code so the slice runs without hand-authored UI scenes. First-pass theme is Month 2
+## (P11, assets/ui/theme.tres — generated from Palette); final UI polish is P19.
+
+const UI_THEME := preload("res://assets/ui/theme.tres")
 
 var _dirty_label: Label
 var _clean_label: Label
@@ -31,6 +34,7 @@ var _pressure_btn: Button
 
 func _ready() -> void:
 	var panel := PanelContainer.new()
+	panel.theme = UI_THEME  # theme inheritance: every child widget styles from here
 	panel.anchor_left = 0.0
 	panel.anchor_top = 0.0
 	panel.offset_left = 16
@@ -43,7 +47,7 @@ func _ready() -> void:
 
 	var title := Label.new()
 	title.text = "OMNI: BLACK MERIDIAN — Glass Wharf"
-	title.add_theme_font_size_override("font_size", 16)
+	title.theme_type_variation = &"TitleLabel"
 	vb.add_child(title)
 
 	_cycle_label = _row(vb)
@@ -58,25 +62,25 @@ func _ready() -> void:
 	_income_label = _row(vb)
 	_launder_label = _row(vb)
 	_overflow_label = _row(vb)
-	_overflow_label.modulate = Color(0.95, 0.45, 0.35)  # overflow reads as danger
+	_overflow_label.modulate = Palette.DANGER  # overflow reads as danger
 	_inspection_label = _row(vb)
-	_inspection_label.modulate = Color(0.95, 0.45, 0.35)
+	_inspection_label.modulate = Palette.DANGER
 	_inspection_label.visible = false
 	_rival_label = _row(vb)
-	_rival_label.modulate = Color(0.62, 0.72, 0.95)  # rival intent reads petrol-blue (Corvine accent)
+	_rival_label.modulate = Palette.RIVAL_ACCENT  # rival intent reads petrol (Corvine accent)
 	_rival_label.visible = false
 	# The Reckoning framing beat (P09): what this cycle settled — shown only in RECKONING.
 	_reckoning_label = _row(vb)
 	_reckoning_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_reckoning_label.custom_minimum_size = Vector2(300, 0)
-	_reckoning_label.modulate = Color(0.85, 0.78, 0.55)  # ledger amber
+	_reckoning_label.modulate = Palette.LEDGER_AMBER
 	_reckoning_label.visible = false
 	# The betrayal tells (P10, brief §7.6): visible only while an intent is open —
 	# the window in which the crisis is still preventable.
 	_betrayal_label = _row(vb)
 	_betrayal_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_betrayal_label.custom_minimum_size = Vector2(300, 0)
-	_betrayal_label.modulate = Color(0.88, 0.48, 0.58)  # bruised crimson — loyalty danger
+	_betrayal_label.modulate = Palette.BETRAYAL_CRIMSON
 	_betrayal_label.visible = false
 	_reassure_btn = Button.new()
 	_reassure_btn.visible = false
@@ -96,8 +100,7 @@ func _ready() -> void:
 	vb.add_child(_venue_actions)
 
 	_hint_label = Label.new()
-	_hint_label.add_theme_font_size_override("font_size", 11)
-	_hint_label.modulate = Color(0.7, 0.74, 0.8)
+	_hint_label.theme_type_variation = &"HintLabel"
 	_hint_label.text = "SPACE pause/resume   X cycle speed   WASD pan   wheel zoom   click venue   F9 save   L load"
 	vb.add_child(_hint_label)
 
@@ -261,9 +264,11 @@ func _refresh_venue() -> void:
 	if _selected.type == BM.VenueType.RACKET:
 		lines += "\nBase yield: %d · Staff: %d" % [_selected.base_yield, _selected.operational_staff]
 		if _selected.disruption > 0.0:
-			lines += "\n[color=#f2b06a]Disrupted: -%d%% income (heat)[/color]" % int(_selected.disruption * 100.0)
+			lines += "\n[color=#%s]Disrupted: -%d%% income (heat)[/color]" % [
+				Palette.SODIUM_AMBER.to_html(false), int(_selected.disruption * 100.0)]
 		if _selected.paused:
-			lines += "\n[color=#f2b06a]PAUSED — earning nothing, creating no exposure[/color]"
+			lines += "\n[color=#%s]PAUSED — earning nothing, creating no exposure[/color]" % \
+				Palette.SODIUM_AMBER.to_html(false)
 	elif _selected.type == BM.VenueType.FRONT:
 		lines += "\nLaundering cap: %d/%d · Efficiency: %d%% · Op cost: %d%%\nClean output: %d/tick" % [
 			_selected.laundering_capacity, EconomyService.FRONT_CAPACITY_MAX,

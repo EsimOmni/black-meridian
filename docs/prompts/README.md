@@ -43,7 +43,7 @@ Claude Code (or Codex) and it knows exactly what to build, what's in scope, and 
 - ✅ [**P08**](P08-job-director.md) — JobDirector: systemic fixer jobs generated from sim state — JobTemplates layer + pure JobGenerator, two deterministic triggers (rival sabotage → retaliation, delayed_consequence → follow-up), cadence gate ≤3 (done 2026-07-03; remaining 8 origins + template variety → P08b)
 - ✅ [**P09**](P09-night-cycle.md) — Night Cycle phase machine: deterministic tick budgets (4+18+6+2 min = 30 min/cycle), Council gates new rival telegraphs, HUD phase clock + Reckoning summary, per-tick settlement untouched (done 2026-07-03; rich phase content → later slices)
 - ✅ [**P10**](P10-loyalty-betrayal.md) — RelationshipService: the Opportunity term modeled from visible sim state, two-gate betrayal (pressure AND opportunity), telegraph→defuse/land window with tells + reassure verb, one bounded landed effect (venue defects to CONTESTED) (done 2026-07-03; hidden fields + multi-lieutenant → P10b, betrayal cinematic → Month 4)
-- ⬜ [**P11**](P11-first-ui-month2-gate.md) — First-pass UI theme + month-2 gate (fun with cubes)
+- 🔨 [**P11**](P11-first-ui-month2-gate.md) — First-pass UI theme + month-2 gate — **theme DONE** (Palette + generated `assets/ui/theme.tres` via `tools/build_theme.gd`, both greybox panels themed, stale "Month 5" comments fixed; job list/switcher → P19); the section-B cycle-integrity gate note is produced separately
 
 ### Month 3 — Art pipeline & character proof
 - ⬜ [**P12**](P12-building-pipeline.md) — Glass Wharf art-direction master + modular building kit pipeline (Blender→GLB→Godot)

@@ -7,9 +7,11 @@ extends Camera3D
 @export var edge_pan_enabled: bool = false  ## off by default; WASD is the primary control
 
 ## Zoom is height above the ground plane, clamped to discrete-ish bands (brief §9.2 limited zoom).
-@export var zoom_min: float = 10.0
-@export var zoom_max: float = 34.0
-@export var zoom_step: float = 3.0
+## Bands raised for P14: assembled buildings reach ~31 m (6 floors), so the top-down read must
+## clear them — the old 10–34 range was sized for the 2 m greybox boxes.
+@export var zoom_min: float = 18.0
+@export var zoom_max: float = 50.0
+@export var zoom_step: float = 4.0
 
 var _target_height: float
 var _pan_origin := Vector3.ZERO
@@ -18,7 +20,7 @@ var _dragging := false
 func _ready() -> void:
 	# 40° downward, looking toward -Z+down. Fixed pitch (no rotation in the slice).
 	rotation_degrees = Vector3(-50.0, 0.0, 0.0)  # -50 pitch => ~40° down from horizontal read
-	position.y = clampf(position.y if position.y > 0.0 else 22.0, zoom_min, zoom_max)
+	position.y = clampf(position.y if position.y > 0.0 else 38.0, zoom_min, zoom_max)
 	_target_height = position.y
 	_pan_origin = Vector3(position.x, 0.0, position.z)
 

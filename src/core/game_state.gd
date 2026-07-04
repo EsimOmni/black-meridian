@@ -45,6 +45,13 @@ func get_character(id: StringName) -> CharacterData:
 			return c
 	return null
 
+## The district a venue belongs to (venues live in district.venues) — null if unplaced.
+func get_district_of_venue(venue: VenueData) -> DistrictData:
+	for d in districts:
+		if venue in d.venues:
+			return d
+	return null
+
 func player_faction() -> FactionData:
 	return get_faction(player_faction_id)
 

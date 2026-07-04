@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3 uid="uid://bmcapturep14"]
+
+[ext_resource type="PackedScene" uid="uid://bmbootstrap01" path="res://scenes/bootstrap/bootstrap.tscn" id="1_boot"]
+[ext_resource type="Script" path="res://tools/validation/capture_node.gd" id="2_cap"]
+
+[node name="CaptureRoot" type="Node"]
+
+[node name="Bootstrap" parent="." instance=ExtResource("1_boot")]
+
+[node name="Capture" type="Node" parent="."]
+script = ExtResource("2_cap")
+out_path = "user://p14_city.png"

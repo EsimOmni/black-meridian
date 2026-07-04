@@ -55,7 +55,7 @@ func _build_camera() -> void:
 	var cam := Camera3D.new()
 	cam.name = "ManagementCamera"
 	cam.set_script(CameraScript)
-	cam.position = Vector3(0, 22, 14)
+	cam.position = Vector3(0, 38, 26)  # P14: raised to clear ~31 m assembled buildings
 	cam.current = true
 	add_child(cam)
 

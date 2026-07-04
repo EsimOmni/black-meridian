@@ -37,33 +37,45 @@ func rebuild() -> void:
 			_markers.add_child(_make_marker(venue))
 
 func _make_marker(venue: VenueData) -> StaticBody3D:
+	# P14: the venue's strategic state assembles a kit building (brief §1 — the city shows the
+	# state). Form is a pure function of district + venue; GameState stays authoritative.
 	var body := StaticBody3D.new()
 	body.name = String(venue.id)
-	body.position = Vector3(venue.map_position.x, VENUE_HEIGHT * 0.5, venue.map_position.y)
+	var district := GameState.get_district_of_venue(venue)
+	var plan := KitAssembler.plan_building(venue, district)
+	var height := KitAssembler.building_height(plan)
+	body.position = Vector3(venue.map_position.x, 0.0, venue.map_position.y)
 
-	var mesh := MeshInstance3D.new()
-	var box := BoxMesh.new()
-	box.size = Vector3(2.2, VENUE_HEIGHT, 2.2)
-	mesh.mesh = box
-	var mat := StandardMaterial3D.new()
+	var building := KitAssembler.assemble(plan)
+	# Tint the whole building by owner faction accent so player vs rival reads at a glance
+	# (brief §9.1) — applied as a per-instance override on every mesh in the stack.
 	var base := RACKET_COLOR if venue.type == BM.VenueType.RACKET else FRONT_COLOR
-	# Tint by owner faction accent so player vs rival reads at a glance (brief §9.1).
 	var faction := GameState.get_faction(venue.owner_faction)
 	if faction:
 		base = base.lerp(faction.accent_color, 0.45)
-	mat.albedo_color = base
-	mesh.material_override = mat
-	body.add_child(mesh)
+	_tint_meshes(building, base)
+	body.add_child(building)
 
-	var col := CollisionShape3D.new()
 	var shape := BoxShape3D.new()
-	shape.size = box.size
+	shape.size = Vector3(KitAssembler.CELL, height, KitAssembler.CELL)
+	var col := CollisionShape3D.new()
 	col.shape = shape
+	col.position = Vector3(0.0, height * 0.5, 0.0)
 	body.add_child(col)
 
 	body.input_ray_pickable = true
 	body.input_event.connect(_on_marker_input.bind(venue))
 	return body
+
+## Apply a tint as a per-instance material override on every MeshInstance3D in the building.
+func _tint_meshes(node: Node, color: Color) -> void:
+	if node is MeshInstance3D:
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = color
+		mat.roughness = 0.6
+		(node as MeshInstance3D).material_override = mat
+	for child in node.get_children():
+		_tint_meshes(child, color)
 
 func _on_marker_input(_camera: Node, event: InputEvent, _pos: Vector3, _normal: Vector3,
 		_idx: int, venue: VenueData) -> void:

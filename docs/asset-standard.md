@@ -20,7 +20,7 @@ Canonical pattern: `<district>_<kit>_<part>_LODn`, lowercase snake_case.
 
 Under `/assets/<category>/…` (categories already scaffolded):
 
-```
+```text
 /assets
   characters/   rigged character bases + animation
   city/         buildings + modular kits, grouped per kit: city/<district>_<kit>/
@@ -60,7 +60,7 @@ Soft cap = warn, hard cap = fail. Mirrors `GLBValidator.SPECS` — edit there fi
 
 ```gdscript
 var report := GLBValidator.validate_file("res://assets/city/glasswharf_dock/warehouse_a.glb",
-	GLBValidator.spec_for(&"building"))
+    GLBValidator.spec_for(&"building"))
 # report = { "pass": bool, "checks": [ {name, level: "pass"|"warn"|"fail", detail}, … ] }
 ```
 

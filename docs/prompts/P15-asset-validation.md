@@ -29,15 +29,18 @@ reinventing the pipeline each asset.*
 ## Confirmed Godot 4.7 API (use these exact names — verified, do not invent)
 
 Runtime GLB load (headless-safe, bypasses the editor `.import` pipeline — this is the point):
+
 ```gdscript
 var doc := GLTFDocument.new()
 var state := GLTFState.new()
 var err := doc.append_from_file(abs_path, state)   # returns Error int, OK == 0
 var root := doc.generate_scene(state)              # returns a detached Node3D; walk it directly
 ```
+
 Walk `root` recursively via `get_children()`, test `node is MeshInstance3D`, guard `mi.mesh != null`.
 
 Per `MeshInstance3D.mesh` (an `ArrayMesh`, but use the `Mesh` base API):
+
 - surfaces / draw-call proxy: `mesh.get_surface_count() -> int` (one glTF surface = one draw call)
 - local bounds: `mesh.get_aabb() -> AABB` → `.position`, `.size`, `.get_center()`
 - world bounds (if needed): `mi.global_transform * mi.get_aabb()`
@@ -60,6 +63,7 @@ convention; document it. Never claim to read importer-generated LODs.
 ## Scope
 
 ### 1. `GLBValidator` static checks — return a structured report
+
 `validate_scene(root: Node3D, spec: Dictionary) -> Dictionary` producing per-asset:
 `{ pass: bool, checks: [ {name, level: "pass"|"warn"|"fail", detail} ] }`. Checks:
 
@@ -78,8 +82,10 @@ convention; document it. Never claim to read importer-generated LODs.
 `pass` is `true` iff no check is `fail`. Warns never block.
 
 ### 2. Deterministic, file-free fixtures — the proof
+
 Because the repo has **zero GLBs** and P15 must not depend on the master or any hand-made asset, build
 fixtures **in code** as `ArrayMesh` scenes:
+
 - **`_make_clean_building()`** — a box mesh with correct meters scale, normals + UVs present, pivot at
   base-center, one material, named with a `_LOD0` child (+ a cheaper `_LOD1`). Must **pass**.
 - **`_make_broken_building()`** — deliberately wrong: 500× scale, a surface with normals stripped
@@ -90,31 +96,37 @@ no external files. (Optional: also round-trip one through `GLTFDocument` save→
 the `validate_file` wrapper, but the pure-core test is the gate.)
 
 ### 3. Asset standard doc
+
 `docs/asset-standard.md`: canonical naming (`<district>_<kit>_<part>_LODn`), the `/assets/<category>/…`
 layout (categories already scaffolded: characters, city, props, vehicles, splat, ui, audio), the
 meters-scale + base-center-pivot + trim-sheet-UV rules, per-category `spec` budgets, and the license log
 pointer (`assets/ATTRIBUTIONS.md`, per CLAUDE.md Sketchfab rules — CC0/CC-BY ok, CC-BY-NC forbidden).
 
 ### 4. Test harness
+
 `tests/unit/test_glb_validator.tscn` + `.gd` runner (a `.tscn`, NOT `-s script.gd` — the `.tscn` runner
 is the established pattern so autoloads load; this validator needs none but keep the convention). Runner
 asserts clean-fixture `pass == true` and broken-fixture has the expected `fail` set; exit 0 = pass.
 
 ## Out of scope (do NOT do here)
+
 - No actual kit geometry (that is P12b). No editor plugin UI (the static tool + runner is the gate; an
   editor button is P19 polish at most). No importer-`.import` pipeline changes. No download/fetch of any
   asset. Do not touch `src/` sim or save code.
 
 ## Verify
+
 ```sh
 GODOT="D:/Godot/Godot_v4.7-stable_win64.exe"
 "$GODOT" --headless --path . --import
 "$GODOT" --headless --path . tests/unit/test_glb_validator.tscn        # clean passes, broken fails: exit 0
 "$GODOT" --headless --path . --quit-after 120 2>&1 | grep -iE "SCRIPT ERROR|ERROR:|Nonexistent"  # empty = clean
 ```
+
 Full prior suite (9 unit + 2 integration) must stay green — P15 adds, never regresses.
 
 ## Done when
+
 - `GLBValidator` grades the code-built clean fixture `pass` and the broken fixture `fail` (≥3 fails),
   with a per-check report.
 - `docs/asset-standard.md` documents naming + layout + per-category specs + license rule.

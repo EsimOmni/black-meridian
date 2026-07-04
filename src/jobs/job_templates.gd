@@ -79,6 +79,9 @@ static func intercepted_shipment() -> JobData:
 ## "Answer in Kind" — generated when a rival SABOTAGE lands on a player venue (P08
 ## trigger 1). The rival's move is the problem; the player architects the answer.
 ## Targeting (id, venue_id) is stamped by JobGenerator; text takes the display names.
+## P06d balance invariant (test_evidence guards it): the loudest route must net
+## >= +0.25 evidence (a visible reprisal leaves a trail — the feud feeds the police
+## line) while the quietest stays <= -0.3 (a careful answer keeps you clean).
 static func retaliation(venue_name: String, rival_name: String) -> JobData:
 	var job := JobData.new()
 	job.title = "Answer in Kind"
@@ -105,7 +108,7 @@ static func retaliation(venue_name: String, rival_name: String) -> JobData:
 	job.approaches = [
 		JobChoiceData.make(&"appr_mirror", "Mirror the damage",
 			"Their nearest operation loses exactly what yours did. Symmetry is the message.",
-			{&"objective_achieved": 0.7, &"public_fear": 0.2, &"evidence_generated": 0.1,
+			{&"objective_achieved": 0.7, &"public_fear": 0.2, &"evidence_generated": 0.35,
 				&"rival_suspicion": 0.2}),
 		JobChoiceData.make(&"appr_feed_inspectors", "Feed them to the inspectors",
 			"A tidy dossier on the crew lands on an honest desk. The law does your hitting.",
@@ -122,7 +125,7 @@ static func retaliation(venue_name: String, rival_name: String) -> JobData:
 			{&"evidence_generated": -0.3}),
 		JobChoiceData.make(&"cover_flaunt", "Let the street know",
 			"No names, no proof — but everyone hears who answered and how fast.",
-			{&"evidence_generated": -0.1, &"public_fear": 0.3, &"delayed_consequence": 0.2}),
+			{&"evidence_generated": -0.05, &"public_fear": 0.3, &"delayed_consequence": 0.2}),
 		JobChoiceData.make(&"cover_broker", "Whisper a truce price",
 			"A back-channel note: this is what the next one costs. Signed by no one.",
 			{&"evidence_generated": -0.2, &"relationship_change": 0.2, &"rival_suspicion": 0.1}),

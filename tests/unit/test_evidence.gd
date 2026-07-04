@@ -17,6 +17,9 @@ func _ready() -> void:
 	_test_cases_pin_the_inspection()
 	_test_passive_erosion_hits_strongest()
 	_test_burn_removes_targeted_case()
+	_test_retaliation_evidence_invariants()
+	_test_loud_retaliation_bootstraps_a_case()
+	_test_quiet_retaliation_stays_clean()
 	_test_cases_survive_save_load()
 	if _failures == 0:
 		print("[PASS] all evidence chain tests passed")
@@ -183,6 +186,81 @@ func _test_burn_removes_targeted_case() -> void:
 	JobDirector.choose_coverup(botch.id, &"cover_walk")    # nothing suppressed -> net +0.2
 	_check(EvidenceMath.find_case(d, target2.id) != null,
 		"a botched burn leaves the targeted case standing")
+
+## Pick the choice whose evidence_generated effect is extremal — read off the REAL
+## effects dicts (the full-cycle-probe discipline), never a hardcoded "which id is loud".
+## Ties break to the first authored option (deterministic).
+func _extremal_by_evidence(choices: Array, want_max: bool) -> JobChoiceData:
+	var best: JobChoiceData = null
+	var best_ev := 0.0
+	for c in choices:
+		var ev: float = float(c.effects.get(&"evidence_generated", 0.0))
+		if best == null or (want_max and ev > best_ev) or (not want_max and ev < best_ev):
+			best = c
+			best_ev = ev
+	return best
+
+## Drive a REAL generated retaliation job (JobGenerator targeting, real venue, real
+## rival) to RESOLVED through the shipped JobDirector path — begin -> approach ->
+## coverup -> apply_outcome. No hand-built outcome dict anywhere (P06d: hand-injected
+## outcomes are exactly what masked the bootstrap gap).
+func _run_retaliation(d: DistrictData, loud: bool, tick: int) -> JobData:
+	var venue: VenueData = null
+	for v in d.venues:
+		if v.owner_faction == GameState.player_faction_id:
+			venue = v
+			break
+	var job := JobGenerator.retaliation_job(venue, GameState.get_faction(&"corvine"), tick)
+	JobDirector.offer(job)
+	JobDirector.begin(job.id)
+	JobDirector.choose_approach(job.id, _extremal_by_evidence(job.approaches, loud).id)
+	JobDirector.choose_coverup(job.id, _extremal_by_evidence(job.coverups, loud).id)
+	return job
+
+## P06d invariants, asserted directly off the template so a future edit that re-breaks
+## the bootstrap fails here: the loudest lifecycle nets >= +0.25, the quietest <= -0.3.
+func _test_retaliation_evidence_invariants() -> void:
+	var t := JobTemplates.retaliation("Venue", "Rival")
+	var loud_net := float(_extremal_by_evidence(t.approaches, true).effects.get(&"evidence_generated", 0.0)) \
+		+ float(_extremal_by_evidence(t.coverups, true).effects.get(&"evidence_generated", 0.0))
+	var quiet_net := float(_extremal_by_evidence(t.approaches, false).effects.get(&"evidence_generated", 0.0)) \
+		+ float(_extremal_by_evidence(t.coverups, false).effects.get(&"evidence_generated", 0.0))
+	_check(loud_net >= 0.25 - 0.0001,
+		"loudest retaliation lifecycle nets >= +0.25 evidence (got %f)" % loud_net)
+	_check(quiet_net <= -0.3 + 0.0001,
+		"quietest retaliation lifecycle nets <= -0.3 evidence (got %f)" % quiet_net)
+
+## The bootstrap: a LOUD retaliation — the dominant job of real play — deposits the
+## first case with no manual injection. This is the chain the long-session gate found
+## dead: feud -> loud answer -> positive net evidence -> case -> combined pressure.
+func _test_loud_retaliation_bootstraps_a_case() -> void:
+	var d := _fresh_world()
+	_check(d.evidence_cases.is_empty(), "fresh world starts caseless")
+	var job := _run_retaliation(d, true, 60)
+	_check(job.stage == BM.JobStage.RESOLVED, "loud retaliation resolved")
+	_check(float(job.outcome.get(&"evidence_generated", 0.0)) > 0.0,
+		"loud resolution nets positive evidence (got %f)" % float(job.outcome.get(&"evidence_generated", 0.0)))
+	_check(d.evidence_cases.size() == 1,
+		"the loud answer deposits a case, no hand injection (got %d)" % d.evidence_cases.size())
+	if not d.evidence_cases.is_empty():
+		_check(d.evidence_cases[0].weight > 0.0, "the deposited case carries weight")
+		_check(String(d.evidence_cases[0].id).begins_with("case@glass_wharf@"),
+			"retaliation-born case id is burn-path parseable (got %s)" % d.evidence_cases[0].id)
+
+## The fork's other tine: a QUIET retaliation deposits nothing, and against a standing
+## case it erodes — a careful answer still keeps you clean (net-negative preserved).
+func _test_quiet_retaliation_stays_clean() -> void:
+	var d := _fresh_world()
+	var job := _run_retaliation(d, false, 70)
+	_check(job.stage == BM.JobStage.RESOLVED, "quiet retaliation resolved")
+	_check(float(job.outcome.get(&"evidence_generated", 0.0)) < 0.0,
+		"quiet resolution nets negative evidence (got %f)" % float(job.outcome.get(&"evidence_generated", 0.0)))
+	_check(d.evidence_cases.is_empty(),
+		"the quiet answer deposits NO case (got %d)" % d.evidence_cases.size())
+	var standing := _case(d, &"case@glass_wharf@0@71", 0.5)
+	_run_retaliation(d, false, 72)
+	_check(standing.weight < 0.5,
+		"against a standing case, the quiet answer erodes it (got %f)" % standing.weight)
 
 ## Cases survive save/load exactly; an in-flight EVIDENCE_CHAIN job rehydrates by id.
 func _test_cases_survive_save_load() -> void:

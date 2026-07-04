@@ -120,6 +120,15 @@ in float64 and the telegraph never opens — a flaky-looking hard failure. Give 
 margin on both sides (arm to 1.5, defuse to 1.2). Exact-boundary behavior gets its own dedicated test
 with integers (see test_night_cycle's budget boundaries), never as a side effect of a scenario test.
 
+### A probe POLICY can mask a working mechanic — check instrument thresholds against the latch's
+P06d: the inspection latch re-arms only when combined < REARM (0.30), but the full-cycle probe's
+policy unpaused rackets at 0.35 — heat flow resumed before re-arm, so inspection RECURRENCE was
+physically unreachable no matter how right the game balance was (read as a mechanic failure, was an
+instrument error; cost two probe runs). Two rules: (1) derive probe marks from the real service
+constants (`EconomyService.HEAT_INSPECTION_REARM - 0.05`), never parallel literals; (2) a static
+extremal policy (always-argMAX) cannot exercise a hysteresis loop — model the player's back-off
+("answer quiet while the district cools") or the latch fires once per run and never again.
+
 ### GDScript `as` binds looser than `==` — `x == [...] as Array[T]` casts the bool
 `restored.chosen_prep == [&"a"] as Array[StringName]` parses as `(x == [...]) as Array[...]` → parse
 error "cannot convert bool". Pre-declare a typed var (`var expected: Array[StringName] = [...]`) and

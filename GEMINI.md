@@ -41,13 +41,25 @@ Corollary: **never put authoritative simulation state inside city-scene nodes.**
 ## Current status
 
 - **Engine binary:** `D:\Godot\Godot_v4.7-stable_win64.exe` (+ `_console.exe` for headless).
-- **Milestone:** Month 1 (Architecture + Risk Spikes). Done: repo, data model, GameState, TimeService
-  (strategic tick + 3 speeds + pause), EconomyService + EconomyMath (the §7.2 formulas, unit-tested),
-  WorldSeed (Glass Wharf slice), greybox city, management camera, minimal HUD, bootstrap.
+- **Milestone:** Month 2 COMPLETE — the full systemic Night-Cycle loop is built and gate-passed
+  (2026-07-04). Month 1 (Architecture + Risk Spikes) done: data model, GameState, TimeService, Economy,
+  WorldSeed, greybox city, save/load, splat spike. Month 2 slices, all committed + independently probed
+  (deterministic, zero-RNG, save-safe): **P05** economy squeeze (pause racket / pressure front) · **P06**
+  heat→disruption→income + latched inspection · **P07** RivalDirector (telegraph→land sabotage) · **P08**
+  systemic job generation (sim-triggered, byte-identical rebuild) · **P09** Night-Cycle phase machine
+  (COUNCIL→OPERATIONS→CRISIS→RECKONING, per-tick settle preserved) · **P10** loyalty/betrayal motive
+  network (two-gate, telegraphed, *preventable*) · **P11** first-pass noir UI theme (Palette + generated
+  theme.tres).
 - **Splat kill criterion: RESOLVED → SPLAT_OK** (2026-07-02). GDGS v2.2.0 + Godot-4.7 push-constant patch
   renders 542k splats at 483 avg / 420 low fps @1080p on the 5060 Ti (`docs/prompts/notes/P01-splat-benchmark.md`).
-- **Open (Month 1):** `CinematicWorldProvider` interface + mesh-fallback flag (P01 remainder), save/load,
-  one placeholder fixer job. See `docs/prompts/` for the ordered build slices.
+- **Month-2 gate: PASSED** (`docs/prompts/notes/P08-month2-gate.md`, `P11-month2-gate.md`). Feel verdict
+  "fun, stress, very good" (short session) + a full-cycle integrity probe proving the chain
+  money→heat→inspection→rival→job→phases is INTACT and self-feeding (rival sabotage spawns jobs). **Month 3
+  (asset production) is authorized** under the existing discipline: proxy first, Sketchfab license-gated,
+  no GLB replaces a validated mechanic, AI 90 / human 10.
+- **Open (deferred, not blocking):** P05b operative pool · P06b evidence chains · P06c Central Pressure ·
+  P07b rival noise/actions · P07c rival memory · P08b more job origins · P10b hidden motives + multi-lieutenant ·
+  P19 final UI polish. See `docs/prompts/` for the ordered build slices.
 
 ## Architecture (brief §13.2–§13.4)
 

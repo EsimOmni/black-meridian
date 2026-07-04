@@ -131,16 +131,21 @@ func _update_district_heat() -> void:
 			district.local_heat = maxf(0.0, district.local_heat - HEAT_DECAY_PER_TICK)
 
 		# Inspection lifecycle: threshold-latched, once per excursion, zero randomness.
+		# P06b: the latch reads the COMBINED pressure — raw heat plus weighted case
+		# pressure (EvidenceMath). Cooling the flow no longer clears you: standing cases
+		# keep the sweep coming until the player burns them down. Re-arm mirrors on the
+		# same combined value, so the excursion only ends when BOTH sides fall.
+		var combined := EvidenceMath.combined_pressure(district.local_heat, district.evidence_cases)
 		if district.inspection_ticks > 0:
 			district.inspection_ticks -= 1
 			if district.inspection_ticks == 0:
 				inspection_ended.emit(district)
-		elif district.inspection_armed and district.local_heat >= HEAT_INSPECTION_THRESHOLD:
+		elif district.inspection_armed and combined >= HEAT_INSPECTION_THRESHOLD:
 			district.inspection_armed = false
 			district.inspection_ticks = INSPECTION_DURATION_TICKS
 			inspection_started.emit(district)
 		if not district.inspection_armed and district.inspection_ticks == 0 \
-				and district.local_heat < HEAT_INSPECTION_REARM:
+				and combined < HEAT_INSPECTION_REARM:
 			district.inspection_armed = true
 
 		# Heat disrupts every venue in the district — police attention doesn't pick sides.

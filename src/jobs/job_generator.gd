@@ -39,6 +39,16 @@ static func followup_job(venue: VenueData, tick: int) -> JobData:
 	job.venue_id = venue.id
 	return job
 
+## Trigger 3 (P06b) — an inspection landed while evidence cases pin the district
+## (JobDirector._on_inspection_started offers a burn against the strongest case).
+## venue_id stays empty: the job targets a CASE, and the district is encoded in the id
+## (JobDirector._district_of parses it back out).
+static func bury_case_job(evidence_case: EvidenceCaseData, district: DistrictData,
+		tick: int) -> JobData:
+	var job := JobTemplates.bury_case(evidence_case.label, district.display_name)
+	job.id = StringName("gen@burycase@%s@%s@%d" % [district.id, evidence_case.id, tick])
+	return job
+
 ## Rebuild a generated job's authored content from its id (SaveService load path — the
 ## generated-id counterpart of JobTemplates.by_id). Deterministic: re-runs the same
 ## builder with the parsed targeting. Returns null for non-generated or unresolvable ids.
@@ -64,6 +74,25 @@ static func rebuild(job_id: StringName, districts: Array[DistrictData],
 			if venue == null:
 				return null
 			return followup_job(venue, int(parts[3]))
+		"burycase":
+			# gen@burycase@<district>@<case id>@<tick>, where the case id is itself
+			# 4 "@"-segments (case@<district>@<kind>@<tick>) -> 8 parts total.
+			if parts.size() != 8:
+				return null
+			var district := _find_district(districts, StringName(parts[2]))
+			if district == null:
+				return null
+			var evidence_case := EvidenceMath.find_case(district,
+				StringName("@".join(parts.slice(3, 7))))
+			if evidence_case == null:  # the case is gone — the job can't be rebuilt honestly
+				return null
+			return bury_case_job(evidence_case, district, int(parts[7]))
+	return null
+
+static func _find_district(districts: Array[DistrictData], district_id: StringName) -> DistrictData:
+	for district in districts:
+		if district.id == district_id:
+			return district
 	return null
 
 static func _find_venue(districts: Array[DistrictData], venue_id: StringName) -> VenueData:

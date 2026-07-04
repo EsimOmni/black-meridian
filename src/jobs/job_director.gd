@@ -26,6 +26,7 @@ func _ready() -> void:
 
 func _connect_triggers() -> void:
 	RivalDirector.rival_action_landed.connect(_on_rival_action_landed)
+	EconomyService.inspection_started.connect(_on_inspection_started)
 
 ## P08 trigger 1: a rival SABOTAGE landing on a player venue is a problem the player can
 ## architect a response to (brief §6 pillar 1). A PROBE is pressure, not a provocation.
@@ -35,6 +36,15 @@ func _on_rival_action_landed(rival: FactionData, venue: VenueData, action: int) 
 	if venue.owner_faction != GameState.player_faction_id:
 		return
 	_try_offer(JobGenerator.retaliation_job(venue, rival, TimeService.tick_index))
+
+## P06b trigger: a sweep landing while evidence cases pin the district offers the aimed
+## strike — a "Bury the Case" job against the STRONGEST case. No cases, no job (the
+## sweep was pure heat; pausing rackets already answers that one).
+func _on_inspection_started(district: DistrictData) -> void:
+	var strongest := EvidenceMath.strongest_case(district)
+	if strongest == null:
+		return
+	_try_offer(JobGenerator.bury_case_job(strongest, district, TimeService.tick_index))
 
 ## The cadence gate: dedupe by id, then cap concurrent unresolved jobs.
 func _try_offer(job: JobData) -> void:
@@ -125,13 +135,18 @@ func _apply_and_emit(job: JobData) -> void:
 		var c := GameState.get_character(cid)
 		if c:
 			involved.append(c)
-	var district: DistrictData = null
-	for d in GameState.districts:
-		for v in d.venues:
-			if v.id == job.venue_id:
-				district = d
-				break
-	JobLifecycle.apply_outcome(job, GameState.player_faction(), district, involved)
+	var district := _district_of(job)
+	JobLifecycle.apply_outcome(job, GameState.player_faction(), district, involved,
+		TimeService.tick_index)
+	# P06b path B: a burn that actually suppressed trace (net negative evidence) removes
+	# its TARGETED case — the aimed strike, distinct from apply_outcome's passive
+	# strongest-first erosion. A botched burn (net positive) leaves the case standing
+	# and has already deposited fresh trace above.
+	if job.origin == BM.JobOrigin.EVIDENCE_CHAIN and district != null \
+			and job.outcome.get(&"evidence_generated", 0.0) < 0.0:
+		var target := _burn_target_of(job)
+		if target != &"":
+			EvidenceMath.remove_case(district, target)
 	# P07c: the feud closes. When the player resolves the retaliation a rival provoked, that
 	# rival remembers — its grudge rises by the job's rival_suspicion (the previously-orphaned
 	# outcome axis). Single writer of grudge upward; RivalDirector decays it. The provocateur is
@@ -156,6 +171,26 @@ func _find_venue(venue_id: StringName) -> VenueData:
 			if v.id == venue_id:
 				return v
 	return null
+
+## The district a job's consequences land in: by its venue for venue-bound jobs, or
+## parsed from the generated id for case-bound burycase jobs (which have no venue).
+func _district_of(job: JobData) -> DistrictData:
+	for d in GameState.districts:
+		for v in d.venues:
+			if v.id == job.venue_id:
+				return d
+	var parts := String(job.id).split("@")
+	if parts.size() == 8 and parts[1] == "burycase":
+		return GameState.get_district(StringName(parts[2]))
+	return null
+
+## P06b: the case a burycase job targets, from its generated id
+## (gen@burycase@<district>@<case id: 4 segments>@<tick>). Empty for other ids.
+func _burn_target_of(job: JobData) -> StringName:
+	var parts := String(job.id).split("@")
+	if parts.size() != 8 or parts[1] != "burycase":
+		return &""
+	return StringName("@".join(parts.slice(3, 7)))
 
 ## P07c: the rival that provoked a RIVAL_PROVOCATION job, from its generated id
 ## (gen@retaliation@<venue>@<rival>@<tick>). Returns null for authored/unparseable ids.

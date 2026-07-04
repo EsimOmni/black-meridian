@@ -64,8 +64,10 @@ static func tick(job: JobData) -> bool:
 ## Apply a resolved job's outcome to the strategic state (brief §7.5: consequences flow
 ## back into cash, heat, fear, relationships). rival_suspicion / new_leverage /
 ## delayed_consequence stay recorded in job.outcome for the P07/P08/P10 systems.
+## tick stamps the id of any evidence case the outcome deposits (P06b) — additive,
+## callers without a clock keep the default.
 static func apply_outcome(job: JobData, faction: FactionData, district: DistrictData,
-		involved: Array[CharacterData]) -> void:
+		involved: Array[CharacterData], tick: int = 0) -> void:
 	var out := job.outcome
 	if out.is_empty():
 		return
@@ -80,6 +82,15 @@ static func apply_outcome(job: JobData, faction: FactionData, district: District
 		district.local_heat = clampf(
 			district.local_heat + 0.08 * out[&"evidence_generated"] + 0.04 * out[&"public_fear"], 0.0, 1.0)
 		district.fear = clampf(district.fear + 0.1 * out[&"public_fear"], 0.0, 1.0)
+		# P06b: the same signed axis also acts on DISCRETE state. Net trace left behind
+		# deposits into a persistent case (heat gains a root); net suppression erodes the
+		# strongest case (cover-ups gain teeth). Additive to the heat line above, never
+		# a replacement.
+		var evidence: float = out[&"evidence_generated"]
+		if evidence > 0.0:
+			EvidenceMath.deposit(district, evidence, job.id, tick)
+		elif evidence < 0.0:
+			EvidenceMath.erode_strongest(district, -evidence)
 	for c in involved:
 		c.public_trust = clampf(c.public_trust + 0.15 * out[&"relationship_change"], 0.0, 1.0)
 		c.grievance = clampf(

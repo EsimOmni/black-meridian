@@ -59,6 +59,9 @@ static func encode_district(d: DistrictData) -> Dictionary:
 	var venues := []
 	for v in d.venues:
 		venues.append(encode_venue(v))
+	var cases := []
+	for c in d.evidence_cases:
+		cases.append({"id": c.id, "kind": c.kind, "weight": c.weight, "label": c.label})
 	return {
 		"id": d.id, "display_name": d.display_name,
 		"influence": d.influence, "security": d.security, "prosperity": d.prosperity,
@@ -66,6 +69,7 @@ static func encode_district(d: DistrictData) -> Dictionary:
 		"institutional_presence": d.institutional_presence, "local_heat": d.local_heat,
 		"faction_pressure": d.faction_pressure.duplicate(),
 		"inspection_ticks": d.inspection_ticks, "inspection_armed": d.inspection_armed,
+		"evidence_cases": cases,
 		"venues": venues,
 	}
 
@@ -167,6 +171,15 @@ static func decode_district(d: Dictionary) -> DistrictData:
 	dist.faction_pressure = d["faction_pressure"].duplicate()
 	dist.inspection_ticks = d.get("inspection_ticks", 0)     # additive since P06
 	dist.inspection_armed = d.get("inspection_armed", true)  # pre-P06 saves: armed, no inspection
+	var cases: Array[EvidenceCaseData] = []
+	for cd in d.get("evidence_cases", []):                   # additive since P06b
+		var c := EvidenceCaseData.new()
+		c.id = cd["id"]
+		c.kind = cd["kind"]
+		c.weight = cd["weight"]
+		c.label = cd["label"]
+		cases.append(c)
+	dist.evidence_cases = cases
 	var venues: Array[VenueData] = []
 	for vd in d["venues"]:
 		venues.append(decode_venue(vd))

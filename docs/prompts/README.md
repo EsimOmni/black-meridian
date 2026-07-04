@@ -38,7 +38,7 @@ Claude Code (or Codex) and it knows exactly what to build, what's in scope, and 
 
 ### Month 2 — Complete core loop
 - ✅ [**P05**](P05-rackets-fronts-ui.md) — Rackets/fronts/laundering UI: squeeze surfaced on HUD (overflow indicator), pause-a-racket + pressure-a-front verbs, interactive venue panel (done 2026-07-02; operative pool + buy-front → P05b)
-- ✅ [**P06**](P06-heat-evidence.md) — Heat consequence loop closed: heat→disruption→income, slow decay, deterministic inspection beat @0.45 (done 2026-07-03; P04b net-axis debt resolved — no split; evidence chains → P06b, Central Pressure → P06c)
+- ✅ [**P06**](P06-heat-evidence.md) — Heat consequence loop closed: heat→disruption→income, slow decay, deterministic inspection beat @0.45 (done 2026-07-03; P04b net-axis debt resolved — no split; evidence chains → P06b ✅ done 2026-07-04 (cases accrue/pin/erode/burn — `EvidenceMath` + bury-case job, probe verdict EVIDENCE CHAIN CLOSES), Central Pressure → P06c)
 - ✅ [**P07**](P07-rival-ai.md) — RivalDirector: deterministic utility AI, PROBE/SABOTAGE, telegraph→land window (done 2026-07-03; noise/tie-break → P07b, other 9 actions → P07b+, memory → P07c)
 - ✅ [**P08**](P08-job-director.md) — JobDirector: systemic fixer jobs generated from sim state — JobTemplates layer + pure JobGenerator, two deterministic triggers (rival sabotage → retaliation, delayed_consequence → follow-up), cadence gate ≤3 (done 2026-07-03; remaining 8 origins + template variety → P08b)
 - ✅ [**P09**](P09-night-cycle.md) — Night Cycle phase machine: deterministic tick budgets (4+18+6+2 min = 30 min/cycle), Council gates new rival telegraphs, HUD phase clock + Reckoning summary, per-tick settlement untouched (done 2026-07-03; rich phase content → later slices)

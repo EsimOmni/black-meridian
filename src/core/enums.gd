@@ -77,13 +77,24 @@ enum JobStage {
 	RESOLVED,
 }
 
-## Where a fixer job originated (brief §7.5).
+## Where a fixer job originated (brief §7.5). EVIDENCE_CHAIN (P06b): a job aimed at
+## burning down a named evidence case — appended, so saved int values stay stable.
 enum JobOrigin {
 	FAILED_RACKET,
 	WITNESS,
 	RIVAL_PROVOCATION,
 	INTERNAL_DISPUTE,
 	INSTITUTIONAL_PRESSURE,
+	EVIDENCE_CHAIN,
+}
+
+## Evidence-case kinds (brief §7.3, P06b). Flavour only — mechanics are weight-driven;
+## the kind picks the display phrasing and which cover-up reads as eroding it best.
+enum EvidenceKind {
+	MANIFEST,
+	FOOTAGE,
+	WITNESS,
+	PHYSICAL,
 }
 
 ## Max preparation actions per job (brief §7.5: Preparation ≤3 actions).

@@ -140,6 +140,13 @@ Stock GDGS pads push constants to 16 bytes; Godot 4.7 validates the exact per-sh
 updated from upstream, re-apply or upstream this patch first — an "invalid" benchmark number from an error
 storm looks like a real perf number if you don't grep the log for ERROR.
 
+### Boot smoke: "RID ... leaked at exit" errors are PRE-EXISTING (since P14), not your slice
+`--quit-after 120` prints ~15 DummyMaterial / 12 DummyMesh "leaked at exit" ERRORs. Verified on a clean
+HEAD worktree (2026-07-04, during P06b): identical leaks with zero new code — they come from earlier
+runtime-built city meshes (P14 kit assembler is the suspect), not from whatever slice you're verifying.
+Compare against HEAD before blaming your change; a smoke regression means NEW lines beyond these. Fixing
+the leak itself is a separate cleanup slice, not a drive-by.
+
 ### Windowed Godot benchmark runs: never pipe stdout through grep/head — write to a file
 The first bench run "hung" for 4 minutes: parse errors kept the app alive on an empty scene while
 `| grep | head` buffering hid every line. Run windowed benchmarks with `> file 2>&1`, then grep the file.

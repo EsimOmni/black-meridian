@@ -129,6 +129,61 @@ static func retaliation(venue_name: String, rival_name: String) -> JobData:
 	]
 	return job
 
+## "Bury the Case" — generated when an inspection lands while a named evidence case
+## pins the district (P06b trigger). The job targets ONE case: a clean resolution nets
+## strongly negative evidence (the targeted case burns — JobDirector removes it); the
+## clumsy route nets POSITIVE evidence on every cover-up (a botched burn leaves more
+## trace than it removes, and the case stands). Targeting is stamped by JobGenerator.
+static func bury_case(case_label: String, district_name: String) -> JobData:
+	var job := JobData.new()
+	job.title = "Bury the Case"
+	job.origin = BM.JobOrigin.EVIDENCE_CHAIN
+	job.apparent_problem = "The sweep in %s is standing on one thing: %s. It sits in an evidence room tonight and in a prosecutor's opening statement next month." % [district_name, case_label.to_lower()]
+	job.deadline_ticks = 60
+	job.known_evidence = [case_label]
+	job.visible_stakes = "While that case stands, the inspectors keep coming back — cooling the street buys nothing."
+	job.hidden_stakes = "Someone inside the evidence room has been photographing intake logs."  # not shown at intake
+	job.reward_dirty = 200
+
+	job.prep_actions = [
+		JobChoiceData.make(&"prep_case_room", "Case the records room",
+			"Two nights of watching shift changes and door codes. Quiet feet, short list.",
+			{&"evidence_generated": -0.1, &"new_leverage": 0.1}),
+		JobChoiceData.make(&"prep_learn_names", "Learn who signed it",
+			"Every case has custodians. Custodians have rents, debts, daughters in school.",
+			{&"new_leverage": 0.15}),
+		JobChoiceData.make(&"prep_go_early", "Go before the transfer",
+			"The file moves to Central soon. Beat the truck instead of the locks.",
+			{&"delayed_consequence": 0.2, &"objective_achieved": 0.1}),
+	]
+
+	job.approaches = [
+		JobChoiceData.make(&"appr_torch", "Torch the archive",
+			"A small electrical fire, a crowded night. The case dies with a shelf of others.",
+			{&"objective_achieved": 0.75, &"evidence_generated": -0.45, &"public_fear": 0.2,
+				&"collateral_damage": 0.2}),
+		JobChoiceData.make(&"appr_custodian", "Buy the custodian",
+			"The intake clerk re-labels one box. Nothing burns; something is simply never found.",
+			{&"objective_achieved": 0.6, &"evidence_generated": -0.4, &"relationship_change": 0.2,
+				&"rival_suspicion": 0.1}),
+		JobChoiceData.make(&"appr_snatch", "Snatch it tonight",
+			"Crowbar, window, forty seconds. Fast, loud, and everything you touch remembers you.",
+			{&"objective_achieved": 0.5, &"evidence_generated": 0.2, &"delayed_consequence": 0.2}),
+	]
+
+	job.coverups = [
+		JobChoiceData.make(&"cover_never_was", "It never existed",
+			"The intake ledger loses a line; the docket number was always a clerical error.",
+			{&"evidence_generated": -0.15}),
+		JobChoiceData.make(&"cover_misfile", "Misfile the duplicate",
+			"The backup copy goes to a basement in the wrong precinct, addressed to no one.",
+			{&"evidence_generated": -0.1, &"delayed_consequence": 0.1}),
+		JobChoiceData.make(&"cover_walk", "Walk away clean",
+			"Touch nothing else. The absence should look like bureaucracy, not intent.",
+			{}),
+	]
+	return job
+
 ## "Loose Ends" — generated K ticks after a job resolves with heavy delayed_consequence
 ## (P08 trigger 2). The earlier intervention's debris surfaces as a new problem.
 static func followup(venue_name: String) -> JobData:

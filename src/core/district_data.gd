@@ -24,6 +24,11 @@ extends Resource
 @export var inspection_ticks: int = 0
 @export var inspection_armed: bool = true
 
+## P06b evidence cases — the discrete, persistent roots of police attention here.
+## Their summed weight (EvidenceMath.case_pressure) pins the inspection latch alongside
+## raw heat; jobs deposit/erode them through JobLifecycle.apply_outcome.
+@export var evidence_cases: Array[EvidenceCaseData] = []
+
 ## Faction pressure: influence each dynasty exerts here. Keyed by faction id -> 0..1.
 @export var faction_pressure: Dictionary = {}
 

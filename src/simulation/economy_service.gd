@@ -6,6 +6,8 @@ extends Node
 signal economy_settled(faction_id: StringName, dirty_delta: int, clean_delta: int, exposure_delta: float)
 signal inspection_started(district: DistrictData)
 signal inspection_ended(district: DistrictData)
+signal central_alert_started(pressure: float)
+signal central_alert_ended(pressure: float)
 
 ## "Pressure an existing front" (brief §7.2): clean capital buys laundering capacity.
 const FRONT_PRESSURE_STEP := 100    ## +capacity per pressure action
@@ -69,6 +71,7 @@ func _on_strategic_tick(_tick: int) -> void:
 	for faction in GameState.factions:
 		_settle_faction(faction)
 	_update_district_heat()
+	_update_central_pressure()
 
 func _settle_faction(faction: FactionData) -> void:
 	var dirty_income := 0
@@ -136,11 +139,16 @@ func _update_district_heat() -> void:
 		# keep the sweep coming until the player burns them down. Re-arm mirrors on the
 		# same combined value, so the excursion only ends when BOTH sides fall.
 		var combined := EvidenceMath.combined_pressure(district.local_heat, district.evidence_cases)
+		# P06c: while a Compact-level alert is active, every district arms more easily —
+		# a bounded READ of the GameState flag, never a second writer of heat/cases.
+		var threshold := HEAT_INSPECTION_THRESHOLD
+		if GameState.central_alert_ticks > 0:
+			threshold -= PressureMath.CENTRAL_ALERT_INSPECTION_RELIEF
 		if district.inspection_ticks > 0:
 			district.inspection_ticks -= 1
 			if district.inspection_ticks == 0:
 				inspection_ended.emit(district)
-		elif district.inspection_armed and combined >= HEAT_INSPECTION_THRESHOLD:
+		elif district.inspection_armed and combined >= threshold:
 			district.inspection_armed = false
 			district.inspection_ticks = INSPECTION_DURATION_TICKS
 			inspection_started.emit(district)
@@ -162,3 +170,24 @@ func _update_district_heat() -> void:
 				if venue.sabotage_ticks == 0:
 					venue.sabotage_disruption = 0.0
 			venue.disruption = venue_disruption
+
+## The single writer of central_pressure / central_alert / central_alert_ticks (P06c):
+## consolidates the whole map into one Compact-level axis, then runs a threshold latch
+## that mirrors the district inspection excursion exactly — once per excursion, zero RNG,
+## telegraphed by the pressure value itself approaching the known bar. Runs AFTER
+## _update_district_heat so it reads this tick's settled district state.
+func _update_central_pressure() -> void:
+	var city := PressureMath.city_pressure(GameState.districts)
+	GameState.central_pressure = PressureMath.step_central(GameState.central_pressure, city)
+	if GameState.central_alert_ticks > 0:
+		GameState.central_alert_ticks -= 1
+		if GameState.central_alert_ticks == 0:
+			central_alert_ended.emit(GameState.central_pressure)
+	elif not GameState.central_alert \
+			and GameState.central_pressure >= PressureMath.CENTRAL_ALERT_THRESHOLD:
+		GameState.central_alert = true
+		GameState.central_alert_ticks = PressureMath.CENTRAL_ALERT_DURATION_TICKS
+		central_alert_started.emit(GameState.central_pressure)
+	if GameState.central_alert and GameState.central_alert_ticks == 0 \
+			and GameState.central_pressure < PressureMath.CENTRAL_ALERT_REARM:
+		GameState.central_alert = false

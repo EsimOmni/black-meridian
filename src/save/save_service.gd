@@ -18,6 +18,10 @@ func save_game(slot: String = "quick") -> bool:
 		"night_cycle": GameState.night_cycle,
 		"phase": GameState.phase,
 		"phase_ticks": GameState.phase_ticks,  # additive since P09
+		# Additive since P06c: the Compact-level pressure axis (plain scalars on GameState).
+		"central_pressure": GameState.central_pressure,
+		"central_alert": GameState.central_alert,
+		"central_alert_ticks": GameState.central_alert_ticks,
 		"tick_index": TimeService.tick_index,
 		"saved_at_unix": int(Time.get_unix_time_from_system()),
 		# Additive since P08: scheduled delayed-consequence follow-ups (JobDirector).
@@ -66,6 +70,9 @@ func load_game(slot: String = "quick") -> bool:
 	GameState.night_cycle = meta["night_cycle"]
 	GameState.phase = meta["phase"]
 	GameState.phase_ticks = meta.get("phase_ticks", 0)  # additive since P09
+	GameState.central_pressure = meta.get("central_pressure", 0.0)  # additive since P06c
+	GameState.central_alert = meta.get("central_alert", false)
+	GameState.central_alert_ticks = meta.get("central_alert_ticks", 0)
 	TimeService.tick_index = meta["tick_index"]
 
 	# Rebuild in-flight jobs: authored content from the registry (or, for generated ids,

@@ -21,6 +21,16 @@ var phase: int = BM.Phase.OPERATIONS
 ## Elapsed strategic ticks in the current phase (advanced by the NightCycle machine, P09).
 var phase_ticks: int = 0
 
+## --- Central pressure (P06c) — the one scale above the districts (brief §7.3) ---
+## Consolidated institutional heat on the Compact, 0..1. Single writer:
+## EconomyService._update_central_pressure (derived via PressureMath each tick).
+var central_pressure: float = 0.0
+## Latched true from the tick a city-wide alert fires until pressure falls below the
+## re-arm bar (false = armed — the district inspection_armed shape, inverted polarity).
+## The active consequence itself is central_alert_ticks > 0.
+var central_alert: bool = false
+var central_alert_ticks: int = 0
+
 func _ready() -> void:
 	# Autoload order in project.godot guarantees GameState is ready before services use it.
 	pass
@@ -74,3 +84,6 @@ func reset() -> void:
 	night_cycle = 1
 	phase = BM.Phase.OPERATIONS
 	phase_ticks = 0
+	central_pressure = 0.0
+	central_alert = false
+	central_alert_ticks = 0

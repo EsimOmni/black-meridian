@@ -49,7 +49,7 @@ Claude Code (or Codex) and it knows exactly what to build, what's in scope, and 
 - ⬜ [**P12**](P12-building-pipeline.md) — Glass Wharf art-direction master + modular building kit pipeline (Blender→GLB→Godot)
 - ⬜ [**P13**](P13-city-life-vfx.md) — Rain/wet-surface VFX + traffic + crowd proxy (MultiMesh, spline traffic)
 - ⬜ [**P14**](P14-characters-roster.md) — Aiko canonical references + 4 character base models + shared animation prototype + roster screen
-- ⬜ [**P15**](P15-asset-validation.md) — GLB import-validation tooling + asset naming/folder standard
+- ✅ [**P15**](P15-asset-validation.md) — GLB import-validation tooling + asset naming/folder standard (done 2026-07-04, pulled ahead of P12b — the gate must exist before a kit asset can be called "validated"; `GLBValidator` pure static core + `validate_file` GLTFDocument wrapper, 9 checks, proven against code-built clean/broken fixtures incl. a real .glb round-trip; `docs/asset-standard.md`)
 
 ### Month 4 — Narrative & cinematic integration
 - ⬜ [**P16**](P16-narrative-authored-jobs.md) — NarrativeDirector + 3 authored jobs + complete evidence chain + first loyalty crisis

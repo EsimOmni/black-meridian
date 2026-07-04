@@ -5,6 +5,11 @@ use raw generated GLBs directly*). The executable side of this document is
 `tools/validation/glb_validator.gd` — its `SPECS` table and this file must stay in sync.
 Established by P15; the Month-3 gate is *repeatable delivery without reinventing the pipeline*.
 
+Two entry paths feed this gate, both provisional until Blender cleanup: **Codex-Blender**
+(box-model from a metric spec — required for grid-tile kit modules) and **Magnific image→3D**
+(concept image → GLB, for low-volume hero/organic assets — see `docs/image-to-3d-tool.md`,
+credit-metered, model choice is a user decision). Neither ships raw output.
+
 ## Naming
 
 Canonical pattern: `<district>_<kit>_<part>_LODn`, lowercase snake_case.

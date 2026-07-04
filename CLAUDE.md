@@ -155,6 +155,17 @@ Subscription discipline:
      Brief §12 still governs: no GLB — Sketchfab or otherwise — replaces a cube until the Month-2
      "fun with cubes" gate passes. Treat Sketchfab GLBs like any provisional geometry: input to
      Blender cleanup + Godot validation, not a game-ready asset.
+- **Magnific image→3D (MCP, credit-metered — see `docs/image-to-3d-tool.md`).** An alternative
+  asset-entry path: an approved concept image → GLB (Trellis 2 / Tripo). For **low-volume hero /
+  organic** geometry where a concept image beats box-modeling; grid-tile kit modules stay on
+  Codex-Blender (image→3D can't guarantee the grid contract). Two hard rules:
+  1. **MCP always charges — unlimited does NOT apply** (`unlimitedAppliesHere:false`). Real
+     probed costs: Trellis 2 = 610/730/850 cr @512/1024/1536 (**exact**); Tripo v3.1 = 580
+     no-tex / 1160 detailed-tex (variable); Tripo P1 = 580. Default first-pass = **Trellis 2
+     @512 (610 cr)**; texture is deferred (doubles Tripo cost). **Model choice is a USER
+     decision** — surface the real cost + certainty and get a yes before any paid generate.
+  2. **Does NOT bypass the gates.** Raw output is provisional: mandatory Blender cleanup (retopo,
+     base-center pivot, trim-sheet UV, LOD0/LOD1, collider) → `GLBValidator` → Godot test.
 - Total targeted external spend for the 6-month slice: ~$55–90 (Sketchfab free tier adds $0).
 
 ## Conventions

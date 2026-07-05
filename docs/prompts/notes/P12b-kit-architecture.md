@@ -38,9 +38,24 @@ the master resolves it: **neither alone — hybrid.**
 | Ground / water / fog / light | shader + lighting pass | Godot side (control tower / Fable) |
 
 `KitAssembler` stays for the band-stacked buildings (the state-showing mechanic is intact); hero
-landmarks are placed as whole meshes keyed to specific venues (the alien diplomatic structure = the
-political/intelligence venue, the stone institution = a civic venue) — they don't grow with influence,
-they anchor the skyline.
+landmarks are placed as whole meshes that **anchor the district skyline**, not per-venue buildings —
+they don't grow with influence and they are not gameplay venues.
+
+**Placement correction (2026-07-05, caught before the first hero shipped):** an earlier draft keyed
+the alien tower to a "political/intelligence venue" and the stone institution to a "civic venue" —
+but Glass Wharf has **no such venues**. WorldSeed seeds only 6 venues, all RACKET or FRONT
+(gw_contraband, gw_nightclub, gw_protection, gw_gaming, gw_freight, gw_clinic). `KitAssembler.family_for`
+maps POLITICAL_OFFICE / INTELLIGENCE_NODE → TOWER, but no Glass Wharf venue is those types. And in the
+master frame the alien tower is **not a business** — it stands out on the wharf/water as a skyline
+landmark, not on a gameplay lot.
+
+So hero landmarks are placed as **district-level scenery**, independent of the venue system:
+`city_view` (or a small `DistrictLandmarks` helper) drops them at fixed positions along the wharf edge
+that echo the master's composition (alien tower out toward the water on one flank, stone institution
+anchoring the opposite corner). They read the district's identity, not a single venue's state.
+`KitAssembler` and the venue → building path are untouched — this is a separate, additive placement
+layer. (If a later slice wants a hero to *react* to state, that's a deliberate wiring decision, not a
+default; ship it as static skyline first.)
 
 ## Priority (two-eye agreed, control-tower refined)
 
@@ -56,7 +71,8 @@ everything.
 ## Production order (P12b execution queue)
 
 1. **Alien diplomatic tower** — bespoke hero, Codex-Blender against the master. Two-eye massing gate →
-   GLBValidator → placed on the political/intelligence venue.
+   GLBValidator → placed as a **district skyline landmark** (fixed wharf-edge position, NOT a venue —
+   see the placement correction above).
 2. **Carved-stone institution** — bespoke hero, same pipeline.
 3. **Transit spine** — rail + lattice bridge + train car kit pieces.
 4. **Neo-deco tower band refinement** — extend the `warehouse_a` band pattern to the tower family.

@@ -29,6 +29,13 @@ const PLACEMENTS := [
 		"rotation_y": 0.95,                       # +y portico front turned to face the 3/4 skyline eye
 		"patina": 0.0,                            # stone: pure cold stain, no metal patina
 	},
+	{
+		"glb": LANDMARK_DIR + "transit_spine.glb",
+		"name": "TransitSpine",
+		"position": Vector3(10.0, 0.0, -40.0),   # pushed deep onto the open water between the row and the right-rear tower (clear of the row)
+		"rotation_y": -0.85,                      # steeper diagonal — the crossing runs toward the tower, not parallel to the row
+		"patina": 0.0,                            # rusted steel: the cold stain reads on it directly, no metal patina
+	},
 ]
 
 ## Spawn every landmark under `parent`. Called once at city build; landmarks are static skyline,

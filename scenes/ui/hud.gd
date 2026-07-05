@@ -191,18 +191,29 @@ func _mmss(ticks: int) -> String:
 ## wrong — and the player has one concrete lever to pull. The HUD only reads the
 ## intent state off CharacterData; the defusal decision stays in RelationshipService.
 func _refresh_betrayal() -> void:
+	# P10b: multiple intents can be open at once — one tell line per lieutenant. While
+	# the driving motive is hidden the player knows SOMETHING is wrong, not why; the
+	# reassure sit-down reveals it. The button targets the first open intent (greybox).
+	var lines: PackedStringArray = []
 	for c in GameState.characters:
 		if c.betrayal_ticks_until_land < 0:
 			continue
-		_betrayal_label.visible = true
-		_betrayal_label.text = "⚠ %s: delayed responses · a missed check-in · a private meeting off the books" % c.display_name
-		var pf := GameState.player_faction()
-		_reassure_btn.visible = true
-		_reassure_btn.disabled = pf == null or pf.clean_capital < LoyaltyScoring.REASSURE_COST_CLEAN
-		_reassure_btn.text = "Address the grievance (+trust, -%d clean)" % LoyaltyScoring.REASSURE_COST_CLEAN
+		var line := "⚠ %s: delayed responses · a missed check-in · a private meeting off the books" % c.display_name
+		if c.motive_revealed and c.betrayal_driving_motive != &"":
+			line += "\n   driven by: %s" % String(c.betrayal_driving_motive).capitalize()
+		else:
+			line += "\n   motive unknown — sit down with them to learn why"
+		lines.append(line)
+	if lines.is_empty():
+		_betrayal_label.visible = false
+		_reassure_btn.visible = false
 		return
-	_betrayal_label.visible = false
-	_reassure_btn.visible = false
+	_betrayal_label.visible = true
+	_betrayal_label.text = "\n".join(lines)
+	var pf := GameState.player_faction()
+	_reassure_btn.visible = true
+	_reassure_btn.disabled = pf == null or pf.clean_capital < LoyaltyScoring.REASSURE_COST_CLEAN
+	_reassure_btn.text = "Address the grievance (+trust, -%d clean)" % LoyaltyScoring.REASSURE_COST_CLEAN
 
 func _on_reassure_pressed() -> void:
 	for c in GameState.characters:

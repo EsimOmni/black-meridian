@@ -53,6 +53,8 @@ static func encode_character(c: CharacterData) -> Dictionary:
 		"betrayal_threshold": c.betrayal_threshold,
 		"relationships": c.relationships.duplicate(),
 		"betrayal_ticks_until_land": c.betrayal_ticks_until_land,
+		"betrayal_driving_motive": c.betrayal_driving_motive,
+		"motive_revealed": c.motive_revealed,
 	}
 
 static func encode_district(d: DistrictData) -> Dictionary:
@@ -155,6 +157,8 @@ static func decode_character(d: Dictionary) -> CharacterData:
 	c.betrayal_threshold = d["betrayal_threshold"]
 	c.relationships = d["relationships"].duplicate()
 	c.betrayal_ticks_until_land = d.get("betrayal_ticks_until_land", -1)  # additive since P10
+	c.betrayal_driving_motive = d.get("betrayal_driving_motive", &"")     # additive since P10b
+	c.motive_revealed = d.get("motive_revealed", false)
 	return c
 
 static func decode_district(d: Dictionary) -> DistrictData:

@@ -29,6 +29,12 @@ extends Resource
 ## betrayal lands; -1 = none. While ≥ 0 the tells are visible and the player can defuse.
 @export var betrayal_ticks_until_land: int = -1
 
+## P10b hidden motives: the single largest contributor to betrayal_pressure(), captured
+## at telegraph time (the motive that drove THIS intent); &"" = none. Starts hidden —
+## the reassure verb reveals it (a deterministic player-driven transition, never a roll).
+@export var betrayal_driving_motive: StringName = &""
+@export var motive_revealed: bool = false
+
 ## BetrayalPressure (brief §7.6). Betrayal also requires a viable opportunity, evaluated elsewhere.
 ## Telegraphed + deterministic — never an untelegraphed random roll.
 func betrayal_pressure() -> float:

@@ -12,6 +12,9 @@ extends RefCounted
 const OPPORTUNITY_THRESHOLD := 0.3
 ## Betrayal lead in rival ticks (~10 strategic ticks each): the player's defusal window.
 const TELEGRAPH_LEAD_RIVAL_TICKS := 6
+## P10b bound: already-open intents always advance, but at most this many NEW telegraphs
+## open per rival tick — two armed lieutenants open on consecutive ticks, never all at once.
+const MAX_NEW_INTENTS_PER_RIVAL_TICK := 1
 
 ## The reassure verb (the defusal lever): clean capital buys the lieutenant back in.
 const REASSURE_COST_CLEAN := 200
@@ -52,25 +55,50 @@ static func betrayal_opportunity(c: CharacterData, districts: Array[DistrictData
 				break
 	return clampf(opp, 0.0, 1.0)
 
-## Both-gates candidate pick (§7.6): pressure above threshold AND opportunity present.
-## Deterministic argmax over the player faction's lieutenants; ties resolve to the
-## first in iteration order (stable — GameState order is authored), like RivalScoring.
-static func choose_betrayer(characters: Array[CharacterData], districts: Array[DistrictData],
-		factions: Array[FactionData], player_faction_id: StringName) -> CharacterData:
-	var best: CharacterData = null
-	var best_score := -INF
-	for c in characters:
+## Both-gates candidate pick (§7.6), multi-lieutenant since P10b: pressure above
+## threshold AND opportunity present, excluding anyone whose intent is already open.
+## Deterministic total order — score descending, ties to authored GameState order
+## (ascending index) — so the result never depends on sort stability. Returns the
+## top max_new candidates.
+static func choose_betrayers(characters: Array[CharacterData], districts: Array[DistrictData],
+		factions: Array[FactionData], player_faction_id: StringName,
+		max_new: int) -> Array[CharacterData]:
+	var scored: Array = []  # [score, authored index, character]
+	for i in characters.size():
+		var c := characters[i]
 		if c.is_player or c.faction_id != player_faction_id:
+			continue
+		if c.betrayal_ticks_until_land >= 0:
 			continue
 		if not c.pressure_exceeds_threshold():
 			continue
 		var opp := betrayal_opportunity(c, districts, factions)
 		if opp < OPPORTUNITY_THRESHOLD:
 			continue
-		var score := c.betrayal_pressure() + opp
-		if score > best_score:
-			best_score = score
-			best = c
+		scored.append([c.betrayal_pressure() + opp, i, c])
+	scored.sort_custom(func(a, b):
+		return a[0] > b[0] if a[0] != b[0] else a[1] < b[1])
+	var out: Array[CharacterData] = []
+	for s in scored:
+		if out.size() >= max_new:
+			break
+		out.append(s[2])
+	return out
+
+## P10b: the DRIVING MOTIVE behind a betrayal — strict argmax over the four positive
+## pressure terms in fixed order (ties resolve to the earlier term). The suppressors
+## (trust/shared_success/fear) reduce pressure; they never drive a betrayal.
+const MOTIVE_TERMS: Array[StringName] = [&"ambition", &"grievance",
+	&"rival_leverage", &"survival_pressure"]
+
+static func driving_motive(c: CharacterData) -> StringName:
+	var best := MOTIVE_TERMS[0]
+	var best_v: float = c.get(best)
+	for m in MOTIVE_TERMS:
+		var v: float = c.get(m)
+		if v > best_v:
+			best_v = v
+			best = m
 	return best
 
 ## Gate re-check for an OPEN intent — the moment either gate stops holding, it defuses.

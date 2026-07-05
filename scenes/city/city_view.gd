@@ -15,6 +15,7 @@ func _ready() -> void:
 	add_child(_markers)
 	_build_ground()
 	rebuild()
+	DistrictLandmarks.spawn_all(self)  # P12b hero landmarks: static district skyline, not venues
 	GameState.districts_changed.connect(rebuild)
 
 func _build_ground() -> void:

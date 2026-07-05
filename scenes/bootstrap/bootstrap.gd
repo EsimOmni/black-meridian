@@ -5,12 +5,15 @@ extends Node3D
 
 const CityViewScript := preload("res://scenes/city/city_view.gd")
 const CameraScript := preload("res://scenes/city/management_camera.gd")
+const SkylineCameraScript := preload("res://scenes/city/skyline_camera.gd")
 const HudScript := preload("res://scenes/ui/hud.gd")
 const JobPanelScript := preload("res://scenes/ui/job_panel.gd")
 
 var _hud
 var _night_cycle: NightCycle
 var _relationships: RelationshipService
+var _management_camera: Camera3D
+var _skyline_camera: Camera3D
 
 func _ready() -> void:
 	WorldSeed.build()
@@ -58,6 +61,24 @@ func _build_camera() -> void:
 	cam.position = Vector3(0, 38, 26)  # P14: raised to clear ~31 m assembled buildings
 	cam.current = true
 	add_child(cam)
+	_management_camera = cam
+
+	# P12b: a second, non-gameplay skyline camera presents the hero landmarks at the master's
+	# cinematic 3/4 angle. Off by default; toggled with C. The management view stays authoritative.
+	var skyline := Camera3D.new()
+	skyline.name = "SkylineCamera"
+	skyline.set_script(SkylineCameraScript)
+	add_child(skyline)
+	_skyline_camera = skyline
+
+## Swap between the top-down management read and the cinematic skyline establishing shot (C).
+func _toggle_skyline_camera() -> void:
+	if _skyline_camera == null or _management_camera == null:
+		return
+	if _skyline_camera.current:
+		_management_camera.current = true
+	else:
+		_skyline_camera.current = true
 
 ## The phase machine is a bootstrap-wired node, NOT an autoload — unit-test scenes of
 ## other systems must never have phases advancing underneath them (P09).
@@ -102,6 +123,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				TimeService.toggle_pause()
 			KEY_X:
 				TimeService.cycle_speed()
+			KEY_C:
+				_toggle_skyline_camera()
 			KEY_F9:
 				SaveService.save_game("quick")
 				print("Quick-saved.")

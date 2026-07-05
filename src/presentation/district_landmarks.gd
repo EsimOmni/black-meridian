@@ -20,6 +20,12 @@ const PLACEMENTS := [
 		"position": Vector3(26.0, 0.0, -30.0),  # right flank, deep out on the water — a distant skyline landmark
 		"rotation_y": -0.35,                     # quarter-turn so a facet faces the camera
 	},
+	{
+		"glb": LANDMARK_DIR + "stone_institution.glb",
+		"name": "StoneInstitution",
+		"position": Vector3(-30.0, 0.0, -14.0),  # left flank, pushed back to sit level with the venue row (not looming in front)
+		"rotation_y": 0.95,                       # +y portico front turned to face the 3/4 skyline eye
+	},
 ]
 
 ## Spawn every landmark under `parent`. Called once at city build; landmarks are static skyline,

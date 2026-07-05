@@ -8,6 +8,7 @@ extends RefCounted
 ## architecture note's placement correction).
 
 const LANDMARK_DIR := "res://assets/city/glasswharf_dock/"
+const NOIR_DETAIL_SHADER := preload("res://src/presentation/landmark_noir_detail.gdshader")
 
 ## Fixed landmark placements for Glass Wharf, echoing glass_wharf_MASTER.jpg. The venue row runs
 ## x ∈ [-20, 20] at z ≈ ±1.5 (kit buildings, camera-facing); the water is behind (-z). The alien
@@ -38,7 +39,33 @@ static func spawn_all(parent: Node3D) -> void:
 		node.name = p["name"]
 		node.position = p["position"]
 		node.rotation.y = p["rotation_y"]
+		_apply_noir_detail(node)  # P12b trim lap: weather the stone/metal, leave the glow clean
 		parent.add_child(node)
+
+## Replace every non-emissive surface material with the triplanar noir weathering shader,
+## feeding it the GLB material's base color/roughness/metallic so the tone is preserved and
+## only weathered (venue-tint pattern: presentation-only override, the GLB itself is untouched,
+## distinct-baked-material budget unchanged). Emissive slots (cyan seam / window glow) keep
+## their own baked material so they bloom clean.
+static func _apply_noir_detail(node: Node) -> void:
+	if node is MeshInstance3D:
+		var mi := node as MeshInstance3D
+		var mesh := mi.mesh
+		if mesh != null:
+			for s in mesh.get_surface_count():
+				var mat := mi.get_active_material(s)
+				if mat is StandardMaterial3D and (mat as StandardMaterial3D).emission_enabled:
+					continue  # the glow stays clean
+				var detail := ShaderMaterial.new()
+				detail.shader = NOIR_DETAIL_SHADER
+				if mat is StandardMaterial3D:
+					var sm := mat as StandardMaterial3D
+					detail.set_shader_parameter("base_color", sm.albedo_color)
+					detail.set_shader_parameter("base_roughness", sm.roughness)
+					detail.set_shader_parameter("base_metallic", sm.metallic)
+				mi.set_surface_override_material(s, detail)
+	for child in node.get_children():
+		_apply_noir_detail(child)
 
 ## Load a landmark GLB into a fresh Node3D (base-center pivot, y=0 = ground — validated by
 ## GLBValidator 'building' spec). One-shot, no cache: a landmark is placed once.

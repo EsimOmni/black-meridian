@@ -24,8 +24,10 @@ func _build_ground() -> void:
 	plane.size = Vector2(80, 80)
 	ground.mesh = plane
 	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.08, 0.09, 0.11)  # wet charcoal asphalt (brief §9.1 palette)
-	mat.roughness = 0.5
+	mat.albedo_color = Color(0.05, 0.06, 0.08)  # wet charcoal asphalt (brief §9.1 palette)
+	mat.roughness = 0.18                          # rain-lacquered: low roughness -> the master's mirror-wet sheen
+	mat.metallic = 0.25                           # a touch of metallic for tighter, brighter reflections
+	mat.metallic_specular = 0.7
 	ground.material_override = mat
 	ground.name = "Ground"
 	add_child(ground)

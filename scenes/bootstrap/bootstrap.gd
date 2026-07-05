@@ -28,24 +28,58 @@ func _ready() -> void:
 	TimeService.set_speed(BM.Speed.PAUSED)
 
 func _build_lighting() -> void:
+	# P12b noir atmosphere pass — lift the hero landmarks out of silhouette without
+	# breaking the brief-§9.2 top-down management read. Both cameras share this rig, so
+	# every change is chosen to help both: a stronger sodium key + a cold rim/fill breaks
+	# the flat silhouette, ACES tonemap + glow lets the emissive seams/windows actually
+	# glow, and a wet-ground spec reflection gives the master's rain-lacquered read.
 	var env := WorldEnvironment.new()
 	var e := Environment.new()
 	e.background_mode = Environment.BG_COLOR
-	e.background_color = Color(0.04, 0.05, 0.07)  # rain-lacquered noir (brief §9.1)
+	e.background_color = Color(0.05, 0.07, 0.10)  # rain-lacquered petrol-blue noir (brief §9.1)
 	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	e.ambient_light_color = Color(0.18, 0.20, 0.26)
-	e.ambient_light_energy = 0.6
+	e.ambient_light_color = Color(0.20, 0.24, 0.32)  # cool ambient, slightly lifted so faces read
+	e.ambient_light_energy = 0.7
+	# ACES tonemap so bright emissives roll off instead of clipping; a hint of exposure.
+	e.tonemap_mode = Environment.TONE_MAPPER_ACES
+	e.tonemap_exposure = 1.05
+	e.tonemap_white = 6.0
+	# Glow — the master's wet-neon read: emissive seams (cyan) + windows (sodium) bloom.
+	e.glow_enabled = true
+	e.glow_intensity = 0.9
+	e.glow_strength = 1.0
+	e.glow_bloom = 0.15
+	e.glow_hdr_threshold = 1.0
+	e.glow_blend_mode = Environment.GLOW_BLEND_MODE_SCREEN
+	# Volumetric-ish depth fog, tuned to the master's petrol haze (thin, distance falls off).
 	e.fog_enabled = true
-	e.fog_density = 0.01
-	e.fog_light_color = Color(0.10, 0.13, 0.18)
+	e.fog_density = 0.012
+	e.fog_light_color = Color(0.12, 0.16, 0.22)
+	e.fog_sky_affect = 0.0
 	env.environment = e
 	add_child(env)
 
+	# Key — sodium amber, high 3/4 to echo the master's raking light; shadows ON so the
+	# portico columns and tower facets carve out (this is what breaks the silhouette).
 	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-55, 40, 0)
-	sun.light_color = Color(0.85, 0.80, 0.70)  # sodium amber key
-	sun.light_energy = 0.9
+	sun.name = "KeyLight"
+	sun.rotation_degrees = Vector3(-48, 35, 0)
+	sun.light_color = Color(0.95, 0.82, 0.62)  # sodium amber key
+	sun.light_energy = 1.4
+	sun.shadow_enabled = true
+	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+	sun.shadow_bias = 0.04
 	add_child(sun)
+
+	# Cold rim/fill from the opposite-rear — separates the dark landmark masses from the
+	# dark backdrop so they read as forms, not flat cut-outs. Low energy, no shadow.
+	var fill := DirectionalLight3D.new()
+	fill.name = "RimFill"
+	fill.rotation_degrees = Vector3(-20, -140, 0)
+	fill.light_color = Color(0.45, 0.60, 0.85)  # cold petrol rim
+	fill.light_energy = 0.6
+	fill.shadow_enabled = false
+	add_child(fill)
 
 func _build_city() -> void:
 	var city := Node3D.new()

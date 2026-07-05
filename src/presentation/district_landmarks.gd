@@ -20,12 +20,14 @@ const PLACEMENTS := [
 		"name": "AlienDiplomaticTower",
 		"position": Vector3(26.0, 0.0, -30.0),  # right flank, deep out on the water — a distant skyline landmark
 		"rotation_y": -0.35,                     # quarter-turn so a facet faces the camera
+		"patina": 0.55,                          # verdigris oxide bloom — the cold stain is invisible on this dark charcoal
 	},
 	{
 		"glb": LANDMARK_DIR + "stone_institution.glb",
 		"name": "StoneInstitution",
 		"position": Vector3(-30.0, 0.0, -14.0),  # left flank, pushed back to sit level with the venue row (not looming in front)
 		"rotation_y": 0.95,                       # +y portico front turned to face the 3/4 skyline eye
+		"patina": 0.0,                            # stone: pure cold stain, no metal patina
 	},
 ]
 
@@ -39,7 +41,7 @@ static func spawn_all(parent: Node3D) -> void:
 		node.name = p["name"]
 		node.position = p["position"]
 		node.rotation.y = p["rotation_y"]
-		_apply_noir_detail(node)  # P12b trim lap: weather the stone/metal, leave the glow clean
+		_apply_noir_detail(node, p.get("patina", 0.0))  # P12b trim lap: weather stone/metal, glow clean
 		parent.add_child(node)
 
 ## Replace every non-emissive surface material with the triplanar noir weathering shader,
@@ -47,7 +49,7 @@ static func spawn_all(parent: Node3D) -> void:
 ## only weathered (venue-tint pattern: presentation-only override, the GLB itself is untouched,
 ## distinct-baked-material budget unchanged). Emissive slots (cyan seam / window glow) keep
 ## their own baked material so they bloom clean.
-static func _apply_noir_detail(node: Node) -> void:
+static func _apply_noir_detail(node: Node, patina: float) -> void:
 	if node is MeshInstance3D:
 		var mi := node as MeshInstance3D
 		var mesh := mi.mesh
@@ -63,9 +65,10 @@ static func _apply_noir_detail(node: Node) -> void:
 					detail.set_shader_parameter("base_color", sm.albedo_color)
 					detail.set_shader_parameter("base_roughness", sm.roughness)
 					detail.set_shader_parameter("base_metallic", sm.metallic)
+				detail.set_shader_parameter("patina_amount", patina)
 				mi.set_surface_override_material(s, detail)
 	for child in node.get_children():
-		_apply_noir_detail(child)
+		_apply_noir_detail(child, patina)
 
 ## Load a landmark GLB into a fresh Node3D (base-center pivot, y=0 = ground — validated by
 ## GLBValidator 'building' spec). One-shot, no cache: a landmark is placed once.

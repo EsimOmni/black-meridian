@@ -23,6 +23,14 @@ uniform float wet_line_m = 7.0;       // height (m) up to which the wet/darker b
 uniform float wet_strength : hint_range(0.0, 1.0) = 0.6;
 uniform float rough_break : hint_range(0.0, 1.0) = 0.35;
 
+// Verdigris patina — for DARK metal (the tower), where the cold dark stain above is
+// invisible (dark-on-dark). Patina is the opposite: a LIGHTER teal-green oxide bloom
+// laid over the dark base in patches, brightening not darkening, so it reads on charcoal.
+// patina_amount 0 = off (stone landmarks keep the pure stain behaviour above).
+uniform float patina_amount : hint_range(0.0, 1.0) = 0.0;
+uniform vec3 patina_color : source_color = vec3(0.28, 0.52, 0.46);  // oxidized-copper verdigris
+uniform float patina_scale = 1.1;    // patch frequency
+
 // cheap value-noise (no texture) ------------------------------------------------
 float hash(vec3 p) {
 	p = fract(p * 0.3183099 + 0.1);
@@ -63,14 +71,29 @@ void fragment() {
 
 	// albedo: base tone stained toward the cold stain color in streaks + the wet band
 	float stain_mask = clamp(streak * stain_amount + wet * wet_strength * 0.7, 0.0, 1.0);
-	ALBEDO = mix(base_color, stain_color, stain_mask);
+	vec3 albedo = mix(base_color, stain_color, stain_mask);
 
 	// roughness: grain dulls dry patches, the wet band slicks (catches the key as wet sheen)
 	float r = base_roughness;
 	r = mix(r, 1.0, grain * rough_break);
 	r = mix(r, 0.12, wet * wet_strength);
-	ROUGHNESS = clamp(r, 0.05, 1.0);
 
 	// a hint of metallic in the wet band so the reflection reads (rain-lacquered stone)
-	METALLIC = clamp(base_metallic + wet * wet_strength * 0.3, 0.0, 1.0);
+	float metallic = clamp(base_metallic + wet * wet_strength * 0.3, 0.0, 1.0);
+
+	// --- verdigris patina (dark metal only) -----------------------------------
+	// two octaves of patch noise; blooms LIGHT teal over the dark base so it reads on
+	// charcoal, concentrated on upward/recessed reads (streak+grain proxy for where oxide
+	// settles). Patina is matte and non-metallic (oxide, not bare copper).
+	if (patina_amount > 0.001) {
+		float patch = vnoise(w * patina_scale) * 0.65 + vnoise(w * patina_scale * 2.7) * 0.35;
+		float pmask = smoothstep(0.38, 0.82, patch) * patina_amount;  // wide range -> softer, diffuse oxide, not hard blobs
+		albedo = mix(albedo, patina_color, pmask);
+		r = mix(r, 0.85, pmask);          // oxide is matte
+		metallic = mix(metallic, 0.0, pmask);
+	}
+
+	ALBEDO = albedo;
+	ROUGHNESS = clamp(r, 0.05, 1.0);
+	METALLIC = clamp(metallic, 0.0, 1.0);
 }

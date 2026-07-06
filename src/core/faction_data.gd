@@ -22,9 +22,15 @@ extends Resource
 
 ## P07 rival intent — the telegraph→land window survives ticks and saves (additive
 ## save fields). intent_action is a BM.RivalAction, or -1 when the rival has no plan.
+## Since P07b intent_venue_id is a generic target id: a venue id, or a character id
+## when intent_action == RECRUIT (field name kept for save-schema stability).
 @export var intent_action: int = -1
 @export var intent_venue_id: StringName = &""
 @export var intent_ticks_until_land: int = 0  ## in rival-ticks (~10 strategic each)
+
+## P07b: how many intents this faction has ever committed. The tie-break jitter salt
+## (persisted, so save→load→replay reproduces the same picks) + telemetry.
+@export var intents_committed: int = 0
 
 ## P07c rival memory — grudge toward the player, 0..1. Rises when the player resolves the
 ## retaliation this rival provoked (the feud closes); decays each rival tick (a grudge cools

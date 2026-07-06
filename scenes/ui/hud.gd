@@ -233,6 +233,10 @@ func _refresh_rival_intent() -> void:
 			for venue in district.venues:
 				if venue.id == faction.intent_venue_id:
 					target = venue.display_name
+		if target == "?":  # P07b RECRUIT: the intent target is a character, not a venue
+			var character := GameState.get_character(faction.intent_venue_id)
+			if character != null:
+				target = character.display_name
 		_rival_label.visible = true
 		_rival_label.text = "⚠ %s is moving on %s" % [faction.display_name, target]
 		return

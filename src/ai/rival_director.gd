@@ -30,23 +30,39 @@ func _act(rival: FactionData) -> void:
 	# the promise made to the player stays deterministic (§7.6).
 	if GameState.phase == BM.Phase.COUNCIL:
 		return
-	var pick := RivalScoring.choose_move(GameState.districts, GameState.player_faction_id, rival)
+	var pick := RivalScoring.choose_move(GameState.districts, GameState.player_faction_id,
+		rival, GameState.characters, rival.intents_committed)
 	if pick.is_empty():
 		return
 	rival.intent_action = pick["action"]
-	rival.intent_venue_id = pick["venue"].id
+	rival.intent_venue_id = pick["target_id"]  # venue id, or character id for RECRUIT
 	rival.intent_ticks_until_land = RivalScoring.TELEGRAPH_LEAD_RIVAL_TICKS
+	rival.intents_committed += 1  # P07b jitter salt advances per decision, persisted
 	rival_intent_telegraphed.emit(rival, pick["venue"], pick["action"])
 
-## The landed effect only writes the venue's sabotage component — the economy composes
-## it into disruption at settle (P06's single-writer pass) and income drops from there.
-## Never touches owner_faction/control_state (ownership shift is its own future slice).
+## Landed effects, one bounded write each. PROBE/SABOTAGE arm the venue's sabotage
+## component — the economy composes it into disruption at settle (P06's single-writer
+## pass). EXPAND (P07b) plants the rival's flag on NEUTRAL ground at the lowest tier —
+## the one place ownership shifts; player property is never taken here. FRAME (P07b)
+## bumps district heat additively (the JobLifecycle pattern) so the P06 latch reacts
+## through its normal, telegraphed path. RECRUIT (P07b) targets a CHARACTER: bounded
+## leverage gain feeding the P10b motive network; its landed signal carries venue=null
+## (every consumer is audited null-safe).
 func _land(rival: FactionData) -> void:
-	var venue := _find_venue(rival.intent_venue_id)
 	var action := rival.intent_action
+	var target_id := rival.intent_venue_id
 	rival.intent_action = -1
 	rival.intent_venue_id = &""
 	rival.intent_ticks_until_land = 0
+	if action == BM.RivalAction.RECRUIT:
+		var character := GameState.get_character(target_id)
+		if character == null:
+			return
+		character.rival_leverage = clampf(
+			character.rival_leverage + RivalScoring.RECRUIT_LEVERAGE, 0.0, 1.0)
+		rival_action_landed.emit(rival, null, action)
+		return
+	var venue := _find_venue(target_id)
 	if venue == null:
 		return
 	match action:
@@ -56,6 +72,14 @@ func _land(rival: FactionData) -> void:
 		BM.RivalAction.PROBE:
 			venue.sabotage_disruption = RivalScoring.PROBE_DISRUPTION
 			venue.sabotage_ticks = RivalScoring.PROBE_DURATION_TICKS
+		BM.RivalAction.EXPAND:
+			venue.owner_faction = rival.id
+			venue.control_state = BM.ControlState.INFLUENCED
+		BM.RivalAction.FRAME:
+			var district := GameState.get_district_of_venue(venue)
+			if district != null:
+				district.local_heat = clampf(
+					district.local_heat + RivalScoring.FRAME_HEAT, 0.0, 1.0)
 	rival_action_landed.emit(rival, venue, action)
 
 func _find_venue(venue_id: StringName) -> VenueData:

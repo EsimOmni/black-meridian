@@ -23,8 +23,12 @@ var _venue_stats: RichTextLabel
 var night_cycle_node: NightCycle
 ## The bootstrap-wired loyalty machine (P10) — the reassure verb routes through it.
 var relationship_node: RelationshipService
+## The bootstrap-wired reveal round-trip (P17b) — the Confront affordance routes through it.
+var transition_node: CinematicTransition
 var _betrayal_label: Label
 var _reassure_btn: Button
+var _confront_btn: Button
+var _confront_target: StringName = &""
 var _venue_actions: VBoxContainer
 var _hint_label: Label
 
@@ -86,6 +90,11 @@ func _ready() -> void:
 	_reassure_btn.visible = false
 	_reassure_btn.pressed.connect(_on_reassure_pressed)
 	vb.add_child(_reassure_btn)
+	# P17b: walk into the confrontation instead of resolving it from the ledger.
+	_confront_btn = Button.new()
+	_confront_btn.visible = false
+	_confront_btn.pressed.connect(_on_confront_pressed)
+	vb.add_child(_confront_btn)
 
 	vb.add_child(HSeparator.new())
 
@@ -207,6 +216,8 @@ func _refresh_betrayal() -> void:
 	if lines.is_empty():
 		_betrayal_label.visible = false
 		_reassure_btn.visible = false
+		_confront_btn.visible = false
+		_confront_target = &""
 		return
 	_betrayal_label.visible = true
 	_betrayal_label.text = "\n".join(lines)
@@ -214,6 +225,19 @@ func _refresh_betrayal() -> void:
 	_reassure_btn.visible = true
 	_reassure_btn.disabled = pf == null or pf.clean_capital < LoyaltyScoring.REASSURE_COST_CLEAN
 	_reassure_btn.text = "Address the grievance (+trust, -%d clean)" % LoyaltyScoring.REASSURE_COST_CLEAN
+	# P17b: confront the first open intent in person (greybox — same targeting rule
+	# as the reassure button). The HUD only names the character; the round-trip and
+	# every consequence live in CinematicTransition/RelationshipService.
+	for c in GameState.characters:
+		if c.betrayal_ticks_until_land >= 0:
+			_confront_target = c.id
+			_confront_btn.visible = transition_node != null
+			_confront_btn.text = "Confront %s (walk the floor)" % c.display_name
+			break
+
+func _on_confront_pressed() -> void:
+	if transition_node != null and _confront_target != &"":
+		transition_node.enter(_confront_target)
 
 func _on_reassure_pressed() -> void:
 	for c in GameState.characters:

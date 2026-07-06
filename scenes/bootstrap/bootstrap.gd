@@ -12,6 +12,8 @@ const JobPanelScript := preload("res://scenes/ui/job_panel.gd")
 var _hud
 var _night_cycle: NightCycle
 var _relationships: RelationshipService
+var _transition: CinematicTransition
+var _city: Node3D
 var _management_camera: Camera3D
 var _skyline_camera: Camera3D
 
@@ -22,6 +24,7 @@ func _ready() -> void:
 	_build_camera()
 	_build_night_cycle()
 	_build_relationships()
+	_build_transition()
 	_build_hud()
 	_build_jobs()
 	# Start paused so the player makes the first decision (brief §5.1).
@@ -87,6 +90,7 @@ func _build_city() -> void:
 	city.set_script(CityViewScript)
 	add_child(city)
 	city.venue_clicked.connect(_on_venue_clicked)
+	_city = city
 
 func _build_camera() -> void:
 	var cam := Camera3D.new()
@@ -128,11 +132,21 @@ func _build_relationships() -> void:
 	_relationships.name = "RelationshipService"
 	add_child(_relationships)
 
+## P17b: the enter/resolve round-trip into the reveal scene. Bootstrap-wired like
+## RelationshipService — the test drives its sim-effect path with city_root null.
+func _build_transition() -> void:
+	_transition = CinematicTransition.new()
+	_transition.name = "CinematicTransition"
+	_transition.city_root = _city
+	_transition.relationship_node = _relationships
+	add_child(_transition)
+
 func _build_hud() -> void:
 	_hud = CanvasLayer.new()
 	_hud.set_script(HudScript)
 	_hud.night_cycle_node = _night_cycle
 	_hud.relationship_node = _relationships
+	_hud.transition_node = _transition
 	add_child(_hud)
 
 func _build_jobs() -> void:

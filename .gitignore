@@ -29,6 +29,19 @@ assets/splat/**/*.glb
 # NOT ignored — the splat plugin carries our Godot-4.7 push-constant patch.)
 addons/godot_ai/
 
+# Godot editor/runtime user data — logs, keystores, editor settings, boot-smoke
+# output. Regenerated every run; never game code. (.godot/ above is the import
+# cache; .godot_user/ is the separate user-data dir.)
+.godot_user/
+
+# Asset-production iteration screenshots (Codex/Blender massing + placement refs).
+# Working refs, not shipped assets — keep them local.
+screenshots/
+
+# Gemini operator bridge (claude-bridge skill + queue). Operator tooling, not the
+# game; each agent maintains its own copy.
+.agents/
+
 # OS / editor cruft
 .DS_Store
 Thumbs.db

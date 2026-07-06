@@ -6,6 +6,11 @@ extends RefCounted
 ## targeting stamped on by JobGenerator; they never invent content the template didn't
 ## author. Migrates to data/jobs/ typed resources when the authored roster grows (P16).
 
+## P08b: variant counts per origin. JobGenerator picks an index deterministically
+## (avalanche of the id string, mod count) — never stored, always recomputed.
+const RETALIATION_VARIANTS := 2
+const BURY_CASE_VARIANTS := 2
+
 ## Job registry: rebuild an AUTHORED job definition by id (saves store runtime state only).
 ## Generated ids (prefix "gen@") are rebuilt by JobGenerator.rebuild instead — SaveService
 ## tries this registry first, then falls back to the generator.
@@ -76,13 +81,24 @@ static func intercepted_shipment() -> JobData:
 	]
 	return job
 
-## "Answer in Kind" — generated when a rival SABOTAGE lands on a player venue (P08
-## trigger 1). The rival's move is the problem; the player architects the answer.
-## Targeting (id, venue_id) is stamped by JobGenerator; text takes the display names.
-## P06d balance invariant (test_evidence guards it): the loudest route must net
+## Retaliation — generated when a rival SABOTAGE lands on a player venue (P08 trigger 1).
+## The rival's move is the problem; the player architects the answer. Targeting (id,
+## venue_id) is stamped by JobGenerator; text takes the display names.
+## P08b: two authored variants — 0 = "Answer in Kind" (the street expects symmetry),
+## 1 = "The Message" (a colder, surgical demonstration). The index is a deterministic
+## hash of the id-encoded targeting, computed by JobGenerator — never stored.
+## Variant contract: BOTH variants share the same choice-id set (saved chosen_* ids and
+## id-referencing tests stay valid whichever variant the hash lands on) and BOTH honor
+## the P06d balance envelope (test_evidence guards it): the loudest route must net
 ## >= +0.25 evidence (a visible reprisal leaves a trail — the feud feeds the police
 ## line) while the quietest stays <= -0.3 (a careful answer keeps you clean).
-static func retaliation(venue_name: String, rival_name: String) -> JobData:
+static func retaliation(venue_name: String, rival_name: String, variant: int = 0) -> JobData:
+	if variant == 1:
+		return _retaliation_the_message(venue_name, rival_name)
+	return _retaliation_answer_in_kind(venue_name, rival_name)
+
+## Variant 0 — "Answer in Kind": the hit was public, the street expects symmetry.
+static func _retaliation_answer_in_kind(venue_name: String, rival_name: String) -> JobData:
 	var job := JobData.new()
 	job.title = "Answer in Kind"
 	job.origin = BM.JobOrigin.RIVAL_PROVOCATION
@@ -132,12 +148,78 @@ static func retaliation(venue_name: String, rival_name: String) -> JobData:
 	]
 	return job
 
+## Variant 1 — "The Message": no symmetry, no heat-of-the-moment. One precise,
+## unmistakable demonstration aimed at whoever gave the order, not the crew who obeyed
+## it. Same choice-id set and outcome-axis shape as variant 0; effect magnitudes differ
+## but stay inside the P06d envelope (loudest lifecycle >= +0.25, quietest <= -0.3).
+static func _retaliation_the_message(venue_name: String, rival_name: String) -> JobData:
+	var job := JobData.new()
+	job.title = "The Message"
+	job.origin = BM.JobOrigin.RIVAL_PROVOCATION
+	job.apparent_problem = "%s put a wrecking crew through the %s and made sure it was watched. Symmetry is what they expect. The Resolver's answer should be read twice: once by the street, once by the man who signed the order." % [rival_name, venue_name]
+	job.deadline_ticks = 60
+	job.known_evidence = ["A payout envelope, wrong district's paper", "The crew drank two blocks east before the hit"]
+	job.visible_stakes = "An answer aimed at the crew punishes the gloves, not the hand. Miss the hand and this happens again, cheaper."
+	job.hidden_stakes = "The order was signed by someone auditioning for a bigger chair — the reprisal is their references."
+	job.reward_dirty = 250
+
+	job.prep_actions = [
+		JobChoiceData.make(&"prep_trace_crew", "Name the paymaster",
+			"Follow the envelope, not the pry-bar — find who paid, not who swung.",
+			{&"new_leverage": 0.2, &"evidence_generated": -0.05}),
+		JobChoiceData.make(&"prep_stage_alibis", "Clear the calendar",
+			"By tonight every name of ours is verifiably, boringly elsewhere.",
+			{&"evidence_generated": -0.2}),
+		JobChoiceData.make(&"prep_answer_tonight", "Send it before dawn",
+			"A message loses its meaning if it arrives late. Skip the homework.",
+			{&"delayed_consequence": 0.2, &"objective_achieved": 0.1}),
+	]
+
+	job.approaches = [
+		JobChoiceData.make(&"appr_mirror", "Make an example",
+			"Their captain's car burns at noon, in front of his crew. Nobody touched; everybody schooled.",
+			{&"objective_achieved": 0.7, &"public_fear": 0.3, &"evidence_generated": 0.35,
+				&"rival_suspicion": 0.15}),
+		JobChoiceData.make(&"appr_feed_inspectors", "Post the ledger",
+			"The paymaster's private accounts, photographed page by page, reach an honest desk.",
+			{&"objective_achieved": 0.6, &"new_leverage": 0.2, &"evidence_generated": 0.1,
+				&"rival_suspicion": 0.1}),
+		JobChoiceData.make(&"appr_absorb", "The open window",
+			"The man who signed the order wakes to an open bedroom window and nothing taken. Nothing needs to be.",
+			{&"objective_achieved": 0.45, &"new_leverage": 0.25, &"relationship_change": 0.1,
+				&"evidence_generated": -0.05}),
+	]
+
+	job.coverups = [
+		JobChoiceData.make(&"cover_deny", "We were never there",
+			"Every hand involved is out of the district by morning; the Compact expresses concern.",
+			{&"evidence_generated": -0.3}),
+		JobChoiceData.make(&"cover_flaunt", "Sign the work",
+			"No proof, no names — but the craftsmanship is unmistakably yours, and meant to be.",
+			{&"evidence_generated": -0.05, &"public_fear": 0.3, &"delayed_consequence": 0.2}),
+		JobChoiceData.make(&"cover_broker", "Send the invoice",
+			"A courier delivers an itemized bill for the damage, payable in territory. No signature.",
+			{&"evidence_generated": -0.2, &"relationship_change": 0.2, &"rival_suspicion": 0.1}),
+	]
+	return job
+
 ## "Bury the Case" — generated when an inspection lands while a named evidence case
 ## pins the district (P06b trigger). The job targets ONE case: a clean resolution nets
 ## strongly negative evidence (the targeted case burns — JobDirector removes it); the
 ## clumsy route nets POSITIVE evidence on every cover-up (a botched burn leaves more
 ## trace than it removes, and the case stands). Targeting is stamped by JobGenerator.
-static func bury_case(case_label: String, district_name: String) -> JobData:
+## P08b: two authored variants — 0 = "Bury the Case" (attack the paper), 1 = "Break the
+## Chain" (attack the people who vouch for the paper). Index chosen deterministically by
+## JobGenerator. Variant contract: same choice-id set AND byte-identical effects — the
+## burn/botch math (test_evidence) reads exact per-choice numbers, so variant 1 differs
+## in reading experience only; the mechanics are the shared spine.
+static func bury_case(case_label: String, district_name: String, variant: int = 0) -> JobData:
+	if variant == 1:
+		return _bury_case_break_the_chain(case_label, district_name)
+	return _bury_case_bury_the_case(case_label, district_name)
+
+## Variant 0 — "Bury the Case": the case is paper in a room; make the paper stop existing.
+static func _bury_case_bury_the_case(case_label: String, district_name: String) -> JobData:
 	var job := JobData.new()
 	job.title = "Bury the Case"
 	job.origin = BM.JobOrigin.EVIDENCE_CHAIN
@@ -183,6 +265,59 @@ static func bury_case(case_label: String, district_name: String) -> JobData:
 			{&"evidence_generated": -0.1, &"delayed_consequence": 0.1}),
 		JobChoiceData.make(&"cover_walk", "Walk away clean",
 			"Touch nothing else. The absence should look like bureaucracy, not intent.",
+			{}),
+	]
+	return job
+
+## Variant 1 — "Break the Chain": a case is only as strong as the people who swear to
+## it. Same ids, same effect dicts as variant 0 (the burn math is shared); the read is
+## a different job — custody signatures instead of archive shelves.
+static func _bury_case_break_the_chain(case_label: String, district_name: String) -> JobData:
+	var job := JobData.new()
+	job.title = "Break the Chain"
+	job.origin = BM.JobOrigin.EVIDENCE_CHAIN
+	job.apparent_problem = "The sweep in %s stands on people, not paper: %s is only as strong as the three signatures on its chain of custody — and signatures belong to people with rents, debts and reasons." % [district_name, case_label.to_lower()]
+	job.deadline_ticks = 60
+	job.known_evidence = [case_label]
+	job.visible_stakes = "Every custodian who stands behind that case keeps the inspectors coming. Break one link and the whole chain reads as hearsay."
+	job.hidden_stakes = "One of the signatories has quietly asked for protection — from you or from his own side, unclear."  # not shown at intake
+	job.reward_dirty = 200
+
+	job.prep_actions = [
+		JobChoiceData.make(&"prep_case_room", "Map the chain",
+			"Every hand that touched the case, intake to vault. Names, shifts, walking routes.",
+			{&"evidence_generated": -0.1, &"new_leverage": 0.1}),
+		JobChoiceData.make(&"prep_learn_names", "Price the weakest link",
+			"Of the three custodians, one gambles, one grieves, one wants a transfer. Pick the lever.",
+			{&"new_leverage": 0.15}),
+		JobChoiceData.make(&"prep_go_early", "Move before the deposition",
+			"The custodians are scheduled to swear their signatures next week. Beat the calendar.",
+			{&"delayed_consequence": 0.2, &"objective_achieved": 0.1}),
+	]
+
+	job.approaches = [
+		JobChoiceData.make(&"appr_torch", "Ruin the signatory",
+			"The intake officer's debts surface loudly and publicly. A compromised chain is no chain.",
+			{&"objective_achieved": 0.75, &"evidence_generated": -0.45, &"public_fear": 0.2,
+				&"collateral_damage": 0.2}),
+		JobChoiceData.make(&"appr_custodian", "Buy a recantation",
+			"One custodian comes to remember signing a different box on a different night.",
+			{&"objective_achieved": 0.6, &"evidence_generated": -0.4, &"relationship_change": 0.2,
+				&"rival_suspicion": 0.1}),
+		JobChoiceData.make(&"appr_snatch", "Lean on him tonight",
+			"A late knock, two large silhouettes, one short sentence. Fast, crude, remembered.",
+			{&"objective_achieved": 0.5, &"evidence_generated": 0.2, &"delayed_consequence": 0.2}),
+	]
+
+	job.coverups = [
+		JobChoiceData.make(&"cover_never_was", "A paperwork mix-up",
+			"The recantation gets filed as a routine correction; the docket quietly loses its spine.",
+			{&"evidence_generated": -0.15}),
+		JobChoiceData.make(&"cover_misfile", "Transfer the man",
+			"The bought custodian gets the posting he always wanted, two districts away, effective now.",
+			{&"evidence_generated": -0.1, &"delayed_consequence": 0.1}),
+		JobChoiceData.make(&"cover_walk", "Walk away clean",
+			"No follow-up, no favors called in. A weak witness should look like a weak witness.",
 			{}),
 	]
 	return job

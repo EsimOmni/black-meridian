@@ -4,8 +4,8 @@ extends RefCounted
 ## unit-tests headless, like EconomyMath/RivalScoring (tasks/lessons.md). PURELY
 ## DETERMINISTIC: the same trigger on the same sim state produces the identical job —
 ## no random number generation or seeded jitter anywhere (P08 house rule, brief §7.6;
-## template variety within an origin is P08b, as a deterministic hash — still not
-## randomness). Enforced by test_job_generation's source scan.
+## P08b template variety within an origin is a deterministic hash of the id-encoded
+## targeting — still not randomness). Enforced by test_job_generation's source scan.
 ##
 ## A generated job = an authored JobTemplates builder + sim-derived targeting. The id
 ## encodes everything needed to rebuild the content ("gen@<template>@<targeting>@<tick>"),
@@ -25,9 +25,14 @@ const FOLLOWUP_LEAD_TICKS := 20
 const GENERATED_PREFIX := "gen@"
 
 ## Trigger 1 — a rival SABOTAGE landed on a player venue (RivalDirector.rival_action_landed).
+## P08b: the template variant is a hash of the id string ITSELF — by construction the
+## pick derives only from id-encoded inputs, so rebuild() (which re-enters this function
+## with the parsed inputs) recomputes the identical index. Never stored, never a counter.
 static func retaliation_job(venue: VenueData, rival: FactionData, tick: int) -> JobData:
-	var job := JobTemplates.retaliation(venue.display_name, rival.display_name)
-	job.id = StringName("gen@retaliation@%s@%s@%d" % [venue.id, rival.id, tick])
+	var id_str := "gen@retaliation@%s@%s@%d" % [venue.id, rival.id, tick]
+	var job := JobTemplates.retaliation(venue.display_name, rival.display_name,
+		_variant_index(id_str, JobTemplates.RETALIATION_VARIANTS))
+	job.id = StringName(id_str)
 	job.venue_id = venue.id
 	return job
 
@@ -45,8 +50,10 @@ static func followup_job(venue: VenueData, tick: int) -> JobData:
 ## (JobDirector._district_of parses it back out).
 static func bury_case_job(evidence_case: EvidenceCaseData, district: DistrictData,
 		tick: int) -> JobData:
-	var job := JobTemplates.bury_case(evidence_case.label, district.display_name)
-	job.id = StringName("gen@burycase@%s@%s@%d" % [district.id, evidence_case.id, tick])
+	var id_str := "gen@burycase@%s@%s@%d" % [district.id, evidence_case.id, tick]
+	var job := JobTemplates.bury_case(evidence_case.label, district.display_name,
+		_variant_index(id_str, JobTemplates.BURY_CASE_VARIANTS))
+	job.id = StringName(id_str)
 	return job
 
 ## Rebuild a generated job's authored content from its id (SaveService load path — the
@@ -88,6 +95,23 @@ static func rebuild(job_id: StringName, districts: Array[DistrictData],
 				return null
 			return bury_case_job(evidence_case, district, int(parts[7]))
 	return null
+
+## P08b — deterministic variant pick: avalanche of the id-encoded string, non-negative
+## modulo variant count (the ((m % n) + n) % n dance because m can be negative). A pure
+## function of the id string, so save → load → rebuild lands on the same variant forever.
+static func _variant_index(seed_str: String, count: int) -> int:
+	var m := _avalanche(seed_str.hash())
+	return ((m % count) + count) % count
+
+## splitmix64 finalizer — DELIBERATE 3-line duplicate of RivalScoring._avalanche (P07b,
+## proven). String.hash() (DJB2) alone has near-zero avalanche — a +1 tick would barely
+## move the bucket and the variant would freeze to one side. rival_scoring.gd is shipped
+## and gated; per the P08b spec (option A) we copy rather than reopen a green file for a
+## cross-file refactor. Keep the two copies byte-identical if either ever changes.
+static func _avalanche(x: int) -> int:
+	x = (x ^ (x >> 30)) * -49064778989728563
+	x = (x ^ (x >> 27)) * -4265267296055464877
+	return x ^ (x >> 31)
 
 static func _find_district(districts: Array[DistrictData], district_id: StringName) -> DistrictData:
 	for district in districts:

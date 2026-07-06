@@ -148,11 +148,13 @@ func _build_hud() -> void:
 	_hud.relationship_node = _relationships
 	_hud.transition_node = _transition
 	add_child(_hud)
+	_transition.hud_layers.append(_hud)  # hide the management panels during the reveal
 
 func _build_jobs() -> void:
 	var panel := CanvasLayer.new()
 	panel.set_script(JobPanelScript)
 	add_child(panel)
+	_transition.hud_layers.append(panel)  # hide the job panel during the reveal too
 	# The authored seed job; further problems emerge systemically (P08 JobGenerator).
 	JobDirector.offer(JobTemplates.intercepted_shipment())
 
@@ -181,3 +183,21 @@ func _unhandled_input(event: InputEvent) -> void:
 				# F8 stops the game process outright, F10 is swallowed by the debugger.
 				# Deferred so the world rebuild happens outside the input flush.
 				_quick_load.call_deferred()
+			KEY_B:
+				# DEBUG: jump straight into the first-person reveal scene (P17b) without
+				# waiting for a betrayal telegraph. Arms bengal_lt's intent, then enters.
+				_debug_enter_reveal()
+
+func _debug_enter_reveal() -> void:
+	var c := GameState.get_character(&"bengal_lt")
+	if c == null:
+		return
+	c.ambition = 0.9
+	c.grievance = 0.95
+	c.rival_leverage = 0.5
+	c.public_trust = 0.1
+	c.shared_success = 0.0
+	c.betrayal_ticks_until_land = LoyaltyScoring.TELEGRAPH_LEAD_RIVAL_TICKS
+	c.betrayal_driving_motive = LoyaltyScoring.driving_motive(c)
+	c.motive_revealed = false
+	_transition.enter(&"bengal_lt")

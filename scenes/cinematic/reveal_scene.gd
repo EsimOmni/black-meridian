@@ -107,8 +107,16 @@ func _unhandled_input(event: InputEvent) -> void:
 		if _cam:
 			_cam.rotation = Vector3(_pitch, _yaw, 0.0)
 		return
+	# ESC releases the cursor (so you can leave the window); click recaptures it for
+	# mouse-look. Standard FPS toggle — nothing here mutates sim state.
+	if event is InputEventMouseButton and event.pressed \
+			and Input.mouse_mode == Input.MOUSE_MODE_VISIBLE:
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
+			KEY_ESCAPE:
+				Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 			KEY_E:
 				if not _inspected and _near_tell():
 					_inspected = true

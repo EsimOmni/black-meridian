@@ -17,6 +17,9 @@ const RevealScene := preload("res://scenes/cinematic/reveal_scene.tscn")
 
 ## The city presentation root to hide while the reveal is up. Null = headless.
 var city_root: Node3D
+## The management HUD CanvasLayers to hide while the reveal is up (the city panels
+## are separate CanvasLayers, not children of city_root, so they need hiding too).
+var hud_layers: Array[CanvasLayer] = []
 ## The bootstrap-wired loyalty machine (P10) — the reassure verb routes through it.
 var relationship_node: RelationshipService
 
@@ -30,6 +33,9 @@ func enter(character_id: StringName) -> void:
 		return  # nothing to swap (headless) or already inside the scene
 	_prev_camera = get_viewport().get_camera_3d()
 	city_root.visible = false
+	for layer in hud_layers:
+		if is_instance_valid(layer):
+			layer.visible = false
 	_reveal = RevealScene.instantiate()
 	_reveal.transition = self
 	add_child(_reveal)
@@ -53,6 +59,9 @@ func resolve(character_id: StringName, reassured: bool) -> void:
 		_reveal = null
 	if city_root != null:
 		city_root.visible = true
+	for layer in hud_layers:
+		if is_instance_valid(layer):
+			layer.visible = true
 	if is_instance_valid(_prev_camera):
 		_prev_camera.current = true
 	_prev_camera = null

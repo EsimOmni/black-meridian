@@ -46,3 +46,14 @@ screenshots/
 .DS_Store
 Thumbs.db
 *.tmp
+
+# Concept-runner tooling (image/video generation via Magnific + Google Flow web
+# UI, Playwright-driven). Browser profiles hold login cookies/secrets — NEVER
+# commit. Outputs are regeneratable renders, not source. venv is a local build.
+tools/concept-runners/.venv/
+tools/concept-runners/**/__pycache__/
+tools/concept-runners/**/*.pyc
+tools/concept-runners/magnific/magnific-profile/
+tools/concept-runners/magnific/outputs/
+tools/concept-runners/google-flow/flow-profile/
+tools/concept-runners/google-flow/outputs/

@@ -1,0 +1,22 @@
+{
+  "project_url": "https://labs.google/fx/tools/flow/project/REPLACE_WITH_YOUR_PROJECT_UUID",
+  "defaults": {
+    "mode": "direct",
+    "modality": "image",
+    "aspect": "16:9",
+    "quality": "x2",
+    "model": "Nano Banana 2",
+    "max_credits": 0
+  },
+  "jobs": [
+    {
+      "name": "glasswharf_master_keyframe",
+      "brief": "Wide establishing concept keyframe of Glass Wharf, a rain-soaked interspecies district in the noir metropolis of Black Meridian at night: dense waterfront warehouses converted into neon-lit clubs and black-market exchanges, an elevated transit line cutting overhead, wet asphalt reflecting cyan and amber signage, distant skyline of towering mixed human/alien architecture, heavy atmospheric fog, cinematic wide shot, moody teal-and-amber color grade, high-fidelity production concept art, no text, no logos.",
+      "refs": [],
+      "mode": "direct",
+      "modality": "image",
+      "model": "Nano Banana 2",
+      "max_credits": 0
+    }
+  ]
+}

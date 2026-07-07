@@ -29,6 +29,10 @@ var _betrayal_label: Label
 var _reassure_btn: Button
 var _confront_btn: Button
 var _confront_target: StringName = &""
+## P17c: the crime-scene affordance — armed by bootstrap when a rival sabotage/frame
+## lands on player ground with an open case; shown while that district still has one.
+var _walk_scene_btn: Button
+var _walk_scene_district: StringName = &""
 var _venue_actions: VBoxContainer
 var _hint_label: Label
 
@@ -97,6 +101,11 @@ func _ready() -> void:
 	_confront_btn.visible = false
 	_confront_btn.pressed.connect(_on_confront_pressed)
 	vb.add_child(_confront_btn)
+	# P17c: walk into the crime-scene the rival left on your ground.
+	_walk_scene_btn = Button.new()
+	_walk_scene_btn.visible = false
+	_walk_scene_btn.pressed.connect(_on_walk_scene_pressed)
+	vb.add_child(_walk_scene_btn)
 
 	vb.add_child(HSeparator.new())
 
@@ -193,6 +202,7 @@ func _refresh() -> void:
 	_speed_label.text = "Speed:  %s" % _speed_name(TimeService.speed)
 	_refresh_reckoning()
 	_refresh_betrayal()
+	_refresh_crime_scene()
 	_refresh_rival_intent()
 	_refresh_squeeze()
 	_refresh_venue()
@@ -254,6 +264,33 @@ func _refresh_betrayal() -> void:
 func _on_confront_pressed() -> void:
 	if transition_node != null and _confront_target != &"":
 		transition_node.enter(_confront_target)
+
+## P17c: bootstrap arms the affordance when the trigger lands (sabotage/frame on a
+## player-owned venue with an open case). The HUD only holds the district ID.
+func offer_crime_scene(district_id: StringName) -> void:
+	_walk_scene_district = district_id
+	_refresh_crime_scene()
+
+## Shown while the armed district still has an open case — labelled with its STRONGEST
+## case (the one the scene is built around). The HUD reads state; it decides nothing.
+func _refresh_crime_scene() -> void:
+	if _walk_scene_btn == null:
+		return
+	if _walk_scene_district == &"":
+		_walk_scene_btn.visible = false
+		return
+	var d := GameState.get_district(_walk_scene_district)
+	var strongest := EvidenceMath.strongest_case(d) if d != null else null
+	if strongest == null:
+		_walk_scene_btn.visible = false
+		_walk_scene_district = &""  # case burned or removed — the offer lapses
+		return
+	_walk_scene_btn.visible = transition_node != null
+	_walk_scene_btn.text = "Walk the scene — %s" % strongest.label
+
+func _on_walk_scene_pressed() -> void:
+	if transition_node != null and _walk_scene_district != &"":
+		transition_node.enter_crime_scene(_walk_scene_district)
 
 func _on_reassure_pressed() -> void:
 	for c in GameState.characters:

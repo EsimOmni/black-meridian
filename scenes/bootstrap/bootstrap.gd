@@ -27,6 +27,9 @@ func _ready() -> void:
 	_build_transition()
 	_build_hud()
 	_build_jobs()
+	# P17c: a sabotage/frame landing on player ground can be walked into as a
+	# crime-scene — the affordance is offered, never automatic (brief §6 pillar 4).
+	RivalDirector.rival_action_landed.connect(_on_rival_action_landed)
 	# Start paused so the player makes the first decision (brief §5.1).
 	TimeService.set_speed(BM.Speed.PAUSED)
 
@@ -187,6 +190,10 @@ func _unhandled_input(event: InputEvent) -> void:
 				# DEBUG: jump straight into the first-person reveal scene (P17b) without
 				# waiting for a betrayal telegraph. Arms bengal_lt's intent, then enters.
 				_debug_enter_reveal()
+			KEY_N:
+				# DEBUG: jump straight into the crime-scene (P17c) — deposits a case on
+				# Glass Wharf, then enters. A letter key: F-keys go to the editor debugger.
+				_debug_enter_crime_scene()
 
 func _debug_enter_reveal() -> void:
 	var c := GameState.get_character(&"bengal_lt")
@@ -201,3 +208,25 @@ func _debug_enter_reveal() -> void:
 	c.betrayal_driving_motive = LoyaltyScoring.driving_motive(c)
 	c.motive_revealed = false
 	_transition.enter(&"bengal_lt")
+
+## P17c trigger: a SABOTAGE/FRAME landing on a player-owned venue whose district has
+## an open evidence case exposes the "Walk the scene" affordance. Player-elected entry;
+## this handler only ARMS the HUD button — it never enters the scene itself.
+func _on_rival_action_landed(_faction: FactionData, venue: VenueData, action: int) -> void:
+	if venue == null or _hud == null:
+		return
+	if action != BM.RivalAction.SABOTAGE and action != BM.RivalAction.FRAME:
+		return
+	if venue.owner_faction != GameState.player_faction_id:
+		return
+	var district := GameState.get_district_of_venue(venue)
+	if district == null or district.evidence_cases.is_empty():
+		return
+	_hud.offer_crime_scene(district.id)
+
+func _debug_enter_crime_scene() -> void:
+	var d := GameState.get_district(&"glass_wharf")
+	if d == null:
+		return
+	EvidenceMath.deposit(d, 0.6, &"debug_crime_scene", TimeService.tick_index)
+	_transition.enter_crime_scene(&"glass_wharf")

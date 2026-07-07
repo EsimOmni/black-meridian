@@ -24,6 +24,21 @@ const PLACEMENTS := [
 		"patina": 0.35,                           # damp wood/metal weathering, matches the master's wet freight facades
 	},
 	{
+		"glb": LANDMARK_DIR + "industrial_block_a.glb",
+		"name": "IndustrialBlockA",
+		"position": Vector3(16.0, 0.0, -8.0),   # right-mid, set back behind the venue row — a taller brick freight block on the skyline
+		"rotation_y": -1.1,                       # broad face angled toward the 3/4 camera
+		"patina": 0.25,                           # light damp-brick weathering
+	},
+	{
+		"glb": LANDMARK_DIR + "dock_house_pier.glb",
+		"name": "DockHousePier",
+		"position": Vector3(2.0, 0.0, 12.0),    # front-center on the wharf edge, out over the water — the near stilt-house + jetty combo
+		"rotation_y": 0.3,                        # jetty runs toward the water/camera-right
+		"scale": 1.3,                             # bring the ~11 m combo up so the stilt house reads beside the warehouse
+		"patina": 0.3,                            # wet weathered dock wood
+	},
+	{
 		"glb": LANDMARK_DIR + "alien_diplomatic_tower.glb",
 		"name": "AlienDiplomaticTower",
 		"position": Vector3(26.0, 0.0, -30.0),  # right flank, deep out on the water — a distant skyline landmark

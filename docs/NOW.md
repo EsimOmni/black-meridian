@@ -23,18 +23,43 @@ Doktrin: concept→asset-split (master ONAYLI, şimdi ona göre 3D üretiyoruz).
   `_apply_noir_detail` shader'ını atlatır (flat-color P12b landmark'ları hâlâ weathering alır).
 - **Asset pipeline kanıtlandı** (~1 dk/asset): download → Blender join+base-center-pivot+1K-texture
   → GLB export (**Draco OFF** — Godot 4.7 okuyamaz) → `--import` doğrula.
-- **Repo self-consistent:** landmark texture'ları (170 dosya) commit'lendi — fresh clone gri açılmaz.
+- **Repo self-consistent:** landmark texture'ları commit'lendi — fresh clone gri açılmaz.
+- **`DockProps` prop scatter placer** (`src/presentation/dock_props.gd`, `city_view.gd`'de wire):
+  5 Faz-1 prop yerinde, dokulu, master'a göre yayılmış + ölçekli — dock_crane, bollard_rope×2,
+  fishing_supplies, market_stall×2, pallet_pack×2. Hepsi **CC-BY, UID+attribution loglu**
+  (`ATTRIBUTIONS.md`). DistrictLandmarks'ı aynalar ama scatter list + prop, patina shader YOK.
 
 ## ⏭️ Sıradaki adım
 
-1. **Prop batch (Grup B):** container/paslı container/fishing boat/street lamp/vintage lamp/dumpster/
-   crane — UID'ler + hedef boyutlar `docs/glass-wharf-buildout-plan.md`'de. Başka chate verilen
-   prompt hazır (Sketchfab→Blender→Godot, aynı pipeline). GLB'ler `assets/city/glasswharf_dock/`'a gelecek.
-2. **`DockProps` scatter placer yaz** — `DistrictLandmarks`'ı aynala ama scatter list + prop spec,
-   patina shader YOK (prop'lar kendi material'ını korur). Sabit authored dizi (RNG YOK).
-3. **Kompozisyon (insan %10):** landmark'lar şu an merkeze kümeli + venue kutularına göre küçük.
-   Master'ın pier dizilimine göre yay + ölçeği büyüt.
-4. **Neon polish:** master'ın sıcak neon vitrinleri eksik (emissive pencereler) + ıslak/yağmur grade.
+1. **PolyHaven Faz 2 — materyal + HDRI** (CC0, `D:\bm-asset-haul\polyhaven\`'da indirili, repoya
+   girmedi henüz): `cobblestone_street_night_4k.hdr` → sahne WorldEnvironment (atmosfer+yansıma);
+   pas/korruge/ahşap PBR texture'lar (rusty_metal_02, corrugated_iron_02, weathered_planks,
+   wood_planks_dirt, cobblestone_floor_08, asphalt_03, metal_plate_02) → zemin + landmark materyali.
+2. **Bekleyen prop'ları kurtar:** container×2, dumpster, fishing_boat, street_lamp, lamp_post_vintage
+   — bir kısmı **yatık/havada pivot'la** export olmuş (base_y≠0, Y-Z ekseni dönük), üstelik
+   **download UID/lisansı kayıtlı değil**. Blender'da doğru pivot/rotasyonla YENİDEN export + Sketchfab
+   UID'den lisans doğrula, sonra `DockProps`'a ekle. Ham dosyalar repoda ama placement'a KOYULMADI.
+3. **Kompozisyon ince-ayar (insan %10):** prop'lar yayıldı+büyüdü ama hâlâ %70 master; skyline
+   kamerasından (oyun-içi C) bak, master'ın derin pier'ine göre son rötuş. Diminishing returns —
+   sonsuz kovalama.
+4. **Neon polish:** master'ın sıcak neon vitrinleri (emissive pencereler) + ıslak/yağmur grade.
+   market_stall'da `_plus_emissive` texture'ı var — neon aksan için değerlendirilebilir.
+
+## 💳 Hero geometri — Magnific image→3D (KARAR VERİLDİ, henüz basılmadı)
+
+Krediyi SADECE **kimlik taşıyan hero geometriye** harca (master'ın focal landmark'ları + 2-3 imza
+prop). Çevre/dolgu/materyal = Sketchfab+PolyHaven bedava, oraya kredi YAKMA.
+
+- **Bakiye: ~40K kredi** (45K havuz). MCP'de `unlimitedAppliesHere:false` → her generate kredi yakar.
+  Kredi bol; darboğaz Blender temizlik emeği, o yüzden az sayıda gerçek hero'ya odaklan.
+- **Model fiyatları (MCP/UI, kesin):** Trellis 2 @512=610 (ucuz ama UV kötü/baked → sadece uzak landmark
+  veya PROVA) · Tripo P1=775 · Tripo v3.1 detailed=1160 (PBR'a yakın) · Meshy 6=1160 (en temiz topoloji/UV,
+  hero için en güvenli, en az Blender emeği).
+- **Doktrin:** önce ucuz **Trellis 610 prova** (silüet/kompozisyon master'a oturuyor mu Godot'ta gör) →
+  onaylıysa o pozisyona **Meshy 6 / Tripo v3.1 detailed @1160 hero** bas. 1160'ı yanlış objeye yakma.
+- Her çıktı **provisional**: Blender (retopo, base-center pivot, trim UV, LOD, collider) → GLBValidator → Godot testi.
+- **Paralı generate ÖNCESİ Cem'e gerçek maliyet + belirsizlik sun, onay al.** Model seçimi Cem'in kararı.
+- **ZAMANLAMA:** diğer asset'ler (haul + prop pipeline) master'a oturduktan SONRA bas. Şu an sıra değil.
 
 ## ⚠️ Açık kararlar / bilinen sorunlar
 

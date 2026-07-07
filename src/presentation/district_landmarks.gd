@@ -16,6 +16,14 @@ const NOIR_DETAIL_SHADER := preload("res://src/presentation/landmark_noir_detail
 ## focal landmark, not on a gameplay lot. Position/rotation are the human 10% (composition taste).
 const PLACEMENTS := [
 	{
+		"glb": LANDMARK_DIR + "warehouse_hero.glb",
+		"name": "WarehouseHero",
+		"position": Vector3(-14.0, 0.0, 9.0),   # front-left of the venue row, camera-facing — the master's near freight depot on the wharf edge
+		"rotation_y": 1.4,                        # long axis roughly parallel to the water, gable end angled to the 3/4 camera
+		"scale": 2.2,                             # a ~5 m depot reads too small beside the venue kit — bring it up to hero read
+		"patina": 0.35,                           # damp wood/metal weathering, matches the master's wet freight facades
+	},
+	{
 		"glb": LANDMARK_DIR + "alien_diplomatic_tower.glb",
 		"name": "AlienDiplomaticTower",
 		"position": Vector3(26.0, 0.0, -30.0),  # right flank, deep out on the water — a distant skyline landmark
@@ -48,6 +56,9 @@ static func spawn_all(parent: Node3D) -> void:
 		node.name = p["name"]
 		node.position = p["position"]
 		node.rotation.y = p["rotation_y"]
+		var s: float = p.get("scale", 1.0)  # some heroes (warehouse) read too small at native size
+		if s != 1.0:
+			node.scale = Vector3(s, s, s)
 		_apply_noir_detail(node, p.get("patina", 0.0))  # P12b trim lap: weather stone/metal, glow clean
 		parent.add_child(node)
 

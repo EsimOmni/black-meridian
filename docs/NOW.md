@@ -28,22 +28,27 @@ Doktrin: concept→asset-split (master ONAYLI, şimdi ona göre 3D üretiyoruz).
   5 Faz-1 prop yerinde, dokulu, master'a göre yayılmış + ölçekli — dock_crane, bollard_rope×2,
   fishing_supplies, market_stall×2, pallet_pack×2. Hepsi **CC-BY, UID+attribution loglu**
   (`ATTRIBUTIONS.md`). DistrictLandmarks'ı aynalar ama scatter list + prop, patina shader YOK.
+- **PolyHaven Faz 2 — gece HDRI atmosferi** (CC0, attribution gerekmez): `cobblestone_street_night_4k.hdr`
+  → `bootstrap.gd` WorldEnvironment'a **ambient + reflection source** olarak bağlandı (background düz
+  noir renk KALIR — diorama gökyüzü göstermez; yüzeyler gerçek gece cadde ışığı alır, düz renk ambient
+  değil). Kutular/prop'lar "kuru mat"tan "gece ışığında yıkanmış"a geçti. Ground ıslaklığı artırıldı
+  (roughness 0.08, metallic 0.45). `assets/city/glasswharf_dock/env/`'de HDRI. Pas/ahşap PBR
+  texture'lar HDRI-only yettiği için KULLANILMADI (haul'da duruyor, footprint eklemedim).
 
 ## ⏭️ Sıradaki adım
 
-1. **PolyHaven Faz 2 — materyal + HDRI** (CC0, `D:\bm-asset-haul\polyhaven\`'da indirili, repoya
-   girmedi henüz): `cobblestone_street_night_4k.hdr` → sahne WorldEnvironment (atmosfer+yansıma);
-   pas/korruge/ahşap PBR texture'lar (rusty_metal_02, corrugated_iron_02, weathered_planks,
-   wood_planks_dirt, cobblestone_floor_08, asphalt_03, metal_plate_02) → zemin + landmark materyali.
-2. **Bekleyen prop'ları kurtar:** container×2, dumpster, fishing_boat, street_lamp, lamp_post_vintage
+1. **Bekleyen prop'ları kurtar:** container×2, dumpster, fishing_boat, street_lamp, lamp_post_vintage
    — bir kısmı **yatık/havada pivot'la** export olmuş (base_y≠0, Y-Z ekseni dönük), üstelik
    **download UID/lisansı kayıtlı değil**. Blender'da doğru pivot/rotasyonla YENİDEN export + Sketchfab
-   UID'den lisans doğrula, sonra `DockProps`'a ekle. Ham dosyalar repoda ama placement'a KOYULMADI.
-3. **Kompozisyon ince-ayar (insan %10):** prop'lar yayıldı+büyüdü ama hâlâ %70 master; skyline
+   UID'den lisans doğrula, sonra `DockProps`'a ekle. Ham dosyalar `D:\bm-asset-haul\pending-props\`'ta.
+2. **Kompozisyon ince-ayar (insan %10):** prop'lar yayıldı+büyüdü ama hâlâ %70 master; skyline
    kamerasından (oyun-içi C) bak, master'ın derin pier'ine göre son rötuş. Diminishing returns —
    sonsuz kovalama.
-4. **Neon polish:** master'ın sıcak neon vitrinleri (emissive pencereler) + ıslak/yağmur grade.
-   market_stall'da `_plus_emissive` texture'ı var — neon aksan için değerlendirilebilir.
+3. **Neon polish:** master'ın sıcak neon vitrinleri (emissive pencereler). market_stall'da
+   `_plus_emissive` texture'ı var — neon aksan için değerlendirilebilir.
+4. **Zemin ıslak-yansıma:** yönetim kamerasında top-down açı gereği zayıf (yansıma göğe gider);
+   skyline kamerasında (göz-hizası) HDRI reflection parlar. Kalan ıslaklık işi skyline'a ait,
+   yönetim kamerasında kovalanmayacak.
 
 ## 💳 Hero geometri — Magnific image→3D (KARAR VERİLDİ, henüz basılmadı)
 

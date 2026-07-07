@@ -26,6 +26,14 @@ shipping game's credits.
 
 All Blender-cleaned (join, base-center pivot, grid-scale, ≤1K textures, Draco off) + Godot-validated.
 
+## Environment — PolyHaven (CC0, no attribution required)
+
+| Asset | License | Source | Used as |
+|---|---|---|---|
+| Cobblestone Street Night (HDRI 4K) | CC0 | https://polyhaven.com/a/cobblestone_street_night | `env/cobblestone_street_night_4k.hdr` — scene ambient + reflection source (WorldEnvironment); the master's night-street glow on wet/metal surfaces |
+
+CC0 requires no credit, but PolyHaven attribution is appreciated and logged here for provenance.
+
 ### Required credit lines (reproduce verbatim in game credits)
 
 - "Old Warehouse" by AlanTinka, licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).

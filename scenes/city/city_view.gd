@@ -26,9 +26,9 @@ func _build_ground() -> void:
 	ground.mesh = plane
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = Color(0.05, 0.06, 0.08)  # wet charcoal asphalt (brief §9.1 palette)
-	mat.roughness = 0.18                          # rain-lacquered: low roughness -> the master's mirror-wet sheen
-	mat.metallic = 0.25                           # a touch of metallic for tighter, brighter reflections
-	mat.metallic_specular = 0.7
+	mat.roughness = 0.08                          # rain-lacquered: near-mirror so the night HDRI reflects sharply
+	mat.metallic = 0.45                           # higher metallic -> the sky-reflection reads as wet sheen, not matte
+	mat.metallic_specular = 0.85
 	ground.material_override = mat
 	ground.name = "Ground"
 	add_child(ground)

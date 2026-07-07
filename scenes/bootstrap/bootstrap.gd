@@ -43,9 +43,19 @@ func _build_lighting() -> void:
 	var e := Environment.new()
 	e.background_mode = Environment.BG_COLOR
 	e.background_color = Color(0.05, 0.07, 0.10)  # rain-lacquered petrol-blue noir (brief §9.1)
-	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	e.ambient_light_color = Color(0.20, 0.24, 0.32)  # cool ambient, slightly lifted so faces read
-	e.ambient_light_energy = 0.7
+	# A PolyHaven night-street HDRI (CC0) drives ambient + reflections ONLY — the background stays
+	# the flat noir colour above (the diorama never shows a sky), but wet/metal surfaces now catch
+	# real night-street light instead of a flat colour ambient. This is the master's rain-lacquered
+	# read: the ground and props reflect the city glow, not a uniform tint.
+	var sky := Sky.new()
+	var panorama := PanoramaSkyMaterial.new()
+	panorama.panorama = load("res://assets/city/glasswharf_dock/env/cobblestone_street_night_4k.hdr")
+	sky.sky_material = panorama
+	e.sky = sky
+	e.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+	e.ambient_light_sky_contribution = 0.6  # blend sky ambient with the lights; not a full sky wash
+	e.ambient_light_energy = 0.7  # night-street glow reads on surfaces; zemin reflection parlar skyline camerada
+	e.reflected_light_source = Environment.REFLECTION_SOURCE_SKY  # wet/metal surfaces mirror the night glow
 	# ACES tonemap so bright emissives roll off instead of clipping; a hint of exposure.
 	e.tonemap_mode = Environment.TONE_MAPPER_ACES
 	e.tonemap_exposure = 1.05

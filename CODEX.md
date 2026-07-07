@@ -6,6 +6,14 @@ Guidance for Claude Code (and any AI agent) working in this repository. Codex, G
 read `AGENTS.md` (and their respective synced mirrors `CODEX.md` and `GEMINI.md`). The authoritative design + production spec is
 **`docs/OMNI-BLACK-MERIDIAN-brief.pdf`** — read it before any non-trivial change.
 
+> **🎯 READ `docs/NOW.md` FIRST — every session, before anything else.** It is the LIVE state:
+> what we'''re doing right now, the next step, open decisions, key files for the active phase. This
+> file holds the permanent rules; `NOW.md` holds the current situation. The "Current status"
+> section below is a coarse milestone marker and can lag — `NOW.md` is the source of truth for
+> "where did we leave off." **After finishing any slice/commit, UPDATE `docs/NOW.md`** (push the
+> old state into its "Geçmiş" summary) so the next chat opens with full context. Cem should never
+> have to re-explain where we are — that is what NOW.md is for.
+
 > **Primary model = Claude Fable 5.** Read **`docs/FABLE.md`** for the Fable operating layer (effort,
 > long-run behavior, subagents, memory, and the hard rule: never instruct the model to echo its reasoning
 > into responses — it triggers a `reasoning_extraction` refusal). On any `stop_reason: "refusal"`, fall

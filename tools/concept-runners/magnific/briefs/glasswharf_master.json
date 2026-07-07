@@ -8,7 +8,18 @@
   },
   "jobs": [
     {
-      "name": "glasswharf_master_keyframe",
+      "name": "glasswharf_master_seedream5lite_4k",
+      "model_slug": "seedream-5-lite",
+      "provider_slug": "seedream",
+      "prompt": "Wide establishing concept keyframe of Glass Wharf, a rain-soaked interspecies district in the noir metropolis of Black Meridian at night: dense waterfront warehouses converted into neon-lit clubs and black-market exchanges, an elevated transit line cutting overhead, wet asphalt reflecting cyan and amber signage, distant skyline of towering mixed human/alien architecture, heavy atmospheric fog, cinematic wide shot, moody teal-and-amber color grade, high-fidelity production concept art, no text, no logos.",
+      "refs": [],
+      "aspect": "16:9",
+      "resolution": "4k"
+    },
+    {
+      "name": "glasswharf_master_seedream4_4k",
+      "model_slug": "seedream-4-4k",
+      "provider_slug": "seedream",
       "prompt": "Wide establishing concept keyframe of Glass Wharf, a rain-soaked interspecies district in the noir metropolis of Black Meridian at night: dense waterfront warehouses converted into neon-lit clubs and black-market exchanges, an elevated transit line cutting overhead, wet asphalt reflecting cyan and amber signage, distant skyline of towering mixed human/alien architecture, heavy atmospheric fog, cinematic wide shot, moody teal-and-amber color grade, high-fidelity production concept art, no text, no logos.",
       "refs": [],
       "aspect": "16:9",

@@ -12,9 +12,9 @@ Key recon facts encoded below:
     `tti-model-selector-popover-model-<slug>` (FEATURED) or
     `tti-model-selector-popover-provider-model-<slug>` (inside a provider group,
     which must be expanded first via `…-provider-<providerSlug>`).
-  * UNLIMITED models carry an `∞` icon `<use xlink:href="#cdn-infinity">` (NOT
-    text). We assert the chosen model is unlimited before generating unless the
-    brief opts into credits.
+  * UNLIMITED models carry an `∞` icon `<use xlink:href="…/sprite/<hash>.svg#infinity">`
+    (credit models use `…#infinity`→`…#credits`); NOT text. We assert the chosen
+    model is unlimited before generating unless the brief opts into credits.
   * REFERENCES: `reference-add-button` opens the ref modal; a real file upload
     goes through `advanced-selection-upload-file-input` (type=file). We upload
     from disk (IP-clean) rather than picking library `library-character-*`
@@ -101,7 +101,7 @@ def _open_model_picker(page: Page) -> bool:
 def select_model(page: Page, slug: str, provider_slug: Optional[str] = None,
                  require_unlimited: bool = True) -> None:
     """Pick a model by slug. Expands the provider group first if given. Asserts
-    the model row carries the ∞ (#cdn-infinity) icon when require_unlimited."""
+    the model row carries the ∞ (sprite `#infinity`) icon when require_unlimited."""
     if not _open_model_picker(page):
         raise RuntimeError("Could not open the model picker.")
     # expand provider group if the model lives inside one
@@ -127,10 +127,18 @@ def select_model(page: Page, slug: str, provider_slug: Optional[str] = None,
     # read the row's ∞ state with a short retry (the icon SVG can mount a beat
     # after the row does; a single snapshot is flaky — this caused a false
     # 'not unlimited' on an already-selected model).
+    # The row carries an svg sprite ref: `…/sprite/<hash>.svg#infinity` for
+    # unlimited, `…#credits` for credit-costing (LIVE-VERIFIED 2026-07-07 — Magnific
+    # renamed the fragment from the old `#cdn-infinity`). Match `#infinity` and treat
+    # an explicit `#credits` as authoritative NOT-unlimited.
     has_inf = False
     for _ in range(4):
         try:
-            if "#cdn-infinity" in (row.inner_html() or ""):
+            h = row.inner_html() or ""
+            if "#credits" in h:
+                has_inf = False
+                break
+            if "#infinity" in h:
                 has_inf = True
                 break
         except Exception:
@@ -270,14 +278,22 @@ def set_count(page: Page, count: int) -> None:
 
 
 def set_aspect(page: Page, ratio: str) -> None:
+    """Open the aspect popover and pick `popover-option-<ratio>`. Uses NATIVE DOM
+    clicks (same quirk as set_resolution — Playwright force-click did NOT open/commit
+    the popover reliably here). The option text is e.g. '16:9 Widescreen', so we
+    target it by its exact cy, never by exact text."""
     try:
-        page.locator(f'[data-cy="{CY_ASPECT}"]').first.click(force=True, timeout=4000)
+        opened = page.evaluate(r"""()=>{const b=document.querySelector('[data-cy="image-aspect-ratio-input"]');
+          if(!b) return false; b.click(); return true;}""")
+        if not opened:
+            print(f"[!] aspect input pill not found")
+            return
         page.wait_for_timeout(700)
-        opt = page.locator(f'[data-cy="popover-option-{ratio}"]').first
-        if opt.count():
-            opt.click(force=True, timeout=4000)
-        else:
-            page.get_by_text(ratio, exact=True).first.click(force=True, timeout=4000)
+        picked = page.evaluate(r"""(r)=>{const o=document.querySelector('[data-cy="popover-option-'+r+'"]');
+          if(o){ o.click(); return true; } return false;}""", ratio)
+        if not picked:
+            print(f"[!] aspect option 'popover-option-{ratio}' not found")
+            return
         page.wait_for_timeout(500)
         print(f"[ok] aspect = {ratio}")
     except Exception as e:
@@ -292,6 +308,14 @@ def set_resolution(page: Page, res: str) -> None:
     target = res.strip().upper()  # '1k' -> '1K'
     if not target.endswith("K"):
         target += "K"
+    # Some models bake resolution into the slug (e.g. `seedream-4-4k`) and expose NO
+    # resolution pill at all. That's a legitimate fixed-resolution model, not a
+    # credit risk — the pre-Generate is_generate_unlimited() guard is the real
+    # safety net before spend. So a MISSING pill is a clean no-op, not a RAISE.
+    has_pill = page.evaluate(r"""()=>!!document.querySelector('[data-cy="image-resolution-input"]')""")
+    if not has_pill:
+        print(f"[ok] no resolution pill — model has a fixed resolution (target {target} implied)")
+        return
     try:
         # If the pill already shows the target, done.
         shown0 = page.evaluate(r"""()=>{const b=document.querySelector('[data-cy="image-resolution-input"]');

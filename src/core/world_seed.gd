@@ -8,11 +8,17 @@ extends RefCounted
 const COMPACT := &"compact"      ## player — the Meridian Compact
 const CORVINE := &"corvine"      ## rival — the Corvine Assembly
 
+## P05b: authored slack on top of each faction's seeded venue staffing. 2 keeps the
+## opening board a real choice without being flush: the Compact starts with 7 assigned
+## (3+2+2 across its rackets) + 2 free — enough to boost ONE venue meaningfully, not all.
+const FREE_RESERVE := 2
+
 static func build() -> void:
 	GameState.reset()
 	_build_factions()
 	_build_characters()
 	_build_glass_wharf()
+	_seed_operative_pools()
 	GameState.player_faction_id = COMPACT
 	GameState.districts_changed.emit()
 	GameState.factions_changed.emit()
@@ -112,6 +118,13 @@ static func _build_glass_wharf() -> void:
 	]
 
 	GameState.districts = [d]
+
+## P05b: each faction's finite operative pool = what the seed already assigned to its
+## venues + FREE_RESERVE. Runs after the venues exist so the sum is the real one.
+static func _seed_operative_pools() -> void:
+	for faction in GameState.factions:
+		faction.operative_pool = \
+			OperativeMath.assigned_sum(faction, GameState.districts) + FREE_RESERVE
 
 # --- Builders ----------------------------------------------------------------
 

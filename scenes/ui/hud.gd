@@ -35,6 +35,8 @@ var _hint_label: Label
 var _selected: VenueData
 var _pause_btn: Button
 var _pressure_btn: Button
+var _assign_btn: Button
+var _recall_btn: Button
 
 func _ready() -> void:
 	var panel := PanelContainer.new()
@@ -147,6 +149,8 @@ func _rebuild_venue_actions() -> void:
 		c.queue_free()
 	_pause_btn = null
 	_pressure_btn = null
+	_assign_btn = null
+	_recall_btn = null
 	if _selected == null or _selected.owner_faction != GameState.player_faction_id:
 		return
 	if _selected.type == BM.VenueType.RACKET:
@@ -155,6 +159,18 @@ func _rebuild_venue_actions() -> void:
 			EconomyService.set_racket_paused(_selected, not _selected.paused)
 			_refresh())
 		_venue_actions.add_child(_pause_btn)
+		# P05b greybox staffing lever — routes through the service verb (clamped,
+		# ownership-gated); the HUD never pokes operational_staff directly.
+		_assign_btn = Button.new()
+		_assign_btn.pressed.connect(func():
+			EconomyService.assign_operatives(_selected, GameState.player_faction(), 1)
+			_refresh())
+		_venue_actions.add_child(_assign_btn)
+		_recall_btn = Button.new()
+		_recall_btn.pressed.connect(func():
+			EconomyService.recall_operatives(_selected, GameState.player_faction(), 1)
+			_refresh())
+		_venue_actions.add_child(_recall_btn)
 	elif _selected.type == BM.VenueType.FRONT:
 		_pressure_btn = Button.new()
 		_pressure_btn.pressed.connect(func():
@@ -302,6 +318,8 @@ func _refresh_venue() -> void:
 		_selected.display_name, type_name, owner_name, _control_name(_selected.control_state)]
 	if _selected.type == BM.VenueType.RACKET:
 		lines += "\nBase yield: %d · Staff: %d" % [_selected.base_yield, _selected.operational_staff]
+		if _selected.owner_faction == GameState.player_faction_id:
+			lines += "  (free pool: %d)" % EconomyService.free_operatives(GameState.player_faction())
 		if _selected.disruption > 0.0:
 			lines += "\n[color=#%s]Disrupted: -%d%% income (heat)[/color]" % [
 				Palette.SODIUM_AMBER.to_html(false), int(_selected.disruption * 100.0)]
@@ -317,6 +335,13 @@ func _refresh_venue() -> void:
 
 	if _pause_btn:
 		_pause_btn.text = "Resume racket" if _selected.paused else "Pause racket (stop income + exposure)"
+	if _assign_btn:
+		var free := EconomyService.free_operatives(GameState.player_faction())
+		_assign_btn.disabled = free <= 0
+		_assign_btn.text = "Assign operative (+1 staff · %d free)" % free
+	if _recall_btn:
+		_recall_btn.disabled = _selected.operational_staff <= 0
+		_recall_btn.text = "Recall operative (-1 staff)"
 	if _pressure_btn:
 		var pf := GameState.player_faction()
 		if _selected.laundering_capacity >= EconomyService.FRONT_CAPACITY_MAX:

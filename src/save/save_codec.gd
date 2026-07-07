@@ -42,6 +42,7 @@ static func encode_faction(f: FactionData) -> Dictionary:
 		"intent_ticks_until_land": f.intent_ticks_until_land,
 		"grudge": f.grudge,
 		"intents_committed": f.intents_committed,
+		"operative_pool": f.operative_pool,
 	}
 
 static func encode_character(c: CharacterData) -> Dictionary:
@@ -140,6 +141,7 @@ static func decode_faction(d: Dictionary) -> FactionData:
 	f.intent_ticks_until_land = d.get("intent_ticks_until_land", 0)
 	f.grudge = d.get("grudge", 0.0)                                 # additive since P07c
 	f.intents_committed = d.get("intents_committed", 0)             # additive since P07b
+	f.operative_pool = d.get("operative_pool", 0)                   # additive since P05b
 	return f
 
 static func decode_character(d: Dictionary) -> CharacterData:

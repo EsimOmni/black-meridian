@@ -66,6 +66,22 @@ func pressure_front(venue: VenueData, faction: FactionData) -> bool:
 	venue.laundering_capacity = mini(venue.laundering_capacity + FRONT_PRESSURE_STEP, FRONT_CAPACITY_MAX)
 	return true
 
+## P05b operative staffing verbs — thin wrappers over the pure OperativeMath rules
+## (staffing is economics: operational_staff multiplies §7.2 DirtyIncome). The service
+## supplies GameState; the math stays engine-free. Each returns the count actually
+## moved (clamped, ownership-gated — 0 = no-op, never a negative pool).
+func assign_operatives(venue: VenueData, faction: FactionData, n: int = 1) -> int:
+	return OperativeMath.assign(faction, venue, n, GameState.districts)
+
+func recall_operatives(venue: VenueData, faction: FactionData, n: int = 1) -> int:
+	return OperativeMath.recall(faction, venue, n)
+
+## Free (unassigned) operatives for the HUD readout.
+func free_operatives(faction: FactionData) -> int:
+	if faction == null:
+		return 0
+	return OperativeMath.free_pool(faction, GameState.districts)
+
 func _on_strategic_tick(_tick: int) -> void:
 	_district_tick_exposure.clear()
 	for faction in GameState.factions:

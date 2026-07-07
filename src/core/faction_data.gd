@@ -36,3 +36,9 @@ extends Resource
 ## retaliation this rival provoked (the feud closes); decays each rival tick (a grudge cools
 ## if left alone). Biases RivalScoring toward the player. Deterministic, save-additive.
 @export_range(0.0, 1.0) var grudge: float = 0.0
+
+## P05b operative pool — the faction's TOTAL operatives (finite labor for the §7.2
+## staffing lever). Free pool = operative_pool - sum(operational_staff of owned venues),
+## derived by OperativeMath, never stored. Assign/recall move operatives between the
+## free pool and venues; the total is invariant (no recruitment/injury yet). Save-additive.
+@export var operative_pool: int = 0

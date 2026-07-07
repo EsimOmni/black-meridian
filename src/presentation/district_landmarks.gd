@@ -21,14 +21,14 @@ const PLACEMENTS := [
 		"position": Vector3(-14.0, 0.0, 9.0),   # front-left of the venue row, camera-facing — the master's near freight depot on the wharf edge
 		"rotation_y": 1.4,                        # long axis roughly parallel to the water, gable end angled to the 3/4 camera
 		"scale": 2.2,                             # a ~5 m depot reads too small beside the venue kit — bring it up to hero read
-		"patina": 0.35,                           # damp wood/metal weathering, matches the master's wet freight facades
+		"textured": true,                         # Sketchfab GLB — keep its baked brick/metal texture, skip the flat-color noir shader
 	},
 	{
 		"glb": LANDMARK_DIR + "industrial_block_a.glb",
 		"name": "IndustrialBlockA",
 		"position": Vector3(16.0, 0.0, -8.0),   # right-mid, set back behind the venue row — a taller brick freight block on the skyline
 		"rotation_y": -1.1,                       # broad face angled toward the 3/4 camera
-		"patina": 0.25,                           # light damp-brick weathering
+		"textured": true,
 	},
 	{
 		"glb": LANDMARK_DIR + "dock_house_pier.glb",
@@ -36,7 +36,7 @@ const PLACEMENTS := [
 		"position": Vector3(2.0, 0.0, 12.0),    # front-center on the wharf edge, out over the water — the near stilt-house + jetty combo
 		"rotation_y": 0.3,                        # jetty runs toward the water/camera-right
 		"scale": 1.3,                             # bring the ~11 m combo up so the stilt house reads beside the warehouse
-		"patina": 0.3,                            # wet weathered dock wood
+		"textured": true,
 	},
 	{
 		"glb": LANDMARK_DIR + "alien_diplomatic_tower.glb",
@@ -74,7 +74,13 @@ static func spawn_all(parent: Node3D) -> void:
 		var s: float = p.get("scale", 1.0)  # some heroes (warehouse) read too small at native size
 		if s != 1.0:
 			node.scale = Vector3(s, s, s)
-		_apply_noir_detail(node, p.get("patina", 0.0))  # P12b trim lap: weather stone/metal, glow clean
+		# The noir-detail shader replaces a flat baked slot with weathered stone/metal, driven by
+		# the material's albedo_COLOR uniform. Texture-mapped GLBs (Sketchfab imports) carry their
+		# tone in the albedo MAP with a white base color, so the shader would wash them flat grey —
+		# they already read as aged brick/wood, so keep their own material and only weather the
+		# flat-colored P12b landmarks (alien tower / stone institution).
+		if not p.get("textured", false):
+			_apply_noir_detail(node, p.get("patina", 0.0))  # P12b trim lap: weather stone/metal, glow clean
 		parent.add_child(node)
 
 ## Replace every non-emissive surface material with the triplanar noir weathering shader,

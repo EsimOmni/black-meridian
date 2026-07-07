@@ -1,0 +1,21 @@
+# Godot writes LF line endings for its text resources. With core.autocrlf=true on
+# Windows, git kept trying to convert them to CRLF, so every `--import` made the
+# .import/.tres/.tscn files show as "modified" (line-ending-only churn, no real
+# content change). Pin Godot's text formats to LF so the working tree stays clean.
+*.import   text eol=lf
+*.godot    text eol=lf
+*.tres     text eol=lf
+*.tscn     text eol=lf
+*.gd       text eol=lf
+*.gdshader text eol=lf
+*.cfg      text eol=lf
+
+# Binary assets — never touch line endings.
+*.glb      binary
+*.png      binary
+*.jpg      binary
+*.hdr      binary
+*.exr      binary
+*.ttf      binary
+*.wav      binary
+*.ogg      binary

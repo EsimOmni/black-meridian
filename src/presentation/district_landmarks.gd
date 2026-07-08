@@ -39,11 +39,12 @@ const PLACEMENTS := [
 		"textured": true,
 	},
 	{
-		"glb": LANDMARK_DIR + "alien_diplomatic_tower.glb",
+		"glb": LANDMARK_DIR + "alien_tower_hero_lod0.glb",
 		"name": "AlienDiplomaticTower",
-		"position": Vector3(26.0, 0.0, -30.0),  # right flank, deep out on the water — a distant skyline landmark
+		"position": Vector3(34.0, 0.0, -34.0),  # right flank, deep out on the water — pushed further right+back so it clears the venue row instead of centering behind it
 		"rotation_y": -0.35,                     # quarter-turn so a facet faces the camera
-		"patina": 0.55,                          # verdigris oxide bloom — the cold stain is invisible on this dark charcoal
+		"scale": 0.32,                           # 60 m native × 0.5 pierced the frame; 0.32 (~19 m) reads as a tall focal spire that stays inside the skyline, still hero beside the ~5-15 m row (human 10%)
+		"textured": true,                        # hero Hunyuan GLB with baked PBR (patina brutalist base → bioluminescent crown) — keep its own texture, skip the flat-color noir shader
 	},
 	{
 		"glb": LANDMARK_DIR + "stone_institution.glb",

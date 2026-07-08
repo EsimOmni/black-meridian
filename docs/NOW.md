@@ -89,17 +89,28 @@ yükseltecek focal landmark.
   16GB texture'ı kaldırıyor → yüksek-VRAM (5090) bu iş için GEREKMİYOR.** Tek zayıflık: view-projection
   texturing "elle boyanmış" his + tepe tendrillerde hafif smear (uzak skyline landmark'ı için sorun değil).
   Prova script'i `scratchpad/texture_prova.py` (tek seferlik — adapter'a branch OLARAK EKLENMEDİ henüz).
-- **Adım 5 — SIRADAKI: Blender temizlik.** Textured GLB'yi Blender'a al → cutout'tan kalan zemin plakasını
-  sil → decimate (200k→≤30k landmark budget), base-center pivot (y=0), grid ölçek (22×60×22), collider,
-  Draco OFF → `assets/_exports/` → GLBValidator → DistrictLandmarks'ta `alien_diplomatic_tower` yerine
-  koy → skyline'dan bak. Ham Hunyuan çıktısı game-ready DEĞİL (arka yüz belirsiz).
+- **Adım 5 — Blender temizlik + OYUNA KONDU ✅ (2026-07-08 öğleden sonra).** Kule game-ready ve Godot'ta
+  skyline'da duruyor. (İlk deneme başka chat/Sonnet'e verildi → decimate silüeti düz blob'a ezdi + texture
+  uçtu, ÇÖP çıktı → Claude kaynaktan yeniden yaptı.) Doğru pipeline: zemin plakası kesildi (z<-0.94 bisect
+  + holes_fill), UV-aware decimate **200k→44k** (30k değil — silüet kutsal, her adım render'la doğrulandı),
+  normals recalc, base-center pivot (Y=0), uniform ölçek 60m yükseklik (dims **24.9×60×24.6m**), convex
+  collider (342 tri, `-col`), export **Draco OFF + yup + JPEG** → `assets/_exports/alien_tower_hero/
+  alien_tower_hero_lod0.glb`. **Re-import doğrulandı** (Sonnet'in atladığı adım): 44k tri, UV+texture
+  bağlı, pivot Y=0. DistrictLandmarks'a `textured:true` (noir shader ATLA), pos `(34,0,-34)` sağ kanat,
+  scale `0.32` (~19m focal spire — 0.5 frame'i deldi). **KRİTİK BULGU: Blender/editor'ın sert directional
+  ışığında tepe beyaz specular veriyordu → oyunun HDRI/noir env'inde SORUN DEĞİL, biyolüminesan taç gibi
+  okuyor** (metallicRoughness bake'i). Kalan tek şey saf kompozisyon zevki (scale/pos = insan %10).
+  DERS: mekanik görünen Blender temizlik aslında ince ayar (decimate oranı+UV+normal+export birbirini
+  ezer) — Sonnet'e körlemesine verilince hero çöpe döndü. Bağlamı taşıyan (kaynağı gören) yapmalı.
 - **Adım 6 — texturing'i adapter'a branch yap** (Blender+skyline testinden SONRA): `hunyuan.py`'ye
   `Mesh_Texturing` route ekle → gelecekteki her hero `--stage texture` tek komut. Şimdi değil, önce
   ilk hero'yu oyunda gör.
-- **YEDEK PLAN — Trellis A/B** (lokalde SwarmUI'da mevcut, henüz DENENMEDİ): Trellis native-3D-latent'ten
-  üretir, texture mesh'e daha yapışık gelebilir. Denemenin DOĞRU zamanı = Hunyuan kule skyline'da texture
-  smear'i rahatsız ederse, aynı cutout'la Trellis çalıştır + A/B. Şimdi denemek erken (oyun-içi bağlam
-  olmadan kıyas anlamsız). Trellis organik formda bazen Hunyuan'dan yumuşak/az detaylı çıkar — garanti değil.
+- **YEDEK PLAN — Trellis A/B (DÜZELTME 2026-07-08: Trellis lokalde YOK).** ComfyUI'da tek lokal mesh
+  paketi `ComfyUI-Hunyuan3d-2-1`. `object_info` taraması: Trellis node'u sıfır. Görünen `Tripo*Node`'lar
+  **bulut Tripo API** (key+kredi ister, lokal ağırlık değil). Yani lokal bedava mesh = SADECE Hunyuan3D.
+  Trellis denemek istenirse: (a) `ComfyUI-Trellis` custom node + ~2GB model indir, ya da (b) HF Space'te
+  online. Deneme DOĞRU zamanı = Hunyuan kule skyline'da texture smear'i rahatsız ederse — o an kur/dene.
+  Şu an gereksiz (Hunyuan hero-kalite verdi).
 
 ## 💳 Hero geometri — kredi doktrini (referans)
 

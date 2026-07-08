@@ -205,3 +205,15 @@ foreground'dan ayıramaz, sahnenin tamamını düz yüzeye bas-relief eder.
 `D:\AI\SwarmUI\dlbackend\comfy\python_embeded\python.exe -c "from rembg import remove..."`.
 **Kural:** image→3D'ye HER ZAMAN şeffaf/cutout PNG ver, düz RGB değil. concept'i üretirken bile
 nötr/sade arka plan iste + sonra rembg'den geçir.
+
+## 2026-07-08 — "Mekanik" Blender temizliğini körlemesine devretme
+Hero kule GLB temizliğini (decimate/pivot/export) başka chat/Sonnet'e verdim — "mekanik iş"
+sandım. Sonnet decimate'i UV-aware yapmadı (silüet düz blob'a ezildi), texture'ı export'ta
+kaybetti, re-import doğrulaması yapmadı → **hero çöp çıktı, tam re-do**. Ders: Blender asset
+temizliği mekanik GÖRÜNÜR ama değil — decimate oranı + UV koruma + normal yönü + Godot Y-up
+export birbirini ezen ince ayarlar. Kaynağı GÖREN (bağlamı taşıyan) yapmalı. Her adımda RENDER
+alıp doğrula, export'u MUTLAKA re-import et (Sonnet bunu atladı). Doğru yol: plaka bisect+holes_fill,
+UV-aware collapse decimate 200k→44k (30k değil — landmark için silüet > tri sayısı), recalc normals,
+base-center pivot, uniform scale, convex collider, Draco OFF + yup + JPEG, re-import verify + render.
+İkinci ders: Blender/editor'ın sert directional ışığındaki beyaz specular ≠ oyunun HDRI env'indeki
+görünüm. Specular'ı Blender'da kovalama; asıl test oyun sahnesinde (orada biyolüminesan gibi okudu).

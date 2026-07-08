@@ -50,9 +50,12 @@ Doktrin: concept→asset-split (master ONAYLI, şimdi ona göre 3D üretiyoruz).
    sonsuz kovalama.
 3. **Neon polish:** master'ın sıcak neon vitrinleri (emissive pencereler). market_stall'da
    `_plus_emissive` texture'ı var — neon aksan için değerlendirilebilir.
-4. **Zemin ıslak-yansıma:** yönetim kamerasında top-down açı gereği zayıf (yansıma göğe gider);
-   skyline kamerasında (göz-hizası) HDRI reflection parlar. Kalan ıslaklık işi skyline'a ait,
-   yönetim kamerasında kovalanmayacak.
+4. **Zemin tam-mirror ıslaklık — MİMARİ SINIR, KOVALAMA.** HDRI reflection + SSR + roughness/metallic
+   denendi (3+ ayar), hepsi marjinal. Kök neden ayar değil: zemin düz koyu (albedo 0.05) + kutuların
+   ALTINDA bitiyor, önlerine uzanmıyor — master'da ıslak cadde kutuların ÖNÜNE serilir. Gerçek
+   ıslak-neon-ayna için ya kompozisyon (zemini öne getir) ya cobblestone texture+normal — ikisi de
+   büyük iş, düşük getiri. SSR eklendi (metal prop/kule yüzeyinde gerçekçi katkı, skyline'da okur),
+   ama tam mirror bırakıldı. Skyline'dan bakınca sahne zaten master ruhunu taşıyor.
 
 ## 💳 Hero geometri — Magnific image→3D (KARAR VERİLDİ, henüz basılmadı)
 

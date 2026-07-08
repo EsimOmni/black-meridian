@@ -56,6 +56,16 @@ func _build_lighting() -> void:
 	e.ambient_light_sky_contribution = 0.6  # blend sky ambient with the lights; not a full sky wash
 	e.ambient_light_energy = 0.7  # night-street glow reads on surfaces; zemin reflection parlar skyline camerada
 	e.reflected_light_source = Environment.REFLECTION_SOURCE_SKY  # wet/metal surfaces mirror the night glow
+	# Screen-space reflections — the sky reflection (above) only mirrors the distant HDRI; SSR is what
+	# reflects the SCENE itself, so the wet ground catches the lit neon shopfronts and landmark masses
+	# above it. This is the master's signature: neon smeared down a rain-lacquered wharf. Reads in the
+	# skyline (eye-level) view where the ground faces the camera; the top-down management view catches
+	# little by geometry (reflection goes skyward), which is expected.
+	e.ssr_enabled = true
+	e.ssr_max_steps = 48
+	e.ssr_fade_in = 0.15
+	e.ssr_fade_out = 2.0
+	e.ssr_depth_tolerance = 0.2
 	# ACES tonemap so bright emissives roll off instead of clipping; a hint of exposure.
 	e.tonemap_mode = Environment.TONE_MAPPER_ACES
 	e.tonemap_exposure = 1.05

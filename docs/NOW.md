@@ -63,13 +63,22 @@ Doktrin: concept→asset-split (master ONAYLI, şimdi ona göre 3D üretiyoruz).
 brutalist taban + organik/biyomorfik biyolüminesan taç). Mevcut basit `alien_diplomatic_tower`'ı
 yükseltecek focal landmark.
 
-- **Adım 1 — concept görseli (BEDAVA yol seçildi, kredi YAKMA):** ChatGPT pipeline runner / Magnific
-  web UI (unlimited orada geçer). Prompt Claude verdi (hibrit kule, nötr arka plan, ¾ hero açı,
-  portrait, IP-temiz — "cephalopod-silhouetted organic", hiçbir seri referansı yok). Görsel gelince
-  `assets/concept/glass_wharf/`'a. **Concept'e kredi yakılmadı — kredi asıl 3D'ye saklandı.**
-- **Adım 2 — image→3D:** concept onaylı → önce **Trellis 610 prova** (Blender'a al, skyline'da
-  alien_diplomatic_tower yerine koy, silüet master'a oturuyor mu) → oturuyorsa **Meshy 6 / Tripo
-  v3.1 detailed @1160 hero**. Her paralı generate öncesi Cem'e maliyet+onay.
+- **Adım 1 — concept görseli ✅ YAPILDI (bedava, kredi yok):** ChatGPT (OMNI Labs Studio projesi,
+  Instant modda) ile üretildi — `assets/concept/glass_wharf/alien_tower_hero.png` (1024×1536, hibrit
+  brutalist taban + organik biyolüminesan taç, tam isabet). Playwright ile açıldı, Cem login oldu,
+  Claude prompt'ladı + görseli sayfa-fetch ile repoya indirdi. **Onaylandı.**
+- **Adım 2 — image→3D: PLAN DEĞİŞTİ → LOKAL BEDAVA.** Magnific kredisi YAKMIYORUZ. Lokal
+  **Hunyuan3D 2.1** var (`D:\AI\SwarmUI\dlbackend\comfy\ComfyUI` backend, model ağırlıkları inmiş) —
+  TripoSR'den kaliteli, organik taca uygun, sıfır kredi (brief §10: local cover, only pay for a win).
+  PersonaX'in **OMNI 3D pipeline'ı bu repoya taşındı** (`tools/pipeline/` + `manifests/` + `jobs/`),
+  yeni **`hunyuan.py` adapter'ı** eklendi (ComfyUI UI-workflow → /prompt API, image enjekte, POST,
+  poll, GLB çıkar). Job: `jobs/active/alien_tower_hero_001.json` (geometry→hunyuan3d, metre,
+  floor-center, 22×60×22 landmark, building budget). **validate + dry-run GEÇTİ** (commit ec8f884).
+- **Adım 3 — SIRADAKI: gerçek Hunyuan çalıştır.** ComfyUI/SwarmUI açık (port 8188). Komut:
+  `python -m tools.pipeline run-job jobs/active/alien_tower_hero_001.json --stage hunyuan3d`
+  → GLB `assets/_generated/hunyuan3d/alien_tower_hero_001/v001/`. Sonra Blender temizlik (retopo,
+  base-center pivot, trim-UV, LOD, collider) → GLBValidator → DistrictLandmarks'ta alien_diplomatic_tower
+  yerine koy → skyline'dan bak. Hunyuan çıktısı GEOMETRY CANDIDATE, ham game-ready değil.
 
 ## 💳 Hero geometri — kredi doktrini (referans)
 

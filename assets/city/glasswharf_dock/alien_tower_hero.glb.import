@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://2qtkajt2qmsw"
-path="res://.godot/imported/alien_tower_hero_lod0.glb-40767a2d9188a5533e791a42c381d829.scn"
+uid="uid://dtqk28esw0dn8"
+path="res://.godot/imported/alien_tower_hero.glb-b20853c2eabff2fe2aef247240bea35f.scn"
 
 [deps]
 
-source_file="res://assets/city/glasswharf_dock/alien_tower_hero_lod0.glb"
-dest_files=["res://.godot/imported/alien_tower_hero_lod0.glb-40767a2d9188a5533e791a42c381d829.scn"]
+source_file="res://assets/city/glasswharf_dock/alien_tower_hero.glb"
+dest_files=["res://.godot/imported/alien_tower_hero.glb-b20853c2eabff2fe2aef247240bea35f.scn"]
 
 [params]
 

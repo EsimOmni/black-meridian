@@ -2,24 +2,20 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://5mdp6hmmjxvr"
-path.s3tc="res://.godot/imported/alien_tower_hero_lod0_Image_0.jpg-939cf3e22eafc789382c693d5636a5da.s3tc.ctex"
+uid="uid://cgf2jjru25aej"
+path="res://.godot/imported/tower_cutout.png-05a06cee790e583ee94ec42aeff77dba.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
-generator_parameters={
-"md5": "fd88515bc43591b75b2e4afcbbec7c20"
+"vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/city/glasswharf_dock/alien_tower_hero_lod0_Image_0.jpg"
-dest_files=["res://.godot/imported/alien_tower_hero_lod0_Image_0.jpg-939cf3e22eafc789382c693d5636a5da.s3tc.ctex"]
+source_file="res://assets/_references/alien_tower_hero/tower_cutout.png"
+dest_files=["res://.godot/imported/tower_cutout.png-05a06cee790e583ee94ec42aeff77dba.ctex"]
 
 [params]
 
-compress/mode=2
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -27,7 +23,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=true
+mipmaps/generate=false
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""
@@ -41,4 +37,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=0
+detect_3d/compress_to=1

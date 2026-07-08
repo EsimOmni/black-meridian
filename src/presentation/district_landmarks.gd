@@ -39,13 +39,14 @@ const PLACEMENTS := [
 		"textured": true,
 	},
 	{
-		"glb": LANDMARK_DIR + "alien_tower_hero_lod0.glb",
+		"glb": LANDMARK_DIR + "alien_tower_hero.glb",  # raw Hunyuan textured GLB, PNG re-encoded (Hunyuan mislabels JPEG as image/png → Godot rejected it); no Blender
 		"name": "AlienDiplomaticTower",
 		"position": Vector3(34.0, 0.0, -34.0),  # right flank, deep out on the water — pushed further right+back so it clears the venue row instead of centering behind it
 		"rotation_y": -0.35,                     # quarter-turn so a facet faces the camera
-		"scale": 0.32,                           # 60 m native × 0.5 pierced the frame; 0.32 (~19 m) reads as a tall focal spire that stays inside the skyline, still hero beside the ~5-15 m row (human 10%)
-		"textured": true,                        # hero Hunyuan GLB with baked PBR (patina brutalist base → bioluminescent crown) — keep its own texture, skip the flat-color noir shader
-		"matte": true,                           # Hunyuan's glTF ships metallicFactor=1.0 + an MR map → Godot reads it metallic-mirror, and the HDRI/glow blows the crown to white. Force metallic=0 + rough=0.9, drop the MR map, so the baked albedo shows and nothing crosses the glow HDR threshold.
+		"scale": 10.0,                           # raw GLB is ~1.88 m native (not the Blender 60 m export); ×10 ≈ 19 m focal spire, hero beside the ~5-15 m row
+		"base_offset_y": 0.9946,                 # raw GLB isn't base-centered (mesh dips 0.9946 below y=0); lift by that × scale so the base sits on the ground
+		"textured": true,                        # keep the baked PBR (patina brutalist base → bioluminescent crown), skip the flat-color noir shader
+		"matte": true,                           # Hunyuan's glTF ships metallicFactor=1.0 + an ORM map → Godot reads it metallic-mirror and the HDRI/glow blows the crown to white. Force metallic=0 + rough=0.95, drop the ORM map, so the baked albedo shows and nothing crosses the glow HDR threshold.
 	},
 	{
 		"glb": LANDMARK_DIR + "stone_institution.glb",
@@ -76,6 +77,10 @@ static func spawn_all(parent: Node3D) -> void:
 		var s: float = p.get("scale", 1.0)  # some heroes (warehouse) read too small at native size
 		if s != 1.0:
 			node.scale = Vector3(s, s, s)
+		# Raw (non-Blender) GLBs aren't base-centered; lift by the mesh's below-y=0 dip × scale so the base sits on the ground.
+		var off_y: float = p.get("base_offset_y", 0.0)
+		if off_y != 0.0:
+			node.position.y += off_y * s
 		# The noir-detail shader replaces a flat baked slot with weathered stone/metal, driven by
 		# the material's albedo_COLOR uniform. Texture-mapped GLBs (Sketchfab imports) carry their
 		# tone in the albedo MAP with a white base color, so the shader would wash them flat grey —
@@ -125,6 +130,8 @@ static func _apply_matte(node: Node) -> void:
 		if mesh != null:
 			for s in mesh.get_surface_count():
 				var mat := mesh.surface_get_material(s)
+				if not (mat is StandardMaterial3D):
+					mat = mi.get_active_material(s)  # some imports carry the material on the instance, not the mesh surface
 				if mat is StandardMaterial3D:
 					var m := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
 					m.metallic = 0.0
@@ -132,7 +139,7 @@ static func _apply_matte(node: Node) -> void:
 					m.roughness = 0.95
 					m.roughness_texture = null           # drop the ORM roughness channel — uniform matte
 					m.specular_mode = BaseMaterial3D.SPECULAR_DISABLED  # no dielectric highlight for the HDRI to bloom
-					mi.set_surface_override_material(s, m)
+					mi.set_surface_override_material(s, m)  # keep the baked albedo untinted — the texture is the tower's real color
 	for child in node.get_children():
 		_apply_matte(child)
 

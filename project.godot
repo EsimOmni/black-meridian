@@ -22,10 +22,10 @@ config/icon="res://icon.svg"
 GameState="*res://src/core/game_state.gd"
 TimeService="*res://src/simulation/time_service.gd"
 EconomyService="*res://src/simulation/economy_service.gd"
-_mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 JobDirector="*res://src/jobs/job_director.gd"
 SaveService="*res://src/save/save_service.gd"
 RivalDirector="*res://src/ai/rival_director.gd"
+_mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 
 [display]
 
@@ -36,4 +36,4 @@ window/stretch/aspect="expand"
 
 [editor_plugins]
 
-enabled=["res://addons/godot_ai/plugin.cfg", "res://addons/gdgs/plugin.cfg"]
+enabled=PackedStringArray("res://addons/gdgs/plugin.cfg", "res://addons/godot_ai/plugin.cfg")

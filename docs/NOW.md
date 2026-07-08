@@ -74,11 +74,16 @@ yükseltecek focal landmark.
   yeni **`hunyuan.py` adapter'ı** eklendi (ComfyUI UI-workflow → /prompt API, image enjekte, POST,
   poll, GLB çıkar). Job: `jobs/active/alien_tower_hero_001.json` (geometry→hunyuan3d, metre,
   floor-center, 22×60×22 landmark, building budget). **validate + dry-run GEÇTİ** (commit ec8f884).
-- **Adım 3 — SIRADAKI: gerçek Hunyuan çalıştır.** ComfyUI/SwarmUI açık (port 8188). Komut:
-  `python -m tools.pipeline run-job jobs/active/alien_tower_hero_001.json --stage hunyuan3d`
-  → GLB `assets/_generated/hunyuan3d/alien_tower_hero_001/v001/`. Sonra Blender temizlik (retopo,
-  base-center pivot, trim-UV, LOD, collider) → GLBValidator → DistrictLandmarks'ta alien_diplomatic_tower
-  yerine koy → skyline'dan bak. Hunyuan çıktısı GEOMETRY CANDIDATE, ham game-ready değil.
+- **Adım 3 — Hunyuan GLB ÜRETİLDİ ✅ (71a9a23):** `python -m tools.pipeline run-job
+  jobs/active/alien_tower_hero_001.json --stage hunyuan3d` (env `OMNI_COMFY_URL=http://127.0.0.1:7821`
+  — SwarmUI ComfyUI backend portu **7821**, 8188 DEĞİL). Çıktı: **100k vertex / 200k tri geçerli GLB**,
+  texture'sız (geometry candidate), `assets/_generated/hunyuan3d/alien_tower_hero_001/v001/`. Adapter
+  5 bug'dan geçti (object_info-driven widget map, token-overlap ckpt snap, dmc→mc, Preview3D strip).
+- **Adım 4 — SIRADAKI: Blender temizlik.** Ham 200k-tri GLB'yi Blender'a al → retopo/decimate (≤30k
+  landmark budget), base-center pivot (y=0), grid ölçek (22×60×22), trim-UV, LOD, collider, Draco OFF
+  → `assets/_exports/` → GLBValidator → DistrictLandmarks'ta `alien_diplomatic_tower` yerine koy →
+  skyline'dan bak. **Ham Hunyuan çıktısı game-ready DEĞİL** — tek concept'ten üretim, arka yüz belirsiz.
+  Texture ayrı adım (Hunyuan Mesh_Texturing workflow veya Blender'da concept'ten bake).
 
 ## 💳 Hero geometri — kredi doktrini (referans)
 

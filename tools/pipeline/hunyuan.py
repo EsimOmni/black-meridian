@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import time
 import urllib.request
@@ -50,14 +51,36 @@ def hunyuan_config_from_env() -> HunyuanConfig:
     )
 
 
-def _ui_to_api_graph(ui: dict[str, Any]) -> dict[str, dict[str, Any]]:
+def _fetch_object_info(comfy_url: str) -> dict[str, Any]:
+    """Fetch ComfyUI /object_info — the authoritative INPUT_TYPES per node class."""
+    try:
+        with urllib.request.urlopen(f"{comfy_url}/object_info", timeout=30) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except (urllib.error.URLError, TimeoutError):
+        return {}
+
+
+def _widget_input_order(object_info: dict[str, Any], class_type: str) -> list[str]:
+    """Return a node class's input names in declaration order (from /object_info)."""
+    info = object_info.get(class_type, {})
+    order = info.get("input_order", {})
+    names: list[str] = []
+    for group in ("required", "optional"):
+        names.extend(order.get(group, []))
+    return names
+
+
+def _ui_to_api_graph(ui: dict[str, Any], object_info: dict[str, Any]) -> dict[str, dict[str, Any]]:
     """Convert a ComfyUI UI-format workflow (nodes + links) to the /prompt API graph.
 
     API graph is { node_id: { "class_type": T, "inputs": { name: value | [src_id, slot] } } }.
-    Widget values fill scalar inputs in declaration order; links fill connected inputs.
+    Links fill connected inputs by name; widget values fill the remaining inputs. The UI JSON's
+    per-node `inputs` list only enumerates SOCKET inputs (links), NOT widget inputs, so we take the
+    node class's real input order from /object_info and assign widgets_values to the input names
+    that are NOT link-connected, in that order (ComfyUI's own positional widget contract). Using
+    generic `_wN` names fails: nodes like Hy3DMeshGenerator require inputs by their real names.
     """
     nodes = {str(n["id"]): n for n in ui["nodes"]}
-    # link_id -> (src_node_id, src_slot)
     link_src: dict[int, tuple[str, int]] = {}
     for link in ui.get("links", []):
         # link = [link_id, src_node, src_slot, dst_node, dst_slot, type]
@@ -68,7 +91,7 @@ def _ui_to_api_graph(ui: dict[str, Any]) -> dict[str, dict[str, Any]]:
         class_type = node["type"]
         inputs: dict[str, Any] = {}
 
-        # Connected inputs (from links) — keyed by the input's declared name.
+        # Connected (socket) inputs from links, keyed by their declared socket name.
         connected_names: set[str] = set()
         for inp in node.get("inputs", []):
             link_id = inp.get("link")
@@ -77,18 +100,14 @@ def _ui_to_api_graph(ui: dict[str, Any]) -> dict[str, dict[str, Any]]:
                 inputs[inp["name"]] = [src_id, src_slot]
                 connected_names.add(inp["name"])
 
-        # Widget values fill the remaining (non-linked) widget inputs in order. The node's
-        # input list interleaves linked inputs and widgets; widgets are the entries WITHOUT a
-        # link that carry a value. ComfyUI matches widgets_values positionally to widget inputs,
-        # so we map them onto the input slots that are not link-connected, in declared order.
+        # Widget values → the class's real input names (from object_info) that aren't link-fed.
         widget_vals = list(node.get("widgets_values", []) or [])
-        widget_slots = [inp["name"] for inp in node.get("inputs", []) if inp["name"] not in connected_names]
-        # Some nodes declare widgets only in widgets_values with no matching `inputs` entry;
-        # ComfyUI's API still expects them by the class's INPUT_TYPES order. When the input list
-        # doesn't enumerate them, fall back to positional generic names the node ignores-safe:
+        all_names = _widget_input_order(object_info, class_type)
+        widget_names = [n for n in all_names if n not in connected_names]
         for i, val in enumerate(widget_vals):
-            name = widget_slots[i] if i < len(widget_slots) else f"_w{i}"
-            inputs[name] = val
+            if i < len(widget_names):
+                inputs[widget_names[i]] = val
+            # extra widget values (e.g. a seed's control_after_generate) have no input slot — drop.
 
         graph[nid] = {"class_type": class_type, "inputs": inputs}
     return graph
@@ -101,6 +120,45 @@ def _find_node_by_type(graph: dict[str, dict[str, Any]], class_type: str) -> str
     return None
 
 
+def _name_tokens(name: str) -> list[str]:
+    """Lowercase a ckpt/model name and split into comparable tokens, dropping the extension and
+    precision suffixes so 'Hunyuan3D-vae-v2-1-fp16.ckpt' ≈ 'hunyuan3d-vae-v2-1.ckpt'."""
+    stem = str(name).lower().rsplit(".", 1)[0]
+    for drop in ("fp16", "fp8", "bf16", "nvfp4"):
+        stem = stem.replace(drop, "")
+    return [t for t in re.split(r"[\\/_.\- ]+", stem) if t]
+
+
+def _snap_combo_widgets(graph: dict[str, dict[str, Any]], object_info: dict[str, Any]) -> None:
+    """For each node input that object_info declares as a choice list (a dropdown/combo — model or
+    vae ckpt names, attention modes, etc.), if the workflow's value isn't among this install's
+    choices, snap it to the best available one: prefer a choice sharing a stem keyword with the
+    stale value (so a missing '...-vae-v2-1-fp16.ckpt' picks the real 'hunyuan3d-vae-v2-1.ckpt'),
+    else the first choice. Only touches literal (non-linked) string inputs."""
+    for node in graph.values():
+        info = object_info.get(node.get("class_type", ""), {})
+        spec = info.get("input", {})
+        choices_by_name: dict[str, list[str]] = {}
+        for group in ("required", "optional"):
+            for name, decl in spec.get(group, {}).items():
+                if isinstance(decl, list) and decl and isinstance(decl[0], list):
+                    choices_by_name[name] = decl[0]
+        for name, value in list(node["inputs"].items()):
+            if isinstance(value, list):
+                continue  # a link, not a widget value
+            choices = choices_by_name.get(name)
+            if not choices or value in choices:
+                continue
+            # Snap to the choice sharing the MOST name tokens with the stale value (e.g. a missing
+            # 'Hunyuan3D-vae-v2-1-fp16.ckpt' → 'hunyuan3d-vae-v2-1.ckpt', NOT a random other VAE).
+            # A single "vae" keyword is too coarse — it matched QwenImage's VAE. Token overlap keeps
+            # the model family (hunyuan3d), variant (v2-1) and role (vae/dit) aligned.
+            want = set(_name_tokens(value))
+            best = max(choices, key=lambda c: len(want & set(_name_tokens(c))))
+            best_score = len(want & set(_name_tokens(best)))
+            node["inputs"][name] = best if best_score > 0 else choices[0]
+
+
 def build_hunyuan_prompt(job: AssetJob, project_root: Path, config: HunyuanConfig) -> tuple[dict[str, Any], Path, str]:
     """Return (api_prompt_graph, stage_output_dir, expected_glb_stub).
 
@@ -108,7 +166,8 @@ def build_hunyuan_prompt(job: AssetJob, project_root: Path, config: HunyuanConfi
     generation options (steps, guidance, decimate target) onto the matching nodes.
     """
     ui = json.loads(config.workflow.read_text(encoding="utf-8"))
-    graph = _ui_to_api_graph(ui)
+    object_info = _fetch_object_info(config.comfy_url)
+    graph = _ui_to_api_graph(ui, object_info)
 
     options = _stage_options(job, "hunyuan3d")
 
@@ -122,26 +181,60 @@ def build_hunyuan_prompt(job: AssetJob, project_root: Path, config: HunyuanConfi
     load_id = _find_node_by_type(graph, "Hy3D21LoadImageWithTransparency")
     if load_id is None:
         raise RuntimeError("workflow has no Hy3D21LoadImageWithTransparency node")
-    # first widget slot on the loader is the image filename
     graph[load_id]["inputs"]["image"] = staged_name
 
-    # 2) Mesh generator options (steps / guidance) if the node exposes them by name.
+    # 2a) Snap every combo/dropdown widget (model/vae ckpt names) to a value THIS install offers.
+    # The example workflow ships fp16 ckpt names that may not exist here (VAELoader wanted
+    # 'Hunyuan3D-vae-v2-1-fp16.ckpt' → load_torch_file got None). For each node input whose
+    # object_info type is a list of choices, if the current value isn't in the list, snap it to the
+    # closest available choice sharing a stem keyword (dit / vae), else the first choice.
+    _snap_combo_widgets(graph, object_info)
+
+    # 2b) Mesh generator: apply per-job steps/guidance by real input name.
     gen_id = _find_node_by_type(graph, "Hy3DMeshGenerator")
     if gen_id is not None:
         gi = graph[gen_id]["inputs"]
-        if "steps" in options and "_w1" in gi:
-            gi["_w1"] = int(options["steps"])
-        if "guidance" in options and "_w2" in gi:
-            gi["_w2"] = float(options["guidance"])
+        if "steps" in options:
+            gi["steps"] = int(options["steps"])
+        if "guidance" in options:
+            gi["guidance_scale"] = float(options["guidance"])
 
-    # 3) Export node → set the output stub so we can locate the GLB.
+    # 2c) VAE decode: the example workflow's dual-marching-cubes ('dmc') returned an EMPTY mesh here
+    # (VAEDecode raised "'NoneType' has no attribute 'mesh_f'"). Standard marching cubes ('mc') is
+    # the robust default. Overridable per job via generation.hunyuan3d.mc_algo.
+    dec_id = _find_node_by_type(graph, "Hy3D21VAEDecode")
+    if dec_id is not None:
+        di = graph[dec_id]["inputs"]
+        di["mc_algo"] = str(options.get("mc_algo", "mc"))
+        if "octree_resolution" in options:
+            di["octree_resolution"] = int(options["octree_resolution"])
+
+    # 3) Export node → set the output filename stub so we can locate the GLB (real input name).
     export_id = _find_node_by_type(graph, "Hy3D21ExportMesh")
     stub = f"{job.job_id}_{job.version}"
     if export_id is not None:
-        graph[export_id]["inputs"]["_w0"] = stub  # filename stub widget
+        ei = graph[export_id]["inputs"]
+        name_key = next((k for k in ("filename_prefix", "filename", "output_path", "name") if k in ei), None)
+        if name_key:
+            ei[name_key] = stub
+
+    # 4) Drop UI-only nodes that crash headless. Preview3D renders a viewport preview and needs a
+    # bg_image the API run never provides ("string index out of range" on an empty bg_image) — the
+    # GLB is already written by ExportMesh, so the preview is dead weight. Remove it and any node
+    # that feeds only it.
+    _strip_ui_only_nodes(graph, {"Preview3D"})
 
     output_dir = stage_output_dir(project_root, job, "hunyuan3d")
     return graph, output_dir, stub
+
+
+def _strip_ui_only_nodes(graph: dict[str, dict[str, Any]], class_types: set[str]) -> None:
+    """Remove nodes of the given UI-only class types (and leave their upstream intact — ComfyUI
+    prunes any node whose only consumer is removed only if unreferenced; ExportMesh is a terminal
+    output so the geometry chain still executes)."""
+    to_remove = [nid for nid, node in graph.items() if node.get("class_type") in class_types]
+    for nid in to_remove:
+        del graph[nid]
 
 
 def run_hunyuan(job: AssetJob, project_root: Path, config: HunyuanConfig, timeout_s: int = 1200) -> dict[str, Any]:

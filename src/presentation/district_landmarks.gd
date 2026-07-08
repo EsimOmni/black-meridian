@@ -39,12 +39,12 @@ const PLACEMENTS := [
 		"textured": true,
 	},
 	{
-		"glb": LANDMARK_DIR + "alien_tower_hero.glb",  # raw Hunyuan textured GLB, PNG re-encoded (Hunyuan mislabels JPEG as image/png → Godot rejected it); no Blender
+		"glb": LANDMARK_DIR + "alien_tower_hero.glb",  # Blender-optimized and base-centered GLB
 		"name": "AlienDiplomaticTower",
 		"position": Vector3(34.0, 0.0, -34.0),  # right flank, deep out on the water — pushed further right+back so it clears the venue row instead of centering behind it
 		"rotation_y": -0.35,                     # quarter-turn so a facet faces the camera
-		"scale": 10.0,                           # raw GLB is ~1.88 m native (not the Blender 60 m export); ×10 ≈ 19 m focal spire, hero beside the ~5-15 m row
-		"base_offset_y": 0.9946,                 # raw GLB isn't base-centered (mesh dips 0.9946 below y=0); lift by that × scale so the base sits on the ground
+		"scale": 10.0,                           # raw GLB is ~1.83 m native after base cut; ×10 ≈ 18 m focal spire
+		"base_offset_y": 0.0,                    # mesh bottom is already at y=0 (base-centered in Blender)
 		"textured": true,                        # keep the baked PBR (patina brutalist base → bioluminescent crown), skip the flat-color noir shader
 		"matte": true,                           # Hunyuan's glTF ships metallicFactor=1.0 + an ORM map → Godot reads it metallic-mirror and the HDRI/glow blows the crown to white. Force metallic=0 + rough=0.95, drop the ORM map, so the baked albedo shows and nothing crosses the glow HDR threshold.
 	},

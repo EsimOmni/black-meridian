@@ -34,6 +34,10 @@ Doktrin: concept→asset-split (master ONAYLI, şimdi ona göre 3D üretiyoruz).
   değil). Kutular/prop'lar "kuru mat"tan "gece ışığında yıkanmış"a geçti. Ground ıslaklığı artırıldı
   (roughness 0.08, metallic 0.45). `assets/city/glasswharf_dock/env/`'de HDRI. Pas/ahşap PBR
   texture'lar HDRI-only yettiği için KULLANILMADI (haul'da duruyor, footprint eklemedim).
+- **Neon vitrin (master imzası):** venue kutularının ZEMIN bandına sıcak sodyum emissive
+  (`city_view.gd` `_tint_building`/`_tint_meshes`) — env glow onu vitrin gibi bloom'lar; üst katlar
+  mat kalır (bina blok gibi parlamaz). Band ayrımı **root'un doğrudan child'ının** y'sinden okunur
+  (leaf mesh'ler GLB-içi local y≈0 → ilk denemede tüm stack parladı, band-y'ye çevirdim, düzeldi).
 
 ## ⏭️ Sıradaki adım
 

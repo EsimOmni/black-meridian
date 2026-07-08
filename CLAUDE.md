@@ -153,6 +153,14 @@ Subscription discipline:
   Godot bridge with animation transfer). Output is input to Blender, not a game-ready asset.
 - **Tripo** — $0 initially; local Hunyuan3D/TripoSR cover proxies. Only swap in for a benchmarked
   geometry win. Never pay Meshy + Tripo simultaneously.
+- **PROVEN 2026-07-08 — local Hunyuan3D 2.1 does hero geometry AND texture end-to-end, zero credit,
+  on the 16GB 5060 Ti with no OOM.** `Mesh_Generation` → 200k-tri GLB, `Mesh_Texturing` → baked PBR
+  (1024² baseColor + metallicRoughness, per-vertex UV) in ~2 min. Verified on the hybrid alien tower:
+  hero-quality, faithful to the concept. **Implication: for a hero where a concept image beats
+  box-modelling, the DEFAULT is local Hunyuan (geometry+texture) — spend Magnific/Meshy/Tripo credit
+  ONLY if the local output fails a specific quality bar the paid tool provably clears.** Requires the
+  reference be a transparent CUTOUT (rembg), never flat RGB — flat RGB gives a bas-relief, not a volume.
+  Adapter: `tools/pipeline/hunyuan.py` (ComfyUI backend port 7821, env `OMNI_COMFY_URL`).
 - **Sketchfab (free tier, via Epic Games account — added 2026-07-03).** Free GLB downloads for
   **proxy/greybox enrichment only** — NOT hero assets that carry the game's identity. Two hard rules:
   1. **License-check every download before use.** Sketchfab "free" is mixed: CC0 (free), CC-BY

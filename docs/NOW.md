@@ -4,7 +4,8 @@
 > bu dosya "şu an neredeyiz, sıradaki adım ne, hangi kararlar açık" durumunu tutar. Claude her
 > slice/commit sonunda bunu günceller — Cem elle yazmaz. Eski durum "Geçmiş" bölümüne düşer.
 
-**Son güncelleme:** 2026-07-08 · **Aktif faz:** Month 3 — Glass Wharf asset üretimi
+**Son güncelleme:** 2026-07-08 (öğle) · **Aktif faz:** Month 3 — Glass Wharf asset üretimi
+· **Kazanım:** hero kule uçtan uca LOKAL üretildi (Hunyuan geometri + texture, sıfır kredi, 16GB'da OOM'suz)
 
 ---
 
@@ -79,11 +80,26 @@ yükseltecek focal landmark.
   — SwarmUI ComfyUI backend portu **7821**, 8188 DEĞİL). Çıktı: **100k vertex / 200k tri geçerli GLB**,
   texture'sız (geometry candidate), `assets/_generated/hunyuan3d/alien_tower_hero_001/v001/`. Adapter
   5 bug'dan geçti (object_info-driven widget map, token-overlap ckpt snap, dmc→mc, Preview3D strip).
-- **Adım 4 — SIRADAKI: Blender temizlik.** Ham 200k-tri GLB'yi Blender'a al → retopo/decimate (≤30k
-  landmark budget), base-center pivot (y=0), grid ölçek (22×60×22), trim-UV, LOD, collider, Draco OFF
-  → `assets/_exports/` → GLBValidator → DistrictLandmarks'ta `alien_diplomatic_tower` yerine koy →
-  skyline'dan bak. **Ham Hunyuan çıktısı game-ready DEĞİL** — tek concept'ten üretim, arka yüz belirsiz.
-  Texture ayrı adım (Hunyuan Mesh_Texturing workflow veya Blender'da concept'ten bake).
+- **Adım 4 — Hunyuan TEXTURE ÜRETİLDİ ✅ (2026-07-08, uçtan uca lokal kanıtlandı):** `Mesh_Texturing`
+  workflow'u 16GB'da OOM'suz çalıştı (~2 dk, exit 0). Prova script'i adapter helper'larını yeniden
+  kullandı: `Hy3D21LoadMesh.glb_path`←v002 GLB, `LoadImageWithTransparency`←cutout, Preview3D strip.
+  Çıktı: **`alien_tower_hero_001_v002_tex.glb` (6.8 MB)** — baseColor 1024² + metallicRoughness 1024²
+  PBR gömülü, her vertex UV'li. Blender render doğrulandı: **hibrit dil birebir konseptte** (patina
+  brutalist taban → örülü cyan-yeşil biyolüminesan taç), hero-kalite, çamur yok. **KRİTİK BULGU:
+  16GB texture'ı kaldırıyor → yüksek-VRAM (5090) bu iş için GEREKMİYOR.** Tek zayıflık: view-projection
+  texturing "elle boyanmış" his + tepe tendrillerde hafif smear (uzak skyline landmark'ı için sorun değil).
+  Prova script'i `scratchpad/texture_prova.py` (tek seferlik — adapter'a branch OLARAK EKLENMEDİ henüz).
+- **Adım 5 — SIRADAKI: Blender temizlik.** Textured GLB'yi Blender'a al → cutout'tan kalan zemin plakasını
+  sil → decimate (200k→≤30k landmark budget), base-center pivot (y=0), grid ölçek (22×60×22), collider,
+  Draco OFF → `assets/_exports/` → GLBValidator → DistrictLandmarks'ta `alien_diplomatic_tower` yerine
+  koy → skyline'dan bak. Ham Hunyuan çıktısı game-ready DEĞİL (arka yüz belirsiz).
+- **Adım 6 — texturing'i adapter'a branch yap** (Blender+skyline testinden SONRA): `hunyuan.py`'ye
+  `Mesh_Texturing` route ekle → gelecekteki her hero `--stage texture` tek komut. Şimdi değil, önce
+  ilk hero'yu oyunda gör.
+- **YEDEK PLAN — Trellis A/B** (lokalde SwarmUI'da mevcut, henüz DENENMEDİ): Trellis native-3D-latent'ten
+  üretir, texture mesh'e daha yapışık gelebilir. Denemenin DOĞRU zamanı = Hunyuan kule skyline'da texture
+  smear'i rahatsız ederse, aynı cutout'la Trellis çalıştır + A/B. Şimdi denemek erken (oyun-içi bağlam
+  olmadan kıyas anlamsız). Trellis organik formda bazen Hunyuan'dan yumuşak/az detaylı çıkar — garanti değil.
 
 ## 💳 Hero geometri — kredi doktrini (referans)
 

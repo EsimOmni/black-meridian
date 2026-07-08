@@ -139,6 +139,14 @@ static func _apply_matte(node: Node) -> void:
 					m.roughness = 0.95
 					m.roughness_texture = null           # drop the ORM roughness channel — uniform matte
 					m.specular_mode = BaseMaterial3D.SPECULAR_DISABLED  # no dielectric highlight for the HDRI to bloom
+					
+					# Bioluminescent crown emission
+					if m.albedo_texture != null:
+						m.emission_enabled = true
+						m.emission_texture = load("res://assets/city/glasswharf_dock/alien_tower_hero_0_emissive.png")
+						m.emission = Color(0.0, 0.9, 0.8) # cyan-green glow
+						m.emission_energy_multiplier = 4.0 # boost to bloom in the dark environment
+					
 					mi.set_surface_override_material(s, m)  # keep the baked albedo untinted — the texture is the tower's real color
 	for child in node.get_children():
 		_apply_matte(child)

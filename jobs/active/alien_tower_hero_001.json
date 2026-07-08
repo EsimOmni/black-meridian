@@ -1,12 +1,12 @@
 {
   "$schema": "../../manifests/asset_manifest.schema.json",
   "job_id": "alien_tower_hero_001",
-  "version": "v001",
+  "version": "v002",
   "status": "active",
   "asset_class": "hero_landmark",
   "quality_profile": "first_pipeline_pass",
   "references": [
-    "assets/_references/alien_tower_hero/tower.png"
+    "assets/_references/alien_tower_hero/tower_cutout.png"
   ],
   "routing": {
     "geometry": "hunyuan3d",

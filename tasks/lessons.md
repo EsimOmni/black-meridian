@@ -193,3 +193,15 @@ refusal on Fable 5 → fallback to Opus, losing Fable's edge. Repo docs audited 
 ### On a `stop_reason: "refusal"`, switch that call to Opus 4.8
 Fable's safety classifiers (cyber/bio/reasoning-extraction) don't apply to game-building, but if a refusal
 ever hits, route that request to Opus 4.8 rather than fighting it.
+
+## Hunyuan3D image→3D: arka planı MUTLAKA kaldır (2026-07-08)
+
+**Sorun:** RGB concept'i (alpha yok) Hunyuan3D'ye verince düz bir KABARTMA (relief) çıktı —
+tüm frame'i (arka plan dahil) obje sandı, yassılık oranı 0.11 (Y=0.22m).
+**Kök neden:** `Hy3D21LoadImageWithTransparency` node'u alpha bekler; alpha yoksa arka planı
+foreground'dan ayıramaz, sahnenin tamamını düz yüzeye bas-relief eder.
+**Fix:** rembg ile arka planı kaldır → şeffaf PNG → tekrar üret. Yassılık 0.11 → 0.588
+(hacimli 3D). rembg ComfyUI python_embeded'de kurulu:
+`D:\AI\SwarmUI\dlbackend\comfy\python_embeded\python.exe -c "from rembg import remove..."`.
+**Kural:** image→3D'ye HER ZAMAN şeffaf/cutout PNG ver, düz RGB değil. concept'i üretirken bile
+nötr/sade arka plan iste + sonra rembg'den geçir.

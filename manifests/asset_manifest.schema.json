@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omnilabs.studio/schemas/asset_manifest.schema.json",
+  "title": "OMNI 3D Asset Job Manifest",
+  "type": "object",
+  "required": ["job_id", "status", "asset_class", "quality_profile", "references", "routing", "target"],
+  "additionalProperties": true,
+  "properties": {
+    "job_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]{2,80}$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^v[0-9]{3}$",
+      "default": "v001"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "active", "blocked", "failed", "passed"]
+    },
+    "asset_class": {
+      "type": "string"
+    },
+    "quality_profile": {
+      "type": "string"
+    },
+    "references": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" }
+    },
+    "routing": {
+      "type": "object",
+      "required": ["geometry", "production", "runtime"],
+      "properties": {
+        "geometry": { "type": "string", "enum": ["procedural", "triposr", "none"] },
+        "appearance_reference": { "type": "string", "enum": ["triposplat", "none"] },
+        "production": { "type": "string", "enum": ["blender"] },
+        "runtime": { "type": "string", "enum": ["godot"] }
+      }
+    },
+    "target": {
+      "type": "object",
+      "required": ["engine"],
+      "properties": {
+        "engine": { "type": "string" },
+        "platform_profile": { "type": "string" },
+        "unit": { "type": "string" },
+        "dimensions_m": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "type": "number" }
+        },
+        "pivot": { "type": "string" }
+      }
+    },
+    "generation": {
+      "type": "object",
+      "properties": {
+        "triposr": {
+          "type": "object",
+          "properties": {
+            "mc_resolution": { "type": "integer", "minimum": 32, "maximum": 512 },
+            "model_save_format": { "type": "string", "enum": ["obj", "glb"] },
+            "no_remove_bg": { "type": "boolean" },
+            "bake_texture": { "type": "boolean" },
+            "texture_resolution": { "type": "integer", "minimum": 512, "maximum": 4096 },
+            "render": { "type": "boolean" }
+          }
+        },
+        "triposplat": {
+          "type": "object",
+          "properties": {
+            "num_gaussians": { "type": "integer", "enum": [32768, 65536, 131072, 262144] },
+            "device": { "type": "string" }
+          }
+        }
+      }
+    },
+    "budgets": { "type": "object" },
+    "requirements": { "type": "object" },
+    "gates": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}
+

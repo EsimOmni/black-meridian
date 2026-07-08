@@ -57,3 +57,15 @@ tools/concept-runners/magnific/magnific-profile/
 tools/concept-runners/magnific/outputs/
 tools/concept-runners/google-flow/flow-profile/
 tools/concept-runners/google-flow/outputs/
+
+# Playwright MCP scratch (screenshots, logs, snapshots)
+.playwright-mcp/
+
+# Python bytecode cache
+__pycache__/
+*.pyc
+
+# 3D pipeline generated artifacts (immutable raw outputs — regenerated per job, not source)
+assets/_generated/*/
+assets/_exports/*/
+jobs/reports/*/

@@ -1,0 +1,66 @@
+{
+  "$schema": "../../manifests/asset_manifest.schema.json",
+  "job_id": "alien_tower_hero_001",
+  "version": "v001",
+  "status": "active",
+  "asset_class": "hero_landmark",
+  "quality_profile": "first_pipeline_pass",
+  "references": [
+    "assets/_references/alien_tower_hero/tower.png"
+  ],
+  "routing": {
+    "geometry": "hunyuan3d",
+    "appearance_reference": "triposplat",
+    "production": "blender",
+    "runtime": "godot"
+  },
+  "target": {
+    "engine": "godot-4.7-stable",
+    "platform_profile": "desktop_high",
+    "unit": "meter",
+    "dimensions_m": [22.0, 60.0, 22.0],
+    "pivot": "floor_center"
+  },
+  "generation": {
+    "hunyuan3d": {
+      "steps": 30,
+      "guidance": 5.0,
+      "decimate_target": 200000
+    },
+    "triposplat": {
+      "num_gaussians": 65536,
+      "device": "cuda"
+    }
+  },
+  "budgets": {
+    "lod0_triangles_max": 30000,
+    "lod1_ratio": 0.5,
+    "lod2_ratio": 0.2,
+    "material_slots_max": 6,
+    "texture_max_px": 2048,
+    "collision_triangles_max": 200
+  },
+  "requirements": {
+    "manifold": false,
+    "uv1": true,
+    "uv2": false,
+    "pbr": ["base_color", "normal", "roughness", "metallic", "ao"],
+    "collision": "compound_primitives",
+    "animations": []
+  },
+  "gates": [
+    "reference_approved",
+    "candidate_approved",
+    "geometry_valid",
+    "materials_valid",
+    "glb_valid",
+    "godot_import_valid",
+    "runtime_smoke_passed"
+  ],
+  "notes": [
+    "Hero alien tower for Glass Wharf — hybrid brutalist base + organic bioluminescent crown, from the approved concept (assets/concept/glass_wharf/alien_tower_hero.png). Replaces the placeholder DistrictLandmarks alien_diplomatic_tower.",
+    "Local Hunyuan3D 2.1 geometry route (zero credit) — chosen over TripoSR for the organic crown; over Magnific for the free win (brief §10).",
+    "Hunyuan3D output is a GEOMETRY CANDIDATE only: single front concept, expect hidden-side ambiguity. Blender owns retopo/base-center pivot/trim-UV/LOD/collider before GLBValidator + Godot test.",
+    "dimensions_m 22x60x22 = a landmark-scale skyline tower to match the venue-row read; final scale tuned in DistrictLandmarks placement (human 10%)."
+  ]
+}

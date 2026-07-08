@@ -57,7 +57,21 @@ Doktrin: concept→asset-split (master ONAYLI, şimdi ona göre 3D üretiyoruz).
    büyük iş, düşük getiri. SSR eklendi (metal prop/kule yüzeyinde gerçekçi katkı, skyline'da okur),
    ama tam mirror bırakıldı. Skyline'dan bakınca sahne zaten master ruhunu taşıyor.
 
-## 💳 Hero geometri — Magnific image→3D (KARAR VERİLDİ, henüz basılmadı)
+## 💳 Hero geometri — Magnific image→3D (AKTİF: alien kule)
+
+**Hedef seçildi (2026-07-08):** master'ın imza öğesi = **alien hero kule**, dil = **hibrit** (yapısal
+brutalist taban + organik/biyomorfik biyolüminesan taç). Mevcut basit `alien_diplomatic_tower`'ı
+yükseltecek focal landmark.
+
+- **Adım 1 — concept görseli (BEDAVA yol seçildi, kredi YAKMA):** ChatGPT pipeline runner / Magnific
+  web UI (unlimited orada geçer). Prompt Claude verdi (hibrit kule, nötr arka plan, ¾ hero açı,
+  portrait, IP-temiz — "cephalopod-silhouetted organic", hiçbir seri referansı yok). Görsel gelince
+  `assets/concept/glass_wharf/`'a. **Concept'e kredi yakılmadı — kredi asıl 3D'ye saklandı.**
+- **Adım 2 — image→3D:** concept onaylı → önce **Trellis 610 prova** (Blender'a al, skyline'da
+  alien_diplomatic_tower yerine koy, silüet master'a oturuyor mu) → oturuyorsa **Meshy 6 / Tripo
+  v3.1 detailed @1160 hero**. Her paralı generate öncesi Cem'e maliyet+onay.
+
+## 💳 Hero geometri — kredi doktrini (referans)
 
 Krediyi SADECE **kimlik taşıyan hero geometriye** harca (master'ın focal landmark'ları + 2-3 imza
 prop). Çevre/dolgu/materyal = Sketchfab+PolyHaven bedava, oraya kredi YAKMA.

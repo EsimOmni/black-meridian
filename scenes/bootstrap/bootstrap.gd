@@ -75,7 +75,7 @@ func _build_lighting() -> void:
 	e.glow_intensity = 0.9
 	e.glow_strength = 1.0
 	e.glow_bloom = 0.15
-	e.glow_hdr_threshold = 1.0
+	e.glow_hdr_threshold = 1.5
 	e.glow_blend_mode = Environment.GLOW_BLEND_MODE_SCREEN
 	# Volumetric-ish depth fog, tuned to the master's petrol haze (thin, distance falls off).
 	e.fog_enabled = true

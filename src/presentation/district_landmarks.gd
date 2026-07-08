@@ -45,6 +45,7 @@ const PLACEMENTS := [
 		"rotation_y": -0.35,                     # quarter-turn so a facet faces the camera
 		"scale": 0.32,                           # 60 m native × 0.5 pierced the frame; 0.32 (~19 m) reads as a tall focal spire that stays inside the skyline, still hero beside the ~5-15 m row (human 10%)
 		"textured": true,                        # hero Hunyuan GLB with baked PBR (patina brutalist base → bioluminescent crown) — keep its own texture, skip the flat-color noir shader
+		"matte": true,                           # Hunyuan's glTF ships metallicFactor=1.0 + an MR map → Godot reads it metallic-mirror, and the HDRI/glow blows the crown to white. Force metallic=0 + rough=0.9, drop the MR map, so the baked albedo shows and nothing crosses the glow HDR threshold.
 	},
 	{
 		"glb": LANDMARK_DIR + "stone_institution.glb",
@@ -82,6 +83,8 @@ static func spawn_all(parent: Node3D) -> void:
 		# flat-colored P12b landmarks (alien tower / stone institution).
 		if not p.get("textured", false):
 			_apply_noir_detail(node, p.get("patina", 0.0))  # P12b trim lap: weather stone/metal, glow clean
+		elif p.get("matte", false):
+			_apply_matte(node)  # kill the Hunyuan glTF's metallic-mirror so the HDRI/glow can't blow it to white
 		parent.add_child(node)
 
 ## Replace every non-emissive surface material with the triplanar noir weathering shader,
@@ -109,6 +112,29 @@ static func _apply_noir_detail(node: Node, patina: float) -> void:
 				mi.set_surface_override_material(s, detail)
 	for child in node.get_children():
 		_apply_noir_detail(child, patina)
+
+## Force every StandardMaterial3D surface to a matte dielectric: metallic=0, roughness high, and
+## the metallic/roughness texture dropped. Hunyuan3D's glTF export writes metallicFactor=1.0 plus an
+## ORM map, so Godot builds a metallic-mirror material; under the scene's HDRI reflection + glow the
+## crown crosses the HDR threshold and blows to white. Killing metallic (keeping the albedo MAP, so
+## the baked patina/bioluminescent color stays) makes it read as painted stone/organic, not chrome.
+static func _apply_matte(node: Node) -> void:
+	if node is MeshInstance3D:
+		var mi := node as MeshInstance3D
+		var mesh := mi.mesh
+		if mesh != null:
+			for s in mesh.get_surface_count():
+				var mat := mesh.surface_get_material(s)
+				if mat is StandardMaterial3D:
+					var m := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
+					m.metallic = 0.0
+					m.metallic_texture = null           # drop the ORM metallic channel — Hunyuan ships metallicFactor=1
+					m.roughness = 0.95
+					m.roughness_texture = null           # drop the ORM roughness channel — uniform matte
+					m.specular_mode = BaseMaterial3D.SPECULAR_DISABLED  # no dielectric highlight for the HDRI to bloom
+					mi.set_surface_override_material(s, m)
+	for child in node.get_children():
+		_apply_matte(child)
 
 ## Load a landmark GLB into a fresh Node3D (base-center pivot, y=0 = ground — validated by
 ## GLBValidator 'building' spec). One-shot, no cache: a landmark is placed once.

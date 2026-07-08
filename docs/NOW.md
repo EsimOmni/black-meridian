@@ -4,8 +4,8 @@
 > bu dosya "şu an neredeyiz, sıradaki adım ne, hangi kararlar açık" durumunu tutar. Claude her
 > slice/commit sonunda bunu günceller — Cem elle yazmaz. Eski durum "Geçmiş" bölümüne düşer.
 
-**Son güncelleme:** 2026-07-08 (öğle) · **Aktif faz:** Month 3 — Glass Wharf asset üretimi
-· **Kazanım:** hero kule uçtan uca LOKAL üretildi (Hunyuan geometri + texture, sıfır kredi, 16GB'da OOM'suz)
+**Son güncelleme:** 2026-07-08 (akşam) · **Aktif faz:** Month 3 — Glass Wharf asset üretimi
+· **Kazanım:** ham Hunyuan kule OYUNDA (JPEG-as-PNG repack ile Godot'a girdi, Blender'sız) — ince ayar Codex'e devredildi, bir sonraki task'e geçiliyor
 
 ---
 
@@ -102,9 +102,24 @@ yükseltecek focal landmark.
   okuyor** (metallicRoughness bake'i). Kalan tek şey saf kompozisyon zevki (scale/pos = insan %10).
   DERS: mekanik görünen Blender temizlik aslında ince ayar (decimate oranı+UV+normal+export birbirini
   ezer) — Sonnet'e körlemesine verilince hero çöpe döndü. Bağlamı taşıyan (kaynağı gören) yapmalı.
-- **Adım 6 — texturing'i adapter'a branch yap** (Blender+skyline testinden SONRA): `hunyuan.py`'ye
-  `Mesh_Texturing` route ekle → gelecekteki her hero `--stage texture` tek komut. Şimdi değil, önce
-  ilk hero'yu oyunda gör.
+- **Adım 5b — HAM GLB oyunda, Blender ÇÖPE ATILDI ✅ (2026-07-08 akşam, commit 439766e).** Cem "ham
+  modeli olduğu gibi koy, Blender'a dokunma" dedi → Blender-cleaned LOD0 SİLİNDİ, ham `v002_tex.glb`
+  kondu. **KÖK BULGU (kritik, tekrar edecek): Hunyuan GLB texture'ı JPEG ama data-URI'de `image/png`
+  diye YANLIŞ etiketli → Godot PNG decoder'ı `ERR_FILE_CORRUPT` verip texture'ı reddediyor.** Çözüm
+  Blender DEĞİL: saf-Python repack (`scratchpad/repack_glb.py` — Pillow gerçek formatı tanır, temiz
+  PNG'ye re-encode eder, GLB'yi yeniden yazar). ~1 dk, sıfır Blender. Sonuç: `alien_tower_hero.glb`
+  (200k tri, texture'lı, Godot'ta temiz). Placement: scale 10 (ham 1.88m native → ~19m), `base_offset_y`
+  ham GLB base-center değil diye zemine oturtur. **matte override KALDI** (glTF metallicFactor=1 mirror'ı
+  öldürür → taç patlamaz) ama **albedo tint DÜŞÜRÜLDÜ** — texture kendi gerçek rengiyle gelir, uydurma yok.
+  Oyunda doğrulandı: taç kendi biyolüminesan yeşil-cyan rengiyle okuyor, beyaz blowout YOK. **DERS:
+  ham Hunyuan GLB Godot'a girmiyorsa ilk şüphe = JPEG-as-PNG mislabel, repack script'i çöz — Blender'a koşma.**
+- **⏭️ Kalan ince ayar → CODEX (kota 10 Tem'de açılınca):** (a) base plakası/kesilmemiş zemin ham GLB'de
+  duruyor — gizle/kes; (b) renk/kompozisyon rötuşu (sıcak sodyum washout, taban tonu); (c) skyline
+  kompozisyonu master'a tam otursun. Cem: "bu ince işleri Codex'e yaptıracağız açılınca." Şimdi bir
+  sonraki task'e geçiliyor.
+- **Adım 6 — texturing'i adapter'a branch yap** (sonra): `hunyuan.py`'ye `Mesh_Texturing` route ekle →
+  gelecekteki her hero `--stage texture` tek komut. Ayrıca `repack_glb.py`'yi pipeline'a kalıcı adım yap
+  (her Hunyuan GLB'nin JPEG-as-PNG'sini otomatik düzeltsin).
 - **YEDEK PLAN — Trellis A/B (DÜZELTME 2026-07-08: Trellis lokalde YOK).** ComfyUI'da tek lokal mesh
   paketi `ComfyUI-Hunyuan3d-2-1`. `object_info` taraması: Trellis node'u sıfır. Görünen `Tripo*Node`'lar
   **bulut Tripo API** (key+kredi ister, lokal ağırlık değil). Yani lokal bedava mesh = SADECE Hunyuan3D.

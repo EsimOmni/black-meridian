@@ -86,6 +86,7 @@ enum JobOrigin {
 	INTERNAL_DISPUTE,
 	INSTITUTIONAL_PRESSURE,
 	EVIDENCE_CHAIN,
+	TERRITORY_LOSS,
 }
 
 ## Evidence-case kinds (brief §7.3, P06b). Flavour only — mechanics are weight-driven;

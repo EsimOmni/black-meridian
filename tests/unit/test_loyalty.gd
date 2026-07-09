@@ -15,7 +15,7 @@ func _ready() -> void:
 	add_child(_rs)
 	_rs.betrayal_telegraphed.connect(func(_c): _telegraphs += 1)
 	_rs.betrayal_defused.connect(func(_c): _defused += 1)
-	_rs.betrayal_committed.connect(func(_c, v): _committed += 1; _committed_venue = v)
+	_rs.betrayal_committed.connect(func(_c, v, _r): _committed += 1; _committed_venue = v)
 	_test_no_rng_in_loyalty()
 	_test_pressure_alone_does_not_telegraph()
 	_test_opportunity_alone_does_not_telegraph()
@@ -122,8 +122,9 @@ func _test_both_gates_telegraph_then_land_after_window() -> void:
 	_check(_telegraphs == 1, "no re-telegraph during the window")
 	_check(_committed_venue != null and _committed_venue.id == &"gw_contraband",
 		"the deterministic target: the first player racket")
-	_check(_committed_venue.control_state == BM.ControlState.CONTESTED,
-		"the landed effect: the lieutenant's ground defects to CONTESTED")
+	_check(_committed_venue.owner_faction == &"corvine"
+		and _committed_venue.control_state == BM.ControlState.INFLUENCED,
+		"the landed effect: the venue transfers to the rival (owner + INFLUENCED)")
 	_check(bengal.betrayal_ticks_until_land == -1, "the intent closed after landing")
 	_check(bengal.grievance == 0.0 and bengal.rival_leverage == 0.0,
 		"the act discharges the motives that drove it")

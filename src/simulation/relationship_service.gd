@@ -14,7 +14,7 @@ extends Node
 
 signal betrayal_telegraphed(character: CharacterData)
 signal betrayal_defused(character: CharacterData)
-signal betrayal_committed(character: CharacterData, venue: VenueData)
+signal betrayal_committed(character: CharacterData, venue: VenueData, rival: FactionData)
 
 func _ready() -> void:
 	TimeService.rival_tick.connect(_on_rival_tick)
@@ -61,11 +61,29 @@ func _advance_intent(c: CharacterData) -> void:
 func _land(c: CharacterData) -> void:
 	c.betrayal_ticks_until_land = -1
 	var venue := LoyaltyScoring.betrayal_target(GameState.districts, c.faction_id)
-	if venue != null:
-		venue.control_state = BM.ControlState.CONTESTED
+	var rival := _defection_rival(c)
+	if venue != null and rival != null:
+		# The turncoat delivers the venue to the rival they were recruited to — territory changes
+		# hands (the one place ownership shifts on betrayal). Was CONTESTED-only; now a real loss.
+		venue.owner_faction = rival.id
+		venue.control_state = BM.ControlState.INFLUENCED
 	c.grievance = 0.0
 	c.rival_leverage = 0.0
-	betrayal_committed.emit(c, venue)
+	c.recruited_by_faction = &""
+	betrayal_committed.emit(c, venue, rival)
+
+## The rival a betrayal delivers to: the faction that RECRUITed this lieutenant, or — if the
+## betrayal grew from grievance/ambition with no explicit recruiter — the single rival faction
+## (the vertical slice has one; filter is_player, first match, the established ad-hoc pattern).
+static func _defection_rival(c: CharacterData) -> FactionData:
+	if c.recruited_by_faction != &"":
+		var f := GameState.get_faction(c.recruited_by_faction)
+		if f != null:
+			return f
+	for faction in GameState.factions:
+		if not faction.is_player:
+			return faction
+	return null
 
 ## The player's defusal verb (greybox): spend clean capital to raise trust and shared
 ## success — cut the lieutenant back in. Whether that defuses the intent is decided by

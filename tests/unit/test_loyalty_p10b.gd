@@ -16,7 +16,7 @@ func _ready() -> void:
 	add_child(_rs)
 	_rs.betrayal_telegraphed.connect(func(c): _telegraphs += 1; _telegraphed_ids.append(c.id))
 	_rs.betrayal_defused.connect(func(_c): _defused += 1)
-	_rs.betrayal_committed.connect(func(_c, v):
+	_rs.betrayal_committed.connect(func(_c, v, _r):
 		_committed += 1
 		_committed_venue_ids.append(v.id if v != null else &""))
 	_test_no_rng_in_loyalty()
@@ -158,9 +158,11 @@ func _test_two_intents_land_independently() -> void:
 	_check(_committed_venue_ids == [&"gw_contraband", &"gw_protection"],
 		"each landing takes the NEXT non-contested racket (got %s)" % str(_committed_venue_ids))
 	var d := GameState.get_district(&"glass_wharf")
-	_check(_venue(d, &"gw_contraband").control_state == BM.ControlState.CONTESTED
-		and _venue(d, &"gw_protection").control_state == BM.ControlState.CONTESTED,
-		"both defected venues read CONTESTED")
+	_check(_venue(d, &"gw_contraband").owner_faction == &"corvine"
+		and _venue(d, &"gw_contraband").control_state == BM.ControlState.INFLUENCED
+		and _venue(d, &"gw_protection").owner_faction == &"corvine"
+		and _venue(d, &"gw_protection").control_state == BM.ControlState.INFLUENCED,
+		"both defected venues transfer to the rival (owner + INFLUENCED)")
 
 func _test_defuse_one_the_other_still_lands() -> void:
 	_fresh_world()

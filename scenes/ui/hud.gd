@@ -139,7 +139,7 @@ func _ready() -> void:
 	if relationship_node:
 		relationship_node.betrayal_telegraphed.connect(func(_c): _refresh())
 		relationship_node.betrayal_defused.connect(func(_c): _refresh())
-		relationship_node.betrayal_committed.connect(func(_c, _v): _refresh())
+		relationship_node.betrayal_committed.connect(func(_c, _v, _r): _refresh())
 	_refresh()
 
 func _row(parent: Node) -> Label:

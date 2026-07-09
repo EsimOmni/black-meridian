@@ -104,17 +104,17 @@ static func _build_glass_wharf() -> void:
 	# and fronts interleave along the frontage; a shallow z stagger gives the row some depth.
 	d.venues = [
 		_racket(&"gw_contraband", "Cargo Terminal Contraband", BM.RacketKind.CONTRABAND_LOGISTICS,
-			COMPACT, BM.ControlState.CONTROLLED, 220, 3, Vector2(-20, -1.5)),
+			COMPACT, BM.ControlState.CONTROLLED, 220, 3, Vector2(-50, -4.0)),
 		_front(&"gw_nightclub", "The Meridian Club", BM.FrontKind.NIGHTCLUB,
-			COMPACT, 600, 0.75, 0.18, Vector2(-12, 1.5)),
+			COMPACT, 600, 0.75, 0.18, Vector2(-30, 4.0)),
 		_racket(&"gw_protection", "Wharfside Protection", BM.RacketKind.PROTECTION,
-			COMPACT, BM.ControlState.INFLUENCED, 140, 2, Vector2(-4, -1.5)),
+			COMPACT, BM.ControlState.INFLUENCED, 140, 2, Vector2(-10, -4.0)),
 		_racket(&"gw_gaming", "Underglass Gaming Den", BM.RacketKind.UNDERGROUND_GAMING,
-			COMPACT, BM.ControlState.CONTROLLED, 180, 2, Vector2(4, 1.5)),
+			COMPACT, BM.ControlState.CONTROLLED, 180, 2, Vector2(10, 4.0)),
 		_front(&"gw_freight", "Glass Wharf Freight Co.", BM.FrontKind.FREIGHT_COMPANY,
-			COMPACT, 450, 0.7, 0.2, Vector2(12, -1.5)),
+			COMPACT, 450, 0.7, 0.2, Vector2(30, -4.0)),
 		_racket(&"gw_clinic", "Backstreet Clinic", BM.RacketKind.ILLEGAL_CLINIC,
-			CORVINE, BM.ControlState.CONTROLLED, 160, 2, Vector2(20, 1.5)),
+			CORVINE, BM.ControlState.CONTROLLED, 160, 2, Vector2(50, 4.0)),
 	]
 
 	GameState.districts = [d]

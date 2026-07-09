@@ -30,58 +30,72 @@ const PLACEMENTS := [
 	{
 		"glb": PROP_DIR + "dock_crane.glb",
 		"name": "DockCrane",
-		"position": Vector3(26.0, 0.0, -14.0),   # right flank on the water — the master's harbor crane silhouette
+		"position": Vector3(65.0, 0.0, -35.0),   # right flank on the water — the master's harbor crane silhouette (2.5× spread)
 		"rotation_y": -0.6,
 		"scale": 2.5,                             # a 3.4 m crane vanishes beside 30 m towers — bring it to skyline read
 	},
 	{
 		"glb": PROP_DIR + "market_stall.glb",
 		"name": "MarketStallA",
-		"position": Vector3(-13.0, 0.0, 13.0),   # left of the near pier — the master's lit market strip
+		"position": Vector3(-32.5, 0.0, 32.5),   # left of the near pier — the master's lit market strip (2.5× spread)
 		"rotation_y": 0.5,
 		"scale": 2.2,
 	},
 	{
 		"glb": PROP_DIR + "market_stall.glb",
 		"name": "MarketStallB",
-		"position": Vector3(-7.0, 0.0, 14.0),    # second stall beside the first — a small row reads as a market
+		"position": Vector3(-17.5, 0.0, 35.0),    # second stall beside the first — a small row reads as a market (2.5× spread)
 		"rotation_y": 0.35,
 		"scale": 2.2,
 	},
 	{
 		"glb": PROP_DIR + "pallet_pack.glb",
 		"name": "PalletPackA",
-		"position": Vector3(-19.0, 0.0, 12.0),   # cargo clutter at the warehouse mouth, far-left pier
+		"position": Vector3(-47.5, 0.0, 30.0),   # cargo clutter at the warehouse mouth, far-left pier (2.5× spread)
 		"rotation_y": 0.9,
 		"scale": 2.4,
 	},
 	{
 		"glb": PROP_DIR + "pallet_pack.glb",
 		"name": "PalletPackB",
-		"position": Vector3(-17.5, 0.0, 10.0),
+		"position": Vector3(-43.75, 0.0, 25.0),  # (2.5× spread)
 		"rotation_y": 0.2,
 		"scale": 2.4,
 	},
 	{
 		"glb": PROP_DIR + "fishing_supplies.glb",
 		"name": "FishingSupplies",
-		"position": Vector3(6.0, 0.0, 15.0),     # pier-edge clutter, camera-near centre
+		"position": Vector3(15.0, 0.0, 37.5),     # pier-edge clutter, camera-near centre (2.5× spread)
 		"rotation_y": -0.4,
 		"scale": 2.0,
 	},
 	{
 		"glb": PROP_DIR + "bollard_rope.glb",
 		"name": "BollardA",
-		"position": Vector3(12.0, 0.0, 15.0),    # wharf-edge mooring line, front-right
+		"position": Vector3(30.0, 0.0, 37.5),    # wharf-edge mooring line, front-right (2.5× spread)
 		"rotation_y": 0.0,
 		"scale": 2.5,
 	},
 	{
 		"glb": PROP_DIR + "bollard_rope.glb",
 		"name": "BollardB",
-		"position": Vector3(0.0, 0.0, 16.0),     # mooring at the near-pier centre
+		"position": Vector3(0.0, 0.0, 40.0),     # mooring at the near-pier centre (2.5× spread)
 		"rotation_y": 0.0,
 		"scale": 2.5,
+	},
+	{
+		"glb": PROP_DIR + "corner.glb",          # kit corner block, repurposed as a low dockside container/plinth on the pier
+		"name": "DockCornerBlock",
+		"position": Vector3(45.0, 0.0, 27.5),    # right-front pier, beside the mooring line — a squat cargo block anchoring the corner (2.5× spread)
+		"rotation_y": 0.4,
+		"scale": 0.9,                             # 4.5 m native reads as a shipping container at this scale, not a building
+	},
+	{
+		"glb": PROP_DIR + "roof_prop.glb",       # small roof-vent/AC prop, set on the near pier as ground clutter
+		"name": "PierRoofProp",
+		"position": Vector3(-7.5, 0.0, 33.75),    # near-centre pier clutter, between the market strip and the fishing supplies (2.5× spread)
+		"rotation_y": -0.7,
+		"scale": 1.8,
 	},
 ]
 

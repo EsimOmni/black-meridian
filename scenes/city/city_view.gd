@@ -22,7 +22,7 @@ func _ready() -> void:
 func _build_ground() -> void:
 	var ground := MeshInstance3D.new()
 	var plane := PlaneMesh.new()
-	plane.size = Vector2(80, 80)
+	plane.size = Vector2(200, 200)
 	ground.mesh = plane
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = Color(0.05, 0.06, 0.08)  # wet charcoal asphalt (brief §9.1 palette)

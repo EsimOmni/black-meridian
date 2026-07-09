@@ -18,7 +18,7 @@ const PLACEMENTS := [
 	{
 		"glb": LANDMARK_DIR + "warehouse_hero.glb",
 		"name": "WarehouseHero",
-		"position": Vector3(-14.0, 0.0, 9.0),   # front-left of the venue row, camera-facing — the master's near freight depot on the wharf edge
+		"position": Vector3(-35.0, 0.0, 22.5),   # front-left of the venue row, camera-facing — the master's near freight depot on the wharf edge (2.5× spread)
 		"rotation_y": 1.4,                        # long axis roughly parallel to the water, gable end angled to the 3/4 camera
 		"scale": 2.2,                             # a ~5 m depot reads too small beside the venue kit — bring it up to hero read
 		"textured": true,                         # Sketchfab GLB — keep its baked brick/metal texture, skip the flat-color noir shader
@@ -26,14 +26,14 @@ const PLACEMENTS := [
 	{
 		"glb": LANDMARK_DIR + "industrial_block_a.glb",
 		"name": "IndustrialBlockA",
-		"position": Vector3(16.0, 0.0, -8.0),   # right-mid, set back behind the venue row — a taller brick freight block on the skyline
+		"position": Vector3(40.0, 0.0, -20.0),   # right-mid, set back behind the venue row — a taller brick freight block on the skyline (2.5× spread)
 		"rotation_y": -1.1,                       # broad face angled toward the 3/4 camera
 		"textured": true,
 	},
 	{
 		"glb": LANDMARK_DIR + "dock_house_pier.glb",
 		"name": "DockHousePier",
-		"position": Vector3(2.0, 0.0, 12.0),    # front-center on the wharf edge, out over the water — the near stilt-house + jetty combo
+		"position": Vector3(5.0, 0.0, 30.0),    # front-center on the wharf edge, out over the water — the near stilt-house + jetty combo (2.5× spread)
 		"rotation_y": 0.3,                        # jetty runs toward the water/camera-right
 		"scale": 1.3,                             # bring the ~11 m combo up so the stilt house reads beside the warehouse
 		"textured": true,
@@ -41,7 +41,7 @@ const PLACEMENTS := [
 	{
 		"glb": LANDMARK_DIR + "alien_tower_hero.glb",  # Blender-optimized and base-centered GLB
 		"name": "AlienDiplomaticTower",
-		"position": Vector3(34.0, 0.0, -34.0),  # right flank, deep out on the water — pushed further right+back so it clears the venue row instead of centering behind it
+		"position": Vector3(85.0, 0.0, -85.0),  # right flank, deep out on the water — pushed further right+back so it clears the venue row instead of centering behind it (2.5× spread)
 		"rotation_y": -0.35,                     # quarter-turn so a facet faces the camera
 		"scale": 10.0,                           # raw GLB is ~1.83 m native after base cut; ×10 ≈ 18 m focal spire
 		"base_offset_y": 0.0,                    # mesh bottom is already at y=0 (base-centered in Blender)
@@ -51,16 +51,23 @@ const PLACEMENTS := [
 	{
 		"glb": LANDMARK_DIR + "stone_institution.glb",
 		"name": "StoneInstitution",
-		"position": Vector3(-30.0, 0.0, -14.0),  # left flank, pushed back to sit level with the venue row (not looming in front)
+		"position": Vector3(-75.0, 0.0, -35.0),  # left flank, pushed back to sit level with the venue row (not looming in front) (2.5× spread)
 		"rotation_y": 0.95,                       # +y portico front turned to face the 3/4 skyline eye
 		"patina": 0.0,                            # stone: pure cold stain, no metal patina
 	},
 	{
 		"glb": LANDMARK_DIR + "transit_spine.glb",
 		"name": "TransitSpine",
-		"position": Vector3(10.0, 0.0, -40.0),   # pushed deep onto the open water between the row and the right-rear tower (clear of the row)
+		"position": Vector3(25.0, 0.0, -100.0),   # pushed deep onto the open water between the row and the right-rear tower (clear of the row) (2.5× spread)
 		"rotation_y": -0.85,                      # steeper diagonal — the crossing runs toward the tower, not parallel to the row
 		"patina": 0.0,                            # rusted steel: the cold stain reads on it directly, no metal patina
+	},
+	{
+		"glb": LANDMARK_DIR + "warehouse_a.glb",  # first P12b Codex-Blender asset (validator PASS, base-centered, LOD0/1); a 36 m stepped-parapet freight block
+		"name": "WarehouseBlockA",
+		"position": Vector3(-50.0, 0.0, -65.0),  # left-of-centre, deep behind the venue row — fills the mid-left skyline gap between the institution and the transit crossing (2.5× spread)
+		"rotation_y": 0.55,                       # long face angled to the 3/4 skyline eye, stepped parapet catching the key light
+		"patina": 0.35,                           # industrial freight: light metal patina on the stain, distinct from the pure-stone institution
 	},
 ]
 

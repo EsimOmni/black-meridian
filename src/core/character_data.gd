@@ -18,6 +18,10 @@ extends Resource
 
 ## --- Hidden motive network (player must infer, brief §7.6) ---
 @export_range(0.0, 1.0) var rival_leverage: float = 0.0
+## Which rival faction last RECRUITed this character (&"" = none). Set by RivalDirector's
+## RECRUIT land; read by RelationshipService when the betrayal hands the venue over. Kept
+## distinct from rival_leverage (the anonymous strength scalar) so the destination is explicit.
+@export var recruited_by_faction: StringName = &""
 @export_range(0.0, 1.0) var survival_pressure: float = 0.0
 ## Per-character betrayal threshold — pressure must exceed this AND an opportunity must exist.
 @export_range(0.0, 1.0) var betrayal_threshold: float = 0.7

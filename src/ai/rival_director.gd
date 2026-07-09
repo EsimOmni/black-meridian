@@ -60,6 +60,7 @@ func _land(rival: FactionData) -> void:
 			return
 		character.rival_leverage = clampf(
 			character.rival_leverage + RivalScoring.RECRUIT_LEVERAGE, 0.0, 1.0)
+		character.recruited_by_faction = rival.id  # remember the destination for a later betrayal
 		rival_action_landed.emit(rival, null, action)
 		return
 	var venue := _find_venue(target_id)

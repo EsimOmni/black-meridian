@@ -52,6 +52,7 @@ static func encode_character(c: CharacterData) -> Dictionary:
 		"public_trust": c.public_trust, "ambition": c.ambition, "fear": c.fear,
 		"grievance": c.grievance, "shared_success": c.shared_success,
 		"rival_leverage": c.rival_leverage, "survival_pressure": c.survival_pressure,
+		"recruited_by_faction": c.recruited_by_faction,
 		"betrayal_threshold": c.betrayal_threshold,
 		"relationships": c.relationships.duplicate(),
 		"betrayal_ticks_until_land": c.betrayal_ticks_until_land,
@@ -157,6 +158,7 @@ static func decode_character(d: Dictionary) -> CharacterData:
 	c.grievance = d["grievance"]
 	c.shared_success = d["shared_success"]
 	c.rival_leverage = d["rival_leverage"]
+	c.recruited_by_faction = StringName(d.get("recruited_by_faction", &""))  # additive since P08b
 	c.survival_pressure = d["survival_pressure"]
 	c.betrayal_threshold = d["betrayal_threshold"]
 	c.relationships = d["relationships"].duplicate()

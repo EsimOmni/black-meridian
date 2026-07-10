@@ -50,7 +50,16 @@ func _fresh_world() -> DistrictData:
 	_last_telegraph_action = -1
 	_last_telegraph_target = &""
 	_last_land_action = -1
-	return GameState.get_district(&"glass_wharf")
+	var d := GameState.get_district(&"glass_wharf")
+	_drop_neutral_bait(d)  # baseline a calm world with NO free neutral ground; the EXPAND test injects its own
+	return d
+
+## The seed ships one neutral EXPAND-bait venue (gw_saltworks, P08b). These tests baseline a calm
+## world with no free ground (the EXPAND test injects gw_union_hall itself); drop the seeded bait.
+func _drop_neutral_bait(d: DistrictData) -> void:
+	for i in range(d.venues.size() - 1, -1, -1):
+		if d.venues[i].owner_faction == &"":
+			d.venues.remove_at(i)
 
 func _pump(n: int) -> void:
 	for i in n:

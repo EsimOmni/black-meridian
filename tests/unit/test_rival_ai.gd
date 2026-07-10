@@ -42,7 +42,16 @@ func _fresh_world() -> DistrictData:
 	JobDirector.active_jobs = []
 	_telegraphs = 0
 	_landings = 0
-	return GameState.get_district(&"glass_wharf")
+	var d := GameState.get_district(&"glass_wharf")
+	_drop_neutral_bait(d)  # these tests baseline a calm world with NO free neutral ground; drop the P08b EXPAND-bait lot
+	return d
+
+## The seed ships one neutral EXPAND-bait venue (gw_saltworks, P08b); the rival-AI tests baseline a
+## calm world with no free ground (else the rival always EXPANDs it). Remove it so those assertions hold.
+func _drop_neutral_bait(d: DistrictData) -> void:
+	for i in range(d.venues.size() - 1, -1, -1):
+		if d.venues[i].owner_faction == &"":
+			d.venues.remove_at(i)
 
 func _pump(n: int) -> void:
 	for i in n:

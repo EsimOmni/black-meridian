@@ -17,6 +17,7 @@ func _ready() -> void:
 	rebuild()
 	DistrictLandmarks.spawn_all(self)  # P12b hero landmarks: static district skyline, not venues
 	DockProps.spawn_all(self)  # scatter dressing: containers, crane, market, pallets, bollards — static, no venue state
+	add_child(RainCurtain.new())  # P13b static rain curtain: atmosphere, presentation-only, no venue state
 	GameState.districts_changed.connect(rebuild)
 
 func _build_ground() -> void:

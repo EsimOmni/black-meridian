@@ -4,8 +4,9 @@
 > bu dosya "şu an neredeyiz, sıradaki adım ne, hangi kararlar açık" durumunu tutar. Claude her
 > slice/commit sonunda bunu günceller — Cem elle yazmaz. Eski durum "Geçmiş" bölümüne düşer.
 
-**Son güncelleme:** 2026-07-10 (gece) · **Aktif faz:** Month 3 — Glass Wharf asset üretimi
-· **Kazanım:** alien kule SIFIRDAN doğru oranla yeniden üretildi + oyunda concept-sadık (brutalist gövde + ışıyan bioluminesan taç, beyaz-blowout GİTTİ); 3 boşta GLB yerleştirildi + diorama 2.5× yayıldı; hero image→3D pipeline doktrini 4 agent dosyasına işlendi. Commit'ler: 2956404 (yayılım), 550c4fa (kule rebuild).
+**Son güncelleme:** 2026-07-10 (öğle) · **Aktif faz:** Month 3 — Glass Wharf asset üretimi (asset kolu paralel)
+· **Kazanım (mekanik):** **P08b TERRITORY_LOSS origin ŞİPPED** — rival toprak kazanınca (seed nötr venue'yü EXPAND'ler, ya da ihanet venue'yü rival'e verir) "Contested Ground" fixer job'ı açılır → oyuncu geri alır (CONTESTED), yaklaşıma göre bedel. Deterministik + save-safe, full-cycle probe "TERRITORY LOSS CLOSES", 12 test yeşil. Subagent-driven (Fable) 10 görev + 2 tam review turu.
+· **Kazanım (asset, önceki):** alien kule sıfırdan doğru oranla üretildi + oyunda concept-sadık; 3 boşta GLB + diorama 2.5×; hero image→3D doktrini 4 agent dosyasına işlendi (2956404, 550c4fa).
 
 ---
 
@@ -178,6 +179,14 @@ prop). Çevre/dolgu/materyal = Sketchfab+PolyHaven bedava, oraya kredi YAKMA.
 
 ## Geçmiş (özet — detay git log + claude-mem'de)
 
+- **P08b TERRITORY_LOSS origin** (2026-07-10): rival toprak kazanınca "Contested Ground" fixer job.
+  Yeni JobOrigin; seed nötr venue (`gw_saltworks`) EXPAND yemi; betrayal artık venue'yü RECRUIT eden
+  rival'e verir (owner+INFLUENCED, `recruited_by_faction` CharacterData'da); iki trigger arm (EXPAND +
+  betrayal-committed) tek job; resolve `objective≥0.5` → venue player'a CONTESTED döner. Deterministik,
+  save-safe, 2 varyant. **DERS:** seed'e nötr venue eklemek rival AI'ın "sakin dünyada bekle" beat'ini
+  kırdı (rival hep bedava toprağı EXPAND'ler) → `_fresh_world` test helper'ı yemi drop eder; probe
+  kanıtladı nötr toprak GEÇİCİ (alınınca rival WAIT/FRAME/PROBE'a döner, kalıcı skew değil).
+  `docs/superpowers/plans/2026-07-08-p08b-territory-loss-contested-ground.md`.
 - **Month 2 COMPLETE + gate PASSED** (2026-07-04): tam Night-Cycle loop, P05–P11, deterministik/zero-RNG/save-safe.
   Feel verdict "fun, stress, very good". Month 3 (asset üretimi) AUTHORIZED.
 - **Month 1** (2026-07-04): data model, GameState, TimeService, Economy, WorldSeed, greybox, save/load.

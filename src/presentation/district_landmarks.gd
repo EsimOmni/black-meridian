@@ -46,7 +46,7 @@ const PLACEMENTS := [
 		"scale": 10.0,                           # raw GLB is ~1.83 m native after base cut; ×10 ≈ 18 m focal spire
 		"base_offset_y": 0.0,                    # mesh bottom is already at y=0 (base-centered in Blender)
 		"textured": true,                        # keep the baked PBR (patina brutalist base → bioluminescent crown), skip the flat-color noir shader
-		"matte": true,                           # Hunyuan's glTF ships metallicFactor=1.0 + an ORM map → Godot reads it metallic-mirror and the HDRI/glow blows the crown to white. Force metallic=0 + rough=0.95, drop the ORM map, so the baked albedo shows and nothing crosses the glow HDR threshold.
+		"matte": true,                           # Hunyuan's glTF ships metallicFactor=1.0 + an ORM map → Godot reads it metallic-mirror; kill metallic/roughness so it reads as painted stone. The crown carries its own baked Crown_Emissive (Codex Blender pass), which _kill_mirror_keep_emission preserves.
 	},
 	{
 		"glb": LANDMARK_DIR + "stone_institution.glb",
@@ -96,7 +96,7 @@ static func spawn_all(parent: Node3D) -> void:
 		if not p.get("textured", false):
 			_apply_noir_detail(node, p.get("patina", 0.0))  # P12b trim lap: weather stone/metal, glow clean
 		elif p.get("matte", false):
-			_apply_matte(node)  # kill the Hunyuan glTF's metallic-mirror so the HDRI/glow can't blow it to white
+			_kill_mirror_keep_emission(node)  # kill the Hunyuan glTF's metallic-mirror; keep the crown's baked bioluminescent emission
 		parent.add_child(node)
 
 ## Replace every non-emissive surface material with the triplanar noir weathering shader,
@@ -125,12 +125,15 @@ static func _apply_noir_detail(node: Node, patina: float) -> void:
 	for child in node.get_children():
 		_apply_noir_detail(child, patina)
 
-## Force every StandardMaterial3D surface to a matte dielectric: metallic=0, roughness high, and
-## the metallic/roughness texture dropped. Hunyuan3D's glTF export writes metallicFactor=1.0 plus an
-## ORM map, so Godot builds a metallic-mirror material; under the scene's HDRI reflection + glow the
-## crown crosses the HDR threshold and blows to white. Killing metallic (keeping the albedo MAP, so
-## the baked patina/bioluminescent color stays) makes it read as painted stone/organic, not chrome.
-static func _apply_matte(node: Node) -> void:
+## Kill the metallic-mirror on every surface while PRESERVING each surface's own baked emission.
+## Hunyuan3D's glTF export writes metallicFactor=1.0 plus an ORM map, so Godot builds a
+## metallic-mirror material; under the scene's HDRI reflection + glow the tower blows to white.
+## We drop metallic + the ORM channels (keeping the albedo MAP, so the baked patina/organic color
+## stays) so it reads as painted stone, not chrome. The Codex Blender pass split the crown onto its
+## own `Crown_Emissive` material with a baked cyan-green emission texture — we KEEP that emission
+## (enabled/texture/color/energy) untouched so the crown self-lights; only the base's flat mirror is
+## killed. This replaced the old approach of injecting a (near-black, useless) emissive PNG here.
+static func _kill_mirror_keep_emission(node: Node) -> void:
 	if node is MeshInstance3D:
 		var mi := node as MeshInstance3D
 		var mesh := mi.mesh
@@ -143,20 +146,14 @@ static func _apply_matte(node: Node) -> void:
 					var m := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
 					m.metallic = 0.0
 					m.metallic_texture = null           # drop the ORM metallic channel — Hunyuan ships metallicFactor=1
-					m.roughness = 0.95
-					m.roughness_texture = null           # drop the ORM roughness channel — uniform matte
+					m.roughness = 0.9
+					m.roughness_texture = null           # drop the ORM roughness channel — uniform matte, can't specular-blow
 					m.specular_mode = BaseMaterial3D.SPECULAR_DISABLED  # no dielectric highlight for the HDRI to bloom
-					
-					# Bioluminescent crown emission
-					if m.albedo_texture != null:
-						m.emission_enabled = true
-						m.emission_texture = load("res://assets/city/glasswharf_dock/alien_tower_hero_0_emissive.png")
-						m.emission = Color(0.0, 0.9, 0.8) # cyan-green glow
-						m.emission_energy_multiplier = 4.0 # boost to bloom in the dark environment
-					
-					mi.set_surface_override_material(s, m)  # keep the baked albedo untinted — the texture is the tower's real color
+					# The crown's baked emission (Crown_Emissive) is left intact on the duplicate — we
+					# only touched metallic/roughness/specular, so the self-lit bioluminescence survives.
+					mi.set_surface_override_material(s, m)
 	for child in node.get_children():
-		_apply_matte(child)
+		_kill_mirror_keep_emission(child)
 
 ## Load a landmark GLB into a fresh Node3D (base-center pivot, y=0 = ground — validated by
 ## GLBValidator 'building' spec). One-shot, no cache: a landmark is placed once.

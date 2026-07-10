@@ -69,3 +69,21 @@ __pycache__/
 assets/_generated/*/
 assets/_exports/*/
 jobs/reports/*/
+
+# Repo-root scratch + throwaway probe files (ad-hoc dumps from tooling/debugging —
+# never source). Keep the tree clean of one-off txt dumps and test scripts.
+/api_output.txt
+/scratch_output.txt
+/test_api.py
+/scratchpad/
+assets/city/**/mesh_uvs.txt
+
+# Third-party engine/DCC exports staged locally (UE/MetaHuman character exports,
+# plugin drops). Large, regeneratable, not this game's source.
+/Exports/
+/Plugins/
+
+# Pipeline staging references (concept views, cutouts fed to Hunyuan/Blender).
+# A .gdignore keeps Godot from importing them; keep the images local only.
+assets/_references/**/*.png
+assets/_references/**/*.jpg

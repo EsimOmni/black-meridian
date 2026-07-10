@@ -4,7 +4,11 @@
 > bu dosya "şu an neredeyiz, sıradaki adım ne, hangi kararlar açık" durumunu tutar. Claude her
 > slice/commit sonunda bunu günceller — Cem elle yazmaz. Eski durum "Geçmiş" bölümüne düşer.
 
-**Son güncelleme:** 2026-07-10 (öğle) · **Aktif faz:** Month 3 — Glass Wharf asset üretimi (asset kolu paralel)
+**Son güncelleme:** 2026-07-10 (öğle) · **Aktif faz:** Month 3 — art pipeline (P12 BİTTİ ✅, sırada P13 VFX / P14 karakter)
+· **Kazanım (asset, bugün):** **P12 modüler bina kiti KAPANDI** — 10 GLB, 8/8 modül `GLBValidator` PASS
+(kit_tile/building/prop, LOD0+1, base-center), `KitAssembler` (CELL=4.5 grid) `city_view`'de canlı: her
+venue'nün stratejik state'i grid-snap bina assemble ediyor (brief §1). README ⬜→✅ (kanıt gömülü). Kule +
+hayalet prop-kurtarma defterleri de kapandı.
 · **Kazanım (mekanik):** **P08b TERRITORY_LOSS origin ŞİPPED** — rival toprak kazanınca (seed nötr venue'yü EXPAND'ler, ya da ihanet venue'yü rival'e verir) "Contested Ground" fixer job'ı açılır → oyuncu geri alır (CONTESTED), yaklaşıma göre bedel. Deterministik + save-safe, full-cycle probe "TERRITORY LOSS CLOSES", 12 test yeşil. Subagent-driven (Fable) 10 görev + 2 tam review turu.
 · **Kazanım (asset, önceki):** alien kule sıfırdan doğru oranla üretildi + oyunda concept-sadık; 3 boşta GLB + diorama 2.5×; hero image→3D doktrini 4 agent dosyasına işlendi (2956404, 550c4fa).
 

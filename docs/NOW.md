@@ -57,10 +57,14 @@ Doktrin: concept→asset-split (master ONAYLI, şimdi ona göre 3D üretiyoruz).
 
 ## ⏭️ Sıradaki adım
 
-1. **Bekleyen prop'ları kurtar:** container×2, dumpster, fishing_boat, street_lamp, lamp_post_vintage
-   — bir kısmı **yatık/havada pivot'la** export olmuş (base_y≠0, Y-Z ekseni dönük), üstelik
-   **download UID/lisansı kayıtlı değil**. Blender'da doğru pivot/rotasyonla YENİDEN export + Sketchfab
-   UID'den lisans doğrula, sonra `DockProps`'a ekle. Ham dosyalar `D:\bm-asset-haul\pending-props\`'ta.
+1. **~~Bekleyen prop kurtarma~~ — İŞ YOK, defter kapandı (2026-07-10, diskten kanıtlı).** NOW.md bu
+   maddeyi bir eski hatırlamadan taşıyordu; gerçek durum temiz: `D:\bm-asset-haul\pending-props\`
+   **diye bir klasör yok** (haul `sketchfab/`+`polyhaven/` altında), ve container/dumpster/boat/lamp
+   ham GLB'leri **diskte HİÇBİR YERDE yok** (`find` boş). HAUL_REPORT.md bunları saymıyor — buoy
+   "deferred", geri kalanı zaten "skipped/rejected" (isim yalan söyleyen dock crane, CC-BY-NC neon).
+   **Haul'daki 5 sketchfab prop'un HEPSİ zaten oyunda + DockProps'ta bağlı + CC-BY UID/lisans loglu**
+   (dock_crane, bollard_rope, pallet_pack, fishing_supplies, market_stall). Prop seti tam; kurtarılacak
+   şey yok. Yeni prop çeşidi istenirse o **yeni asset üretimi**dir (kompozisyon boşluğu görülürse), kurtarma değil.
 2. **Kompozisyon ince-ayar (insan %10):** prop'lar yayıldı+büyüdü ama hâlâ %70 master; skyline
    kamerasından (oyun-içi C) bak, master'ın derin pier'ine göre son rötuş. Diminishing returns —
    sonsuz kovalama.

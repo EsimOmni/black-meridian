@@ -115,6 +115,8 @@ static func _build_glass_wharf() -> void:
 			COMPACT, 450, 0.7, 0.2, Vector2(30, -4.0)),
 		_racket(&"gw_clinic", "Backstreet Clinic", BM.RacketKind.ILLEGAL_CLINIC,
 			CORVINE, BM.ControlState.CONTROLLED, 160, 2, Vector2(50, 4.0)),
+		_racket(&"gw_saltworks", "Abandoned Saltworks", BM.RacketKind.CONTRABAND_LOGISTICS,
+			&"", BM.ControlState.CONTESTED, 90, 1, Vector2(20, -3.0)),
 	]
 
 	GameState.districts = [d]

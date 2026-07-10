@@ -1,4 +1,8 @@
-# P13 — Rain/wet-surface VFX + traffic + crowd proxy
+# P13b — Rain/wet-surface VFX + traffic + crowd proxy
+
+> **Renumbered 2026-07-10:** was `P13`, but P13 is the modular building kit (`P13-modular-kit.md`,
+> assembly gate PASSED — everything references the kit as P13). This city-life VFX slice is a
+> distinct, not-yet-built deliverable → `P13b`.
 
 **Month:** 3 · **Brief:** §6 pillar 2 (the city shows the state), §15 (performance — crowd illusion)
 

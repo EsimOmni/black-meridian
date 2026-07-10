@@ -1,4 +1,8 @@
-# P14 — Character bases + shared animation + roster screen
+# P14b — Character bases + shared animation + roster screen
+
+> **Renumbered 2026-07-10:** was `P14`, but P14 is the runtime KitAssembler (`P14-runtime-assembler.md`,
+> accepted — the sim drives the kit). This character/roster slice is a distinct, not-yet-built
+> deliverable → `P14b`.
 
 **Month:** 3 · **Brief:** §9.3 (portraits/roster), §10.4 (character pipeline), §4 (vertical-slice roster)
 

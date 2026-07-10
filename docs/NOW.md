@@ -4,12 +4,16 @@
 > bu dosya "şu an neredeyiz, sıradaki adım ne, hangi kararlar açık" durumunu tutar. Claude her
 > slice/commit sonunda bunu günceller — Cem elle yazmaz. Eski durum "Geçmiş" bölümüne düşer.
 
-**Son güncelleme:** 2026-07-10 (ikindi) · **Aktif faz:** Month 3 — art pipeline (P12 ✅ + P13b yağmur ✅, sırada P13c atmosfer / P14b karakter)
-· **Kazanım (VFX, bugün):** **P13b YAĞMUR PERDESİ ŞİPPED** — sabit diagonal `GPUParticles3D` streak perdesi,
-kamera-pan kutusunu kaplayan sabit box (yaklaşım A, brief §15). `city_view`'de tek-satır kardeş node
-(`RainCurtain`), presentation-only — GameState'e dokunmuyor, sinyal yok, sim'e sıfır risk. Oyunda 1080p'de
-doğrulandı: diagonal iniyor, master yoğunluğunda, diorama okunur kalıyor. Import/boot temiz, save/load yeşil.
-Steam/ripple/wet-ground/trafik/crowd/state-reaktif → P13c+. Spec: `docs/superpowers/specs/2026-07-10-p13b-rain-curtain-design.md`.
+**Son güncelleme:** 2026-07-10 (akşamüstü) · **Aktif faz:** Month 3 — art pipeline (P12 ✅ + P13b yağmur ✅ + P13c steam/ripple ✅, sırada P13d trafik/crowd / P14b karakter)
+· **Kazanım (VFX, bugün):** **P13b YAĞMUR + P13c STEAM/RIPPLE ŞİPPED.** Üç atmosfer katmanı, hepsi `city_view`'de
+tek-satır kardeş `GPUParticles3D` node, presentation-only (GameState'e dokunmaz, sinyal yok, sim'e sıfır risk):
+(1) `RainCurtain` — sabit diagonal streak perdesi, kamera-pan kutusu (yaklaşım A, brief §15); (2) `SteamVents`
+— seyrek yavaş yükselen yumuşak buhar (radial-gradient disc doku → kare değil puf, amount 90/alpha 0.06);
+(3) `RainSplashes` — zeminde yatık büyüyen su lekeleri (QuadMesh FACE_Y). Fog ZATEN vardı (bootstrap, petrol-blue,
+sky_affect 0) — dokunulmadı. Ground/SSR/roughness da dokunulmadı (tam-mirror = işaretli mimari kuyu).
+Oyunda 1080p doğrulandı, import/boot temiz, save/load yeşil. DERS: ilk steam pass keskin gri kare çıktı →
+radial soft-disc doku + düşük count/alpha ile düzeldi. Trafik/crowd/state-reaktif → P13d+.
+Spec: `docs/superpowers/specs/2026-07-10-p13b-rain-curtain-design.md`.
 · **Kazanım (asset):** **P12 modüler bina kiti KAPANDI** — 10 GLB, 8/8 modül `GLBValidator` PASS
 (kit_tile/building/prop, LOD0+1, base-center), `KitAssembler` (CELL=4.5 grid) `city_view`'de canlı: her
 venue'nün stratejik state'i grid-snap bina assemble ediyor (brief §1). Mükerrer P13/P14 numaraları temizlendi

@@ -20,6 +20,7 @@ func _ready() -> void:
 	add_child(RainCurtain.new())  # P13b static rain curtain: atmosphere, presentation-only, no venue state
 	add_child(SteamVents.new())   # P13c sparse ground steam: atmosphere, presentation-only
 	add_child(RainSplashes.new()) # P13c rain-on-ground ripple accents: atmosphere, presentation-only
+	add_child(CrowdProxy.new())   # P13d pedestrian crowd illusion: MultiMesh, presentation-only
 	GameState.districts_changed.connect(rebuild)
 
 func _build_ground() -> void:

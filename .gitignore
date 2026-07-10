@@ -83,6 +83,9 @@ assets/city/**/mesh_uvs.txt
 /Exports/
 /Plugins/
 
+# MetaHuman / character-factory audit notes — local pipeline scratch, not game source.
+/docs/CharacterFactory/
+
 # Pipeline staging references (concept views, cutouts fed to Hunyuan/Blender).
 # A .gdignore keeps Godot from importing them; keep the images local only.
 assets/_references/**/*.png

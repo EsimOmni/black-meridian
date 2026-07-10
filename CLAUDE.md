@@ -161,6 +161,39 @@ Subscription discipline:
   ONLY if the local output fails a specific quality bar the paid tool provably clears.** Requires the
   reference be a transparent CUTOUT (rembg), never flat RGB — flat RGB gives a bas-relief, not a volume.
   Adapter: `tools/pipeline/hunyuan.py` (ComfyUI backend port 7821, env `OMNI_COMFY_URL`).
+- **PROVEN 2026-07-10 — the hero image→3D pipeline for an ORGANIC + HARD-SURFACE hybrid (the alien
+  tower).** When a single-view Hunyuan mesh comes out wrong, DON'T iterate the same tool blindly — the
+  failure is structural and each stage below fixes a specific, diagnosed cause. This is the default
+  recipe now for any hero where the concept mixes organic sculpt with architectural/hard-surface
+  massing, or is tall-and-thin:
+  1. **Root-cause first, match the tool to the sub-problem.** Single-view image→3D is strong on
+     organic/sculpted form and WEAK on hard-surface (flat walls, sharp edges, windows) and on tall
+     narrow verticals — it squashes the body and blurs architecture. Naming the failure mode beats
+     re-rolling the same job.
+  2. **Fix PROPORTION in 2D, before 3D.** Re-interpret the locked concept into a proportion-correct
+     image with the **Magnific web runner** (`personax/tools/concept-campaigns/magnific/image_runner.py`,
+     JSON brief, ref = the concept). **Seedream 5 Lite** (∞, free, ref-upload works in the runner) is
+     the reliable ref-consistent model; Nano-Banana's ref-upload UI currently hangs the runner
+     (`counter stayed ''`) — use Seedream. Free (unlimited tier), NOT the credit-metered MCP.
+  3. **Kill the shadow — cast shadow becomes SLAB geometry.** The #1 cause of "relief/slab" Hunyuan
+     output is the input's ground/drop shadow surviving the cutout; Hunyuan reads the grey shadow as
+     volume. Prompt the image on a **pure solid WHITE background, floating, NO cast/drop/ground shadow,
+     product-shot isolation** so a simple white-threshold alpha cuts perfectly. (Grey studio bg → the
+     shadow blends in and survives; white bg → clean alpha.)
+  4. **Single-view beats native multi-view for this.** `Hunyuan3Dv2ConditioningMultiView`
+     (front/left/back/right → shape) EXISTS in the ComfyUI install but produced an unusable slab on the
+     tower; the proportion-corrected single FRONT view through `Mesh_Generation.json` gave a proper
+     volume. Try multi-view only if you have a specific reason; default to the best single clean view.
+     (The `Hy3D*MultiViews*` nodes are for TEXTURING, not shape — they do NOT fix proportion.)
+  5. **Delegate the mechanical rest to Codex** (ChatGPT-billed, zero credit): local Hunyuan texturing
+     (`Mesh_Texturing.json`) → Blender pass — split the organic crown onto its own emissive material
+     (measure the Z transition, don't hardcode), base-center the pivot, export the game GLB.
+  6. **Godot glTF gotcha — metallic-mirror blowout.** Hunyuan's glTF ships `metallicFactor=1.0` + an
+     ORM map, so Godot builds a metallic mirror and the HDRI/glow blows the mesh to WHITE in-scene
+     (this, NOT the texture, was the "white tower"). `DistrictLandmarks._kill_mirror_keep_emission`
+     drops metallic + the ORM channels while PRESERVING the mesh's own baked crown emission — the mesh
+     self-lights, nothing crosses the glow threshold. Emission belongs in the GLB (Blender split), not
+     injected code-side.
 - **Sketchfab (free tier, via Epic Games account — added 2026-07-03).** Free GLB downloads for
   **proxy/greybox enrichment only** — NOT hero assets that carry the game's identity. Two hard rules:
   1. **License-check every download before use.** Sketchfab "free" is mixed: CC0 (free), CC-BY

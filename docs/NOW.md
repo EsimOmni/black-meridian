@@ -4,8 +4,8 @@
 > bu dosya "şu an neredeyiz, sıradaki adım ne, hangi kararlar açık" durumunu tutar. Claude her
 > slice/commit sonunda bunu günceller — Cem elle yazmaz. Eski durum "Geçmiş" bölümüne düşer.
 
-**Son güncelleme:** 2026-07-08 (akşam) · **Aktif faz:** Month 3 — Glass Wharf asset üretimi
-· **Kazanım:** ham Hunyuan kule OYUNDA (JPEG-as-PNG repack ile Godot'a girdi, Blender'sız) — ince ayar Codex'e devredildi, bir sonraki task'e geçiliyor
+**Son güncelleme:** 2026-07-10 (gece) · **Aktif faz:** Month 3 — Glass Wharf asset üretimi
+· **Kazanım:** alien kule SIFIRDAN doğru oranla yeniden üretildi + oyunda concept-sadık (brutalist gövde + ışıyan bioluminesan taç, beyaz-blowout GİTTİ); 3 boşta GLB yerleştirildi + diorama 2.5× yayıldı; hero image→3D pipeline doktrini 4 agent dosyasına işlendi. Commit'ler: 2956404 (yayılım), 550c4fa (kule rebuild).
 
 ---
 
@@ -18,6 +18,19 @@ Doktrin: concept→asset-split (master ONAYLI, şimdi ona göre 3D üretiyoruz).
 
 ## ✅ Bitti (bu üretim kolunda)
 
+- **🏛️ ALIEN KULE — sıfırdan doğru üretildi (2026-07-10).** Eski ham Hunyuan kule oranı ezikti
+  (taç baskın, taban küçük) + oyunda beyaza patlıyordu. Yeniden üretildi: (1) concept'ten Seedream
+  web runner ile oran-doğru + **gölgesiz beyaz-bg** görsel (bedava), (2) temiz cutout → single-view
+  Hunyuan = düzgün hacim (gölge→slab kök nedeni çözüldü), (3) Codex lokal Hunyuan texturing + Blender'da
+  taç `Crown_Emissive` bioluminesan split + base-center, (4) Godot `_kill_mirror_keep_emission`
+  (metallicFactor=1.0 mirror blowout'u kırar, baked crown emission'ı korur). **Oyunda concept-sadık:
+  koyu brutalist gövde + sıcak pencere ışıkları + içeriden ışıyan teal mercan taç.** Tam pipeline
+  doktrini 4 agent dosyasında (`PROVEN 2026-07-10`). Kule (85,-85)'te uzak — başlangıç kadrajında
+  değil, oyuncu WASD ile görür (kompozisyon ince-ayarı deferred, mesh/material BİTTİ).
+- **3 boşta GLB yerleştirildi + diorama 2.5× yayıldı (2956404).** warehouse_a (P12b validator-PASS
+  bina) landmark, corner + roof_prop prop olarak eklendi. Venue satırı x∈[-20,20]→[-50,50], tüm
+  landmark/prop 2.5× dışa, ground 80→200, kamera zoom/pan açıldı — iç içelik gitti, diorama nefes
+  aldı. `Exports/`+`Plugins/` cruft'una `.gdignore`/gitignore.
 - **3 landmark yerinde ve dokulu:** warehouse_hero, industrial_block_a, dock_house_pier —
   `src/presentation/district_landmarks.gd` → `PLACEMENTS`. Hepsi CC-BY, attribution loglu.
 - **Grey-wash fix:** Sketchfab GLB'leri kendi texture'ını korur; `textured:true` flag'i

@@ -10,6 +10,7 @@ extends RefCounted
 ## (avalanche of the id string, mod count) — never stored, always recomputed.
 const RETALIATION_VARIANTS := 2
 const BURY_CASE_VARIANTS := 2
+const CONTESTED_VARIANTS := 2
 
 ## Job registry: rebuild an AUTHORED job definition by id (saves store runtime state only).
 ## Generated ids (prefix "gen@") are rebuilt by JobGenerator.rebuild instead — SaveService
@@ -319,6 +320,120 @@ static func _bury_case_break_the_chain(case_label: String, district_name: String
 		JobChoiceData.make(&"cover_walk", "Walk away clean",
 			"No follow-up, no favors called in. A weak witness should look like a weak witness.",
 			{}),
+	]
+	return job
+
+## "Contested Ground" — generated when the rival takes player-adjacent territory (rival EXPAND
+## onto a neutral venue, or a betrayal handing a venue over). The player reclaims it; the cost
+## splits by approach. Targeting (venue, rival) stamped by JobGenerator. Two variants share one
+## choice-id set and honor the P06d envelope (loudest lifecycle >= +0.25, quietest <= -0.3).
+static func contested_ground(venue_name: String, rival_name: String, variant: int = 0) -> JobData:
+	if variant == 1:
+		return _contested_starve_them_out(venue_name, rival_name)
+	return _contested_reclaim_the_wharf(venue_name, rival_name)
+
+## Variant 0 — "Reclaim the Wharf": the flag is planted; take it back before it sets.
+static func _contested_reclaim_the_wharf(venue_name: String, rival_name: String) -> JobData:
+	var job := JobData.new()
+	job.title = "Reclaim the Wharf"
+	job.origin = BM.JobOrigin.TERRITORY_LOSS
+	job.apparent_problem = "%s planted their flag on the %s while the Compact blinked. Every day it stands, the street reads the ground as theirs." % [rival_name, venue_name]
+	job.deadline_ticks = 60
+	job.known_evidence = ["A fresh %s crew rota, nailed to the door" % rival_name, "Protection collectors already working the block"]
+	job.visible_stakes = "Leave it and the loss becomes a fact. Take it back too loud and the district burns for a lot."
+	job.hidden_stakes = "The crew holding it was promised the lot for a reason — someone is testing the Resolver's reach."
+	job.reward_dirty = 250
+
+	job.prep_actions = [
+		JobChoiceData.make(&"prep_scout", "Scout the holding",
+			"Two nights watching who mans the lot and when the collectors come.",
+			{&"evidence_generated": -0.1, &"new_leverage": 0.1}),
+		JobChoiceData.make(&"prep_stage", "Stage alibis",
+			"Every name of ours is verifiably elsewhere whatever happens tonight.",
+			{&"evidence_generated": -0.2}),
+		JobChoiceData.make(&"prep_move_now", "Move before it sets",
+			"Take it back tonight, before the district accepts the new flag.",
+			{&"delayed_consequence": 0.2, &"objective_achieved": 0.1}),
+	]
+
+	job.approaches = [
+		JobChoiceData.make(&"appr_evict", "Drive them out",
+			"Their crew is put off the lot in front of the block. Loud, certain, watched.",
+			{&"objective_achieved": 0.75, &"public_fear": 0.25, &"evidence_generated": 0.35,
+				&"rival_suspicion": 0.2}),
+		JobChoiceData.make(&"appr_buyback", "Buy back the rent",
+			"Match whatever the rival pays the crew, and the lot quietly changes hands again.",
+			{&"objective_achieved": 0.55, &"relationship_change": 0.2, &"rival_suspicion": 0.1,
+				&"evidence_generated": -0.1}),
+		JobChoiceData.make(&"appr_rot", "Rot the operation",
+			"Sour their new business from inside until holding the lot costs more than it earns.",
+			{&"objective_achieved": 0.5, &"evidence_generated": -0.3, &"new_leverage": 0.2,
+				&"delayed_consequence": 0.2}),
+	]
+
+	job.coverups = [
+		JobChoiceData.make(&"cover_deny", "It was always ours",
+			"The paperwork says the lot never left the Compact's books.",
+			{&"evidence_generated": -0.3}),
+		JobChoiceData.make(&"cover_flaunt", "Let the block see",
+			"No names, no proof — but everyone watches who took it back and how fast.",
+			{&"evidence_generated": -0.05, &"public_fear": 0.25, &"delayed_consequence": 0.2}),
+		JobChoiceData.make(&"cover_broker", "Send the price",
+			"A back-channel note to the rival: this is what the next lot costs. Unsigned.",
+			{&"evidence_generated": -0.2, &"relationship_change": 0.2, &"rival_suspicion": 0.1}),
+	]
+	return job
+
+## Variant 1 — "Starve Them Out": same ids and axis shape, a colder read — no eviction scene,
+## the holding is made worthless until they abandon it. Magnitudes differ, envelope preserved.
+static func _contested_starve_them_out(venue_name: String, rival_name: String) -> JobData:
+	var job := JobData.new()
+	job.title = "Starve Them Out"
+	job.origin = BM.JobOrigin.TERRITORY_LOSS
+	job.apparent_problem = "%s holds the %s now, and a fight for it is exactly the show they want. The Resolver's answer is to make the ground not worth standing on." % [rival_name, venue_name]
+	job.deadline_ticks = 60
+	job.known_evidence = ["Supplier invoices redirected to a %s cutout" % rival_name, "The lot's regulars have stopped coming"]
+	job.visible_stakes = "A loud reclaim hands them a martyr. A quiet strangling costs time the loss keeps ticking."
+	job.hidden_stakes = "One of the crew holding it is ours already, waiting to be told which way to jump."
+	job.reward_dirty = 250
+
+	job.prep_actions = [
+		JobChoiceData.make(&"prep_scout", "Map the supply",
+			"Follow every truck and payment that keeps the lot running.",
+			{&"evidence_generated": -0.1, &"new_leverage": 0.1}),
+		JobChoiceData.make(&"prep_stage", "Clear the calendar",
+			"By tonight our people are boringly, verifiably elsewhere.",
+			{&"evidence_generated": -0.2}),
+		JobChoiceData.make(&"prep_move_now", "Choke it tonight",
+			"Cut the supply before they dig in. No time to be careful about it.",
+			{&"delayed_consequence": 0.2, &"objective_achieved": 0.1}),
+	]
+
+	job.approaches = [
+		JobChoiceData.make(&"appr_evict", "Break the crew",
+			"The men holding it are made examples of, publicly, until no one else will man it.",
+			{&"objective_achieved": 0.75, &"public_fear": 0.25, &"evidence_generated": 0.35,
+				&"rival_suspicion": 0.15}),
+		JobChoiceData.make(&"appr_buyback", "Turn the inside man",
+			"The crew member who is already ours hands the lot back and walks away rich.",
+			{&"objective_achieved": 0.55, &"relationship_change": 0.2, &"rival_suspicion": 0.1,
+				&"evidence_generated": -0.1}),
+		JobChoiceData.make(&"appr_rot", "Cut the supply",
+			"No suppliers, no customers, no reason to stay. They leave on their own.",
+			{&"objective_achieved": 0.5, &"evidence_generated": -0.3, &"new_leverage": 0.2,
+				&"delayed_consequence": 0.2}),
+	]
+
+	job.coverups = [
+		JobChoiceData.make(&"cover_deny", "A bad investment",
+			"The story writes itself: the rival overreached and the lot simply failed.",
+			{&"evidence_generated": -0.3}),
+		JobChoiceData.make(&"cover_flaunt", "Let it be known",
+			"No proof — but the district learns holding Compact ground is a way to lose money.",
+			{&"evidence_generated": -0.05, &"public_fear": 0.25, &"delayed_consequence": 0.2}),
+		JobChoiceData.make(&"cover_broker", "Name the terms",
+			"A quiet message: keep to your own lots and this stops happening to you.",
+			{&"evidence_generated": -0.2, &"relationship_change": 0.2, &"rival_suspicion": 0.1}),
 	]
 	return job
 

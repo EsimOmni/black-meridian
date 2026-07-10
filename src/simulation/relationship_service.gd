@@ -54,10 +54,11 @@ func _advance_intent(c: CharacterData) -> void:
 	if c.betrayal_ticks_until_land <= 0:
 		_land(c)
 
-## One bounded, legible effect (P10 scope): the lieutenant's ground defects to
-## CONTESTED — income drops to the 0.3× control modifier and the venue now reads as
-## a prime rival target. The act discharges the motives that drove it (the grievance
-## spent, the rival's leverage cashed in), so the crisis doesn't instantly re-arm.
+## One bounded, legible effect (P08b): the lieutenant's ground TRANSFERS to the rival they
+## were recruited to — owner_faction becomes the rival, control_state INFLUENCED. A real
+## territory loss (not just CONTESTED): the player no longer owns the venue. The act discharges
+## the motives that drove it (the grievance spent, the rival's leverage cashed in), so the
+## crisis doesn't instantly re-arm.
 func _land(c: CharacterData) -> void:
 	c.betrayal_ticks_until_land = -1
 	var venue := LoyaltyScoring.betrayal_target(GameState.districts, c.faction_id)

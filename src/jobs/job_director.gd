@@ -27,15 +27,24 @@ func _ready() -> void:
 func _connect_triggers() -> void:
 	RivalDirector.rival_action_landed.connect(_on_rival_action_landed)
 	EconomyService.inspection_started.connect(_on_inspection_started)
+	# RelationshipService is bootstrap-wired, NOT an autoload (the P09 lesson), so resolve
+	# the live node from the tree — bootstrap's _ready has already added it by the time
+	# this deferred call runs. Absent under unit-test scenes; the betrayal arm stays dark.
+	var relationships := get_tree().root.find_child("RelationshipService", true, false) as RelationshipService
+	if relationships:
+		relationships.betrayal_committed.connect(_on_betrayal_committed)
 
-## P08 trigger 1: a rival SABOTAGE landing on a player venue is a problem the player can
-## architect a response to (brief §6 pillar 1). A PROBE is pressure, not a provocation.
 func _on_rival_action_landed(rival: FactionData, venue: VenueData, action: int) -> void:
-	if action != BM.RivalAction.SABOTAGE:
-		return
-	if venue.owner_faction != GameState.player_faction_id:
-		return
-	_try_offer(JobGenerator.retaliation_job(venue, rival, TimeService.tick_index))
+	# SABOTAGE on a player venue → retaliation (P08). A PROBE is pressure, not a provocation.
+	if action == BM.RivalAction.SABOTAGE:
+		if venue == null or venue.owner_faction != GameState.player_faction_id:
+			return
+		_try_offer(JobGenerator.retaliation_job(venue, rival, TimeService.tick_index))
+	# EXPAND onto neutral ground (venue is now the rival's) → Contested Ground (P08b territory).
+	elif action == BM.RivalAction.EXPAND:
+		if venue == null:
+			return
+		_try_offer(JobGenerator.contested_ground_job(venue, rival, TimeService.tick_index))
 
 ## P06b trigger: a sweep landing while evidence cases pin the district offers the aimed
 ## strike — a "Bury the Case" job against the STRONGEST case. No cases, no job (the
@@ -45,6 +54,14 @@ func _on_inspection_started(district: DistrictData) -> void:
 	if strongest == null:
 		return
 	_try_offer(JobGenerator.bury_case_job(strongest, district, TimeService.tick_index))
+
+## P08b territory arm: a betrayal handed a venue to the rival (RelationshipService._land set
+## owner + INFLUENCED). Same job as an EXPAND loss — reclaim it. venue/rival may be null if the
+## betrayal found no target; guard both.
+func _on_betrayal_committed(_character: CharacterData, venue: VenueData, rival: FactionData) -> void:
+	if venue == null or rival == null:
+		return
+	_try_offer(JobGenerator.contested_ground_job(venue, rival, TimeService.tick_index))
 
 ## The cadence gate: dedupe by id, then cap concurrent unresolved jobs.
 func _try_offer(job: JobData) -> void:
@@ -157,6 +174,15 @@ func _apply_and_emit(job: JobData) -> void:
 			var rival := _provocateur_of(job)
 			if rival:
 				rival.grudge = clampf(rival.grudge + suspicion, 0.0, 1.0)
+	# P08b: a resolved Contested Ground job with a real objective reclaims the venue — back to the
+	# player, but CONTESTED (disputed, not fully controlled), so the loop stays alive. Origin-gated
+	# single write, mirroring the EVIDENCE_CHAIN/RIVAL_PROVOCATION post-outcome branches.
+	if job.origin == BM.JobOrigin.TERRITORY_LOSS \
+			and job.outcome.get(&"objective_achieved", 0.0) >= 0.5:
+		var venue := _find_venue(job.venue_id)
+		if venue != null:
+			venue.owner_faction = GameState.player_faction_id
+			venue.control_state = BM.ControlState.CONTESTED
 	# P08 trigger 2 (schedule side): a heavy delayed_consequence finally spawns the
 	# follow-up problem apply_outcome had been holding — the loop never simply empties
 	# (brief §5.1: "a new problem is created rather than every problem disappearing").

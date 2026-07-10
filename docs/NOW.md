@@ -27,7 +27,8 @@ Doktrin: concept→asset-split (master ONAYLI, şimdi ona göre 3D üretiyoruz).
   (metallicFactor=1.0 mirror blowout'u kırar, baked crown emission'ı korur). **Oyunda concept-sadık:
   koyu brutalist gövde + sıcak pencere ışıkları + içeriden ışıyan teal mercan taç.** Tam pipeline
   doktrini 4 agent dosyasında (`PROVEN 2026-07-10`). Kule (85,-85)'te uzak — başlangıç kadrajında
-  değil, oyuncu WASD ile görür (kompozisyon ince-ayarı deferred, mesh/material BİTTİ).
+  değil, oyuncu WASD ile görür. **KULE TAMAMEN BİTTİ — mesh, material, polish hepsi kapandı** (polish
+  kovalanmayacak, Cem kararı 2026-07-10).
 - **3 boşta GLB yerleştirildi + diorama 2.5× yayıldı (2956404).** warehouse_a (P12b validator-PASS
   bina) landmark, corner + roof_prop prop olarak eklendi. Venue satırı x∈[-20,20]→[-50,50], tüm
   landmark/prop 2.5× dışa, ground 80→200, kamera zoom/pan açıldı — iç içelik gitti, diorama nefes
@@ -72,7 +73,7 @@ Doktrin: concept→asset-split (master ONAYLI, şimdi ona göre 3D üretiyoruz).
    büyük iş, düşük getiri. SSR eklendi (metal prop/kule yüzeyinde gerçekçi katkı, skyline'da okur),
    ama tam mirror bırakıldı. Skyline'dan bakınca sahne zaten master ruhunu taşıyor.
 
-## 💳 Hero geometri — Magnific image→3D (AKTİF: alien kule)
+## 💳 Hero geometri — Magnific image→3D (alien kule ✅ KAPANDI — arşiv/referans)
 
 **Hedef seçildi (2026-07-08):** master'ın imza öğesi = **alien hero kule**, dil = **hibrit** (yapısal
 brutalist taban + organik/biyomorfik biyolüminesan taç). Mevcut basit `alien_diplomatic_tower`'ı
@@ -127,10 +128,10 @@ yükseltecek focal landmark.
   öldürür → taç patlamaz) ama **albedo tint DÜŞÜRÜLDÜ** — texture kendi gerçek rengiyle gelir, uydurma yok.
   Oyunda doğrulandı: taç kendi biyolüminesan yeşil-cyan rengiyle okuyor, beyaz blowout YOK. **DERS:
   ham Hunyuan GLB Godot'a girmiyorsa ilk şüphe = JPEG-as-PNG mislabel, repack script'i çöz — Blender'a koşma.**
-- **⏭️ Kalan ince ayar → CODEX (kota 10 Tem'de açılınca):** (a) base plakası/kesilmemiş zemin ham GLB'de
-  duruyor — gizle/kes; (b) renk/kompozisyon rötuşu (sıcak sodyum washout, taban tonu); (c) skyline
-  kompozisyonu master'a tam otursun. Cem: "bu ince işleri Codex'e yaptıracağız açılınca." Şimdi bir
-  sonraki task'e geçiliyor.
+- **✅ KULE BİTTİ — polish defteri kapandı (2026-07-10, Cem kararı).** Mesh + material + oyun-içi okuma
+  hero-kalite ve concept-sadık; kalan üç ince ayar (base plaka kes / sıcak sodyum washout + taban tonu /
+  skyline kompozisyon master'a tam otursun) **KOVALANMAYACAK** — diminishing returns, insan %10 zevk
+  rötuşu, mekaniği bloke etmiyor. Kule kapanmış bir iş; yeniden açılmaz, açık madde bırakılmadı.
 - **Adım 6 — texturing'i adapter'a branch yap** (sonra): `hunyuan.py`'ye `Mesh_Texturing` route ekle →
   gelecekteki her hero `--stage texture` tek komut. Ayrıca `repack_glb.py`'yi pipeline'a kalıcı adım yap
   (her Hunyuan GLB'nin JPEG-as-PNG'sini otomatik düzeltsin).

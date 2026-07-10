@@ -4,7 +4,13 @@
 > bu dosya "şu an neredeyiz, sıradaki adım ne, hangi kararlar açık" durumunu tutar. Claude her
 > slice/commit sonunda bunu günceller — Cem elle yazmaz. Eski durum "Geçmiş" bölümüne düşer.
 
-**Son güncelleme:** 2026-07-10 (akşamüstü) · **Aktif faz:** Month 3 — art pipeline (P12 ✅ + P13b yağmur ✅ + P13c steam/ripple ✅, sırada P13d trafik/crowd / P14b karakter)
+**Son güncelleme:** 2026-07-10 (akşam) · **Aktif faz:** Month 3 — art pipeline (P12 ✅ + P13b/c/d VFX ✅, sırada P13e trafik / P14b karakter)
+· **Kazanım (VFX, bugün son):** **P13d KALABALIK İLLÜZYONU ŞİPPED** — `CrowdProxy` tek MultiMesh, ~84 low-poly
+figür (kod-üretilmiş kapsül+küre, tek ArrayMesh), venue hattının ÖNÜNDEKİ açık rıhtıma (+Z pier apron)
+deterministik serpiştirilmiş (`hash(index)`, RNG yok, byte-identical). Vertex shader idle sway (per-instance
+faz `INSTANCE_CUSTOM`, GPU-only, `_process` yok). Presentation-only, sim'e sıfır risk. Hareket yok (→ P13e),
+faction tint yok (→ P13e+). DERS: ilk pass figürleri venue merkezine koydu → binaların içine gömüldü; +Z
+pier apron'a taşıyıp renk açınca tepeden okudu. Oyunda 1080p doğrulandı, import/boot temiz, save/load yeşil.
 · **Kazanım (VFX, bugün):** **P13b YAĞMUR + P13c STEAM/RIPPLE ŞİPPED.** Üç atmosfer katmanı, hepsi `city_view`'de
 tek-satır kardeş `GPUParticles3D` node, presentation-only (GameState'e dokunmaz, sinyal yok, sim'e sıfır risk):
 (1) `RainCurtain` — sabit diagonal streak perdesi, kamera-pan kutusu (yaklaşım A, brief §15); (2) `SteamVents`

@@ -56,6 +56,17 @@ static func bury_case_job(evidence_case: EvidenceCaseData, district: DistrictDat
 	job.id = StringName(id_str)
 	return job
 
+## Trigger (P08b territory) — the rival took ground: a landed EXPAND onto a neutral venue, or a
+## betrayal handing a venue over (JobDirector wires both arms to this). The variant is a hash of
+## the id string, recomputed identically by rebuild — never stored, never a counter.
+static func contested_ground_job(venue: VenueData, rival: FactionData, tick: int) -> JobData:
+	var id_str := "gen@contested@%s@%s@%d" % [venue.id, rival.id, tick]
+	var job := JobTemplates.contested_ground(venue.display_name, rival.display_name,
+		_variant_index(id_str, JobTemplates.CONTESTED_VARIANTS))
+	job.id = StringName(id_str)
+	job.venue_id = venue.id
+	return job
+
 ## Rebuild a generated job's authored content from its id (SaveService load path — the
 ## generated-id counterpart of JobTemplates.by_id). Deterministic: re-runs the same
 ## builder with the parsed targeting. Returns null for non-generated or unresolvable ids.
@@ -74,6 +85,14 @@ static func rebuild(job_id: StringName, districts: Array[DistrictData],
 			if venue == null or rival == null:
 				return null
 			return retaliation_job(venue, rival, int(parts[4]))
+		"contested":
+			if parts.size() != 5:
+				return null
+			var venue := _find_venue(districts, StringName(parts[2]))
+			var rival := _find_faction(factions, StringName(parts[3]))
+			if venue == null or rival == null:
+				return null
+			return contested_ground_job(venue, rival, int(parts[4]))
 		"followup":
 			if parts.size() != 4:
 				return null

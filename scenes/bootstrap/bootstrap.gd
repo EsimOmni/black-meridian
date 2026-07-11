@@ -172,6 +172,9 @@ func _build_hud() -> void:
 	_hud.transition_node = _transition
 	add_child(_hud)
 	_transition.hud_layers.append(_hud)  # hide the management panels during the reveal
+	var roster := RosterPanel.new()      # P14b-lite: R toggles the principals roster
+	add_child(roster)
+	_transition.hud_layers.append(roster)  # hide the roster during the reveal too
 
 func _build_jobs() -> void:
 	var panel := CanvasLayer.new()

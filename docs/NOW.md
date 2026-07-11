@@ -4,8 +4,13 @@
 > bu dosya "şu an neredeyiz, sıradaki adım ne, hangi kararlar açık" durumunu tutar. Claude her
 > slice/commit sonunda bunu günceller — Cem elle yazmaz. Eski durum "Geçmiş" bölümüne düşer.
 
-**Son güncelleme:** 2026-07-10 (akşam) · **Aktif faz:** Month 3 — art pipeline (P12 ✅ + P13b/c/d VFX ✅, sırada P13e trafik / P14b karakter)
-· **Kazanım (VFX, bugün son):** **P13d KALABALIK İLLÜZYONU ŞİPPED** — `CrowdProxy` tek MultiMesh, ~84 low-poly
+**Son güncelleme:** 2026-07-12 (gece) · **Aktif faz:** ANAHTAR TESLİM PUSH (plan: `~/.claude/plans/reis-ben-bu-projeden-breezy-badger.md`) — S1 Month-3 kapanışı (P13e trafik ✅, sırada P14b-lite portre roster)
+· **Kazanım (bu push, S1a):** **P13e TRAFİK İLLÜZYONU ŞİPPED** (2395880) — `TrafficProxy` tek MultiMesh,
+24 low-poly araç (2 şerit, zıt yön) venue satırı ile pier kalabalığı arasındaki temiz koridorda
+(z=10.5/12.5). Akış tamamen GPU: vertex shader sawtooth (TIME + hash-faz, `_process` yok, RNG yok,
+byte-identical). Shader-taşınan span için custom AABB (yoksa pan kenarında cull). Presentation-only.
+CUT (ship-first): faction tint, state-reaktif yoğunluk, kavşak. Import+boot+save-roundtrip yeşil.
+· **Kazanım (VFX, önceki):** **P13d KALABALIK İLLÜZYONU ŞİPPED** — `CrowdProxy` tek MultiMesh, ~84 low-poly
 figür (kod-üretilmiş kapsül+küre, tek ArrayMesh), venue hattının ÖNÜNDEKİ açık rıhtıma (+Z pier apron)
 deterministik serpiştirilmiş (`hash(index)`, RNG yok, byte-identical). Vertex shader idle sway (per-instance
 faz `INSTANCE_CUSTOM`, GPU-only, `_process` yok). Presentation-only, sim'e sıfır risk. Hareket yok (→ P13e),

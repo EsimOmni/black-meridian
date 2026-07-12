@@ -151,6 +151,13 @@ constants (`EconomyService.HEAT_INSPECTION_REARM - 0.05`), never parallel litera
 extremal policy (always-argMAX) cannot exercise a hysteresis loop — model the player's back-off
 ("answer quiet while the district cools") or the latch fires once per run and never again.
 
+### A probe that save/loads mid-run must re-fetch EVERY data reference through GameState
+The P16 narrative probe cached `lt`/`district` before its mid-chain load; load_game replaces the
+data objects, so the probe kept reading (and reassuring) a dead world — the defuse assertion failed
+while the mechanic was correct (same instrument-error class as the P06d threshold lesson). Rule:
+in any probe/test that calls load_game, resolve characters/districts/venues via GameState lookups
+per iteration, never hold references across a load.
+
 ### GDScript `as` binds looser than `==` — `x == [...] as Array[T]` casts the bool
 `restored.chosen_prep == [&"a"] as Array[StringName]` parses as `(x == [...]) as Array[...]` → parse
 error "cannot convert bool". Pre-declare a typed var (`var expected: Array[StringName] = [...]`) and

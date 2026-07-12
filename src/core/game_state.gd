@@ -31,6 +31,11 @@ var central_pressure: float = 0.0
 var central_alert: bool = false
 var central_alert_ticks: int = 0
 
+## --- Narrative progression (P16) — authored beat chain state (brief §13.2) ---
+## Written only by the NarrativeDirector (fired@/resolved@ flags, accord stance).
+## Lives here (not on the director node) so it saves additively and survives loads.
+var narrative_flags: Dictionary = {}
+
 func _ready() -> void:
 	# Autoload order in project.godot guarantees GameState is ready before services use it.
 	pass
@@ -87,3 +92,4 @@ func reset() -> void:
 	central_pressure = 0.0
 	central_alert = false
 	central_alert_ticks = 0
+	narrative_flags = {}

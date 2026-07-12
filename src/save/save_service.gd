@@ -26,6 +26,8 @@ func save_game(slot: String = "quick") -> bool:
 		"saved_at_unix": int(Time.get_unix_time_from_system()),
 		# Additive since P08: scheduled delayed-consequence follow-ups (JobDirector).
 		"pending_followups": JobDirector.pending_followups.duplicate(true),
+		# Additive since P16: authored narrative beat-chain state.
+		"narrative_flags": GameState.narrative_flags.duplicate(),
 	}
 	var data := SaveCodec.encode_state(
 		GameState.districts, GameState.factions, GameState.characters,
@@ -74,6 +76,7 @@ func load_game(slot: String = "quick") -> bool:
 	GameState.central_alert = meta.get("central_alert", false)
 	GameState.central_alert_ticks = meta.get("central_alert_ticks", 0)
 	TimeService.tick_index = meta["tick_index"]
+	GameState.narrative_flags = meta.get("narrative_flags", {}).duplicate()  # additive since P16
 
 	# Rebuild in-flight jobs: authored content from the registry (or, for generated ids,
 	# deterministically from JobGenerator.rebuild — P08), runtime state from the save.

@@ -20,7 +20,7 @@ static func by_id(job_id: StringName) -> JobData:
 		&"job_intercepted_shipment":
 			return intercepted_shipment()
 		_:
-			return null
+			return NarrativeJobs.by_id(job_id)  # P16 authored chain, same registry contract
 
 ## "Intercepted shipment at the Cargo Terminal" — tied to gw_contraband (WorldSeed).
 ## Apparent problem: a contraband run got stopped at the wharf gates and a dock

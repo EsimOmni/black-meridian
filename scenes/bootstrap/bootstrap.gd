@@ -154,6 +154,10 @@ func _build_relationships() -> void:
 	_relationships = RelationshipService.new()
 	_relationships.name = "RelationshipService"
 	add_child(_relationships)
+	# P16: the authored beat chain rides the same bootstrap-wired pattern.
+	var narrative := NarrativeDirector.new()
+	narrative.name = "NarrativeDirector"
+	add_child(narrative)
 
 ## P17b: the enter/resolve round-trip into the reveal scene. Bootstrap-wired like
 ## RelationshipService — the test drives its sim-effect path with city_root null.

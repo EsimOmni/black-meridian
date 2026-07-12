@@ -4,219 +4,106 @@
 > bu dosya "şu an neredeyiz, sıradaki adım ne, hangi kararlar açık" durumunu tutar. Claude her
 > slice/commit sonunda bunu günceller — Cem elle yazmaz. Eski durum "Geçmiş" bölümüne düşer.
 
-**Son güncelleme:** 2026-07-12 (gece) · **Aktif faz:** ANAHTAR TESLİM PUSH (plan: `~/.claude/plans/reis-ben-bu-projeden-breezy-badger.md`) — S1 Month-3 kapanışı (P13e trafik ✅, sırada P14b-lite portre roster)
-· **Kazanım (bu push, S1a):** **P13e TRAFİK İLLÜZYONU ŞİPPED** (2395880) — `TrafficProxy` tek MultiMesh,
-24 low-poly araç (2 şerit, zıt yön) venue satırı ile pier kalabalığı arasındaki temiz koridorda
-(z=10.5/12.5). Akış tamamen GPU: vertex shader sawtooth (TIME + hash-faz, `_process` yok, RNG yok,
-byte-identical). Shader-taşınan span için custom AABB (yoksa pan kenarında cull). Presentation-only.
-CUT (ship-first): faction tint, state-reaktif yoğunluk, kavşak. Import+boot+save-roundtrip yeşil.
-· **Kazanım (VFX, önceki):** **P13d KALABALIK İLLÜZYONU ŞİPPED** — `CrowdProxy` tek MultiMesh, ~84 low-poly
-figür (kod-üretilmiş kapsül+küre, tek ArrayMesh), venue hattının ÖNÜNDEKİ açık rıhtıma (+Z pier apron)
-deterministik serpiştirilmiş (`hash(index)`, RNG yok, byte-identical). Vertex shader idle sway (per-instance
-faz `INSTANCE_CUSTOM`, GPU-only, `_process` yok). Presentation-only, sim'e sıfır risk. Hareket yok (→ P13e),
-faction tint yok (→ P13e+). DERS: ilk pass figürleri venue merkezine koydu → binaların içine gömüldü; +Z
-pier apron'a taşıyıp renk açınca tepeden okudu. Oyunda 1080p doğrulandı, import/boot temiz, save/load yeşil.
-· **Kazanım (VFX, bugün):** **P13b YAĞMUR + P13c STEAM/RIPPLE ŞİPPED.** Üç atmosfer katmanı, hepsi `city_view`'de
-tek-satır kardeş `GPUParticles3D` node, presentation-only (GameState'e dokunmaz, sinyal yok, sim'e sıfır risk):
-(1) `RainCurtain` — sabit diagonal streak perdesi, kamera-pan kutusu (yaklaşım A, brief §15); (2) `SteamVents`
-— seyrek yavaş yükselen yumuşak buhar (radial-gradient disc doku → kare değil puf, amount 90/alpha 0.06);
-(3) `RainSplashes` — zeminde yatık büyüyen su lekeleri (QuadMesh FACE_Y). Fog ZATEN vardı (bootstrap, petrol-blue,
-sky_affect 0) — dokunulmadı. Ground/SSR/roughness da dokunulmadı (tam-mirror = işaretli mimari kuyu).
-Oyunda 1080p doğrulandı, import/boot temiz, save/load yeşil. DERS: ilk steam pass keskin gri kare çıktı →
-radial soft-disc doku + düşük count/alpha ile düzeldi. Trafik/crowd/state-reaktif → P13d+.
-Spec: `docs/superpowers/specs/2026-07-10-p13b-rain-curtain-design.md`.
-· **Kazanım (asset):** **P12 modüler bina kiti KAPANDI** — 10 GLB, 8/8 modül `GLBValidator` PASS
-(kit_tile/building/prop, LOD0+1, base-center), `KitAssembler` (CELL=4.5 grid) `city_view`'de canlı: her
-venue'nün stratejik state'i grid-snap bina assemble ediyor (brief §1). Mükerrer P13/P14 numaraları temizlendi
-(VFX→P13b, roster→P14b). Kule + hayalet prop-kurtarma defterleri de kapandı.
-· **Kazanım (mekanik):** **P08b TERRITORY_LOSS origin ŞİPPED** — rival toprak kazanınca (seed nötr venue'yü EXPAND'ler, ya da ihanet venue'yü rival'e verir) "Contested Ground" fixer job'ı açılır → oyuncu geri alır (CONTESTED), yaklaşıma göre bedel. Deterministik + save-safe, full-cycle probe "TERRITORY LOSS CLOSES", 12 test yeşil. Subagent-driven (Fable) 10 görev + 2 tam review turu.
-· **Kazanım (asset, önceki):** alien kule sıfırdan doğru oranla üretildi + oyunda concept-sadık; 3 boşta GLB + diorama 2.5×; hero image→3D doktrini 4 agent dosyasına işlendi (2956404, 550c4fa).
+**Son güncelleme:** 2026-07-12 (gece) · **Aktif faz:** 🚢 **ANAHTAR TESLİM PUSH** (onaylı plan:
+`~/.claude/plans/reis-ben-bu-projeden-breezy-badger.md` — sprint sırası + locked kararlar orada).
+**S1 (Month-3 kapanışı) ✅ + S2.1 (P16) ✅ BİTTİ** — şu an **S2.2 P17-lite mesh cinematic** ortasında.
 
----
+## 🔒 Push'un locked kararları (2026-07-12, Cem — yeniden tartışılmaz)
 
-## 🎯 Şu an ne yapıyoruz
+1. **"Oyun bitsin, sonra her şeyi değiştiririz."** Her kararda en hızlı kabul-edilebilir yol;
+   polish defteri AÇILMAZ; her asset/ekran/ses swappable placeholder. Deferred backlog (P05b,
+   P07b/c-artıkları, P10b-artıkları) sadece oynanışta delik açarsa girer.
+2. **P17 cinematic dünya = mesh interior, $0** (Marble YOK, splat YOK); `CinematicWorldProvider`
+   interface'i ile splat'a sonradan swap edilebilir kalır.
+3. **Karakterler = 2D portre roster** (3D model/rig/anim YOK).
+4. **Teslim = Windows build + paket (P22+P24); P23 (Steam store/trailer) ERTELENDİ.**
+5. **Playtest = Cem + 1-2 kişi.** Deterministik sim disiplini + IP boundary taviz görmez.
 
-Glass Wharf district'ini onaylı master keyframe'e
-(`assets/concept/glass_wharf/glasswharf_master.png` — yağmurlu, neon, alacakaranlık rıhtım noir)
-uyacak şekilde **hazır asset'lerle** (Sketchfab CC0/CC-BY → Blender temizlik → Godot) donatıyoruz.
-Doktrin: concept→asset-split (master ONAYLI, şimdi ona göre 3D üretiyoruz). AI ~90 / insan ~10.
+## ✅ Bu push'ta bitenler (hepsi commit + verify'lı)
 
-## ✅ Bitti (bu üretim kolunda)
+- **S1a — P13e trafik illüzyonu** (2395880): `TrafficProxy` tek MultiMesh, 24 araç, 2 zıt şerit
+  (z=10.5/12.5 koridoru), akış tamamen GPU (vertex shader sawtooth, TIME+hash-faz, RNG yok).
+  Shader-taşınan span için custom AABB şart (yoksa pan kenarında cull) — bilinen tuzak.
+- **S1b — P14b-lite roster** (bee3089): `RosterPanel` (R toggle) — portre, PUBLIC motive network
+  (gizli motiveler ASLA render edilmez, o asimetri tasarımın kendisi), ilişki edge'leri, betrayal
+  tell. Read-only, state sahibi değil. R guard: transition layer'ı gizlediğinde input yutulur
+  (cinematic'lerin R'siyle çakışma).
+- **S1b — portre seti** (f316c1b): 4 principal noir portresi `assets/characters/portraits/`
+  (ChatGPT runner Instant, $0; Codex triage set-coherence 9/10). Placeholder statüsü: world-bible
+  kimlik kilidi (brief §20) gelince yeniden üretilebilir; roster portresizken monograma düşer.
+- **S1c — Month-3 gate NOTU + README** (5d6022e): gate PASSED — "1 char anim" maddesi ship-first
+  kararıyla kapsam dışı (3D karakter yok ki anime edilsin), "1 vehicle" TrafficProxy + üç kez
+  kanıtlanmış GLB pipeline ile karşılandı. `docs/prompts/notes/P14b-month3-gate.md`.
+- **S2.1 — P16 NarrativeDirector** (3ca1e80): authored omurga — Intercepted Shipment →
+  **Inspector's Ledger** (authored evidence beat; loud yol GERÇEK case eker → P06b zinciri) →
+  **Lieutenant's Debt** (ilk loyalty krizi: beat fire'da leverage kurulur, YAKLAŞIM barı geçip
+  geçmeyeceğine karar verir — pay_it/buy_marker altında tutar, bait/expiry üstüne iter, hepsi
+  ≥0.05 float marjla; iki-kapılı telegraph + reassure-defuse aynen) → **Meridian Accord**
+  (stance truce/leverage/war → P19 ending'lerinin tohumu). Mimari: bootstrap-wired
+  `NarrativeDirector` + pure `NarrativeBeats` + `NarrativeJobs` (code-as-data, JobTemplates
+  registry; **data/jobs .tres migrasyonu ship-first ile CUT** — "UI'ya gömme" kuralı korunuyor).
+  Beat state `GameState.narrative_flags` (SaveService meta, additive). Kanıt: unit test +
+  `narrative_probe.tscn` verdict **NARRATIVE CHAIN CLOSES** (telegraph/defuse/mid-chain +
+  final save-load byte-identical) + 23 test süiti yeşil + roundtrip + boot smoke.
 
-- **🏛️ ALIEN KULE — sıfırdan doğru üretildi (2026-07-10).** Eski ham Hunyuan kule oranı ezikti
-  (taç baskın, taban küçük) + oyunda beyaza patlıyordu. Yeniden üretildi: (1) concept'ten Seedream
-  web runner ile oran-doğru + **gölgesiz beyaz-bg** görsel (bedava), (2) temiz cutout → single-view
-  Hunyuan = düzgün hacim (gölge→slab kök nedeni çözüldü), (3) Codex lokal Hunyuan texturing + Blender'da
-  taç `Crown_Emissive` bioluminesan split + base-center, (4) Godot `_kill_mirror_keep_emission`
-  (metallicFactor=1.0 mirror blowout'u kırar, baked crown emission'ı korur). **Oyunda concept-sadık:
-  koyu brutalist gövde + sıcak pencere ışıkları + içeriden ışıyan teal mercan taç.** Tam pipeline
-  doktrini 4 agent dosyasında (`PROVEN 2026-07-10`). Kule (85,-85)'te uzak — başlangıç kadrajında
-  değil, oyuncu WASD ile görür. **KULE TAMAMEN BİTTİ — mesh, material, polish hepsi kapandı** (polish
-  kovalanmayacak, Cem kararı 2026-07-10).
-- **3 boşta GLB yerleştirildi + diorama 2.5× yayıldı (2956404).** warehouse_a (P12b validator-PASS
-  bina) landmark, corner + roof_prop prop olarak eklendi. Venue satırı x∈[-20,20]→[-50,50], tüm
-  landmark/prop 2.5× dışa, ground 80→200, kamera zoom/pan açıldı — iç içelik gitti, diorama nefes
-  aldı. `Exports/`+`Plugins/` cruft'una `.gdignore`/gitignore.
-- **3 landmark yerinde ve dokulu:** warehouse_hero, industrial_block_a, dock_house_pier —
-  `src/presentation/district_landmarks.gd` → `PLACEMENTS`. Hepsi CC-BY, attribution loglu.
-- **Grey-wash fix:** Sketchfab GLB'leri kendi texture'ını korur; `textured:true` flag'i
-  `_apply_noir_detail` shader'ını atlatır (flat-color P12b landmark'ları hâlâ weathering alır).
-- **Asset pipeline kanıtlandı** (~1 dk/asset): download → Blender join+base-center-pivot+1K-texture
-  → GLB export (**Draco OFF** — Godot 4.7 okuyamaz) → `--import` doğrula.
-- **Repo self-consistent:** landmark texture'ları commit'lendi — fresh clone gri açılmaz.
-- **`DockProps` prop scatter placer** (`src/presentation/dock_props.gd`, `city_view.gd`'de wire):
-  5 Faz-1 prop yerinde, dokulu, master'a göre yayılmış + ölçekli — dock_crane, bollard_rope×2,
-  fishing_supplies, market_stall×2, pallet_pack×2. Hepsi **CC-BY, UID+attribution loglu**
-  (`ATTRIBUTIONS.md`). DistrictLandmarks'ı aynalar ama scatter list + prop, patina shader YOK.
-- **PolyHaven Faz 2 — gece HDRI atmosferi** (CC0, attribution gerekmez): `cobblestone_street_night_4k.hdr`
-  → `bootstrap.gd` WorldEnvironment'a **ambient + reflection source** olarak bağlandı (background düz
-  noir renk KALIR — diorama gökyüzü göstermez; yüzeyler gerçek gece cadde ışığı alır, düz renk ambient
-  değil). Kutular/prop'lar "kuru mat"tan "gece ışığında yıkanmış"a geçti. Ground ıslaklığı artırıldı
-  (roughness 0.08, metallic 0.45). `assets/city/glasswharf_dock/env/`'de HDRI. Pas/ahşap PBR
-  texture'lar HDRI-only yettiği için KULLANILMADI (haul'da duruyor, footprint eklemedim).
-- **Neon vitrin (master imzası):** venue kutularının ZEMIN bandına sıcak sodyum emissive
-  (`city_view.gd` `_tint_building`/`_tint_meshes`) — env glow onu vitrin gibi bloom'lar; üst katlar
-  mat kalır (bina blok gibi parlamaz). Band ayrımı **root'un doğrudan child'ının** y'sinden okunur
-  (leaf mesh'ler GLB-içi local y≈0 → ilk denemede tüm stack parladı, band-y'ye çevirdim, düzeldi).
+## ⏭️ Şu anki iş: S2.2 P17-lite (yarıda — dosyalar yazıldı, wiring kaldı)
 
-## ⏭️ Sıradaki adım
+`CinematicWorldProvider` seam'i yazıldı (P01'in deferred borcu): `cinematic_world_provider.gd`
+(USE_SPLAT flag'li selector) + `splat_world_provider.gd` (GDGS yolu, P17b kodundan taşındı) +
+`mesh_world_provider.gd` ($0 depo back-room: 8×6 m kabuk, pallet_pack×2 + fishing_supplies
+prop'ları, sarkan sodyum lamba + petrol fill + kapı altı ışık sızıntısı). **KALAN:**
+1. `reveal_scene.gd` + `crime_scene.gd` `_build_splat()` → provider çağrısına geçir
+   (BOUNDS_HALF const → provider'dan gelen değer).
+2. Görsel doğrula (godot-ai screenshot, cinematic'e gir).
+3. S2.3 P18: `CinematicTransition.enter/enter_crime_scene`'e **checkpoint save** ekle +
+   Month-4 gate integration probe'u (consequence persist + save/load'dan sağ çıkma — P17b/c
+   persistence testleri ZATEN var, probe onları round-trip'le birleştirir).
+4. 🎮 **CEM GATE #1**: cinematic feel seansı (10-15 dk) — S2 bitince dur, Cem'e haber ver.
 
-1. **~~Bekleyen prop kurtarma~~ — İŞ YOK, defter kapandı (2026-07-10, diskten kanıtlı).** NOW.md bu
-   maddeyi bir eski hatırlamadan taşıyordu; gerçek durum temiz: `D:\bm-asset-haul\pending-props\`
-   **diye bir klasör yok** (haul `sketchfab/`+`polyhaven/` altında), ve container/dumpster/boat/lamp
-   ham GLB'leri **diskte HİÇBİR YERDE yok** (`find` boş). HAUL_REPORT.md bunları saymıyor — buoy
-   "deferred", geri kalanı zaten "skipped/rejected" (isim yalan söyleyen dock crane, CC-BY-NC neon).
-   **Haul'daki 5 sketchfab prop'un HEPSİ zaten oyunda + DockProps'ta bağlı + CC-BY UID/lisans loglu**
-   (dock_crane, bollard_rope, pallet_pack, fishing_supplies, market_stall). Prop seti tam; kurtarılacak
-   şey yok. Yeni prop çeşidi istenirse o **yeni asset üretimi**dir (kompozisyon boşluğu görülürse), kurtarma değil.
-2. **Kompozisyon ince-ayar (insan %10):** prop'lar yayıldı+büyüdü ama hâlâ %70 master; skyline
-   kamerasından (oyun-içi C) bak, master'ın derin pier'ine göre son rötuş. Diminishing returns —
-   sonsuz kovalama.
-3. **Neon polish:** master'ın sıcak neon vitrinleri (emissive pencereler). market_stall'da
-   `_plus_emissive` texture'ı var — neon aksan için değerlendirilebilir.
-4. **Zemin tam-mirror ıslaklık — MİMARİ SINIR, KOVALAMA.** HDRI reflection + SSR + roughness/metallic
-   denendi (3+ ayar), hepsi marjinal. Kök neden ayar değil: zemin düz koyu (albedo 0.05) + kutuların
-   ALTINDA bitiyor, önlerine uzanmıyor — master'da ıslak cadde kutuların ÖNÜNE serilir. Gerçek
-   ıslak-neon-ayna için ya kompozisyon (zemini öne getir) ya cobblestone texture+normal — ikisi de
-   büyük iş, düşük getiri. SSR eklendi (metal prop/kule yüzeyinde gerçekçi katkı, skyline'da okur),
-   ama tam mirror bırakıldı. Skyline'dan bakınca sahne zaten master ruhunu taşıyor.
+**Kritik keşif (S2 scope'unu küçülten):** P17b/P17c ZATEN tam round-trip'i kuruyor
+(pause → node swap → FP walk (WASD+mouse) → E incele / R verb / Q çık → consequence MEVCUT
+verb'lerle (reassure / remove_case) → restore). Eksik SADECE: dünya (splat bench → mesh interior),
+checkpoint save, gate probe'u.
 
-## 💳 Hero geometri — Magnific image→3D (alien kule ✅ KAPANDI — arşiv/referans)
+## ⚠️ Açık kararlar / bilinen durumlar
 
-**Hedef seçildi (2026-07-08):** master'ın imza öğesi = **alien hero kule**, dil = **hibrit** (yapısal
-brutalist taban + organik/biyomorfik biyolüminesan taç). Mevcut basit `alien_diplomatic_tower`'ı
-yükseltecek focal landmark.
-
-- **Adım 1 — concept görseli ✅ YAPILDI (bedava, kredi yok):** ChatGPT (OMNI Labs Studio projesi,
-  Instant modda) ile üretildi — `assets/concept/glass_wharf/alien_tower_hero.png` (1024×1536, hibrit
-  brutalist taban + organik biyolüminesan taç, tam isabet). Playwright ile açıldı, Cem login oldu,
-  Claude prompt'ladı + görseli sayfa-fetch ile repoya indirdi. **Onaylandı.**
-- **Adım 2 — image→3D: PLAN DEĞİŞTİ → LOKAL BEDAVA.** Magnific kredisi YAKMIYORUZ. Lokal
-  **Hunyuan3D 2.1** var (`D:\AI\SwarmUI\dlbackend\comfy\ComfyUI` backend, model ağırlıkları inmiş) —
-  TripoSR'den kaliteli, organik taca uygun, sıfır kredi (brief §10: local cover, only pay for a win).
-  PersonaX'in **OMNI 3D pipeline'ı bu repoya taşındı** (`tools/pipeline/` + `manifests/` + `jobs/`),
-  yeni **`hunyuan.py` adapter'ı** eklendi (ComfyUI UI-workflow → /prompt API, image enjekte, POST,
-  poll, GLB çıkar). Job: `jobs/active/alien_tower_hero_001.json` (geometry→hunyuan3d, metre,
-  floor-center, 22×60×22 landmark, building budget). **validate + dry-run GEÇTİ** (commit ec8f884).
-- **Adım 3 — Hunyuan GLB ÜRETİLDİ ✅ (71a9a23):** `python -m tools.pipeline run-job
-  jobs/active/alien_tower_hero_001.json --stage hunyuan3d` (env `OMNI_COMFY_URL=http://127.0.0.1:7821`
-  — SwarmUI ComfyUI backend portu **7821**, 8188 DEĞİL). Çıktı: **100k vertex / 200k tri geçerli GLB**,
-  texture'sız (geometry candidate), `assets/_generated/hunyuan3d/alien_tower_hero_001/v001/`. Adapter
-  5 bug'dan geçti (object_info-driven widget map, token-overlap ckpt snap, dmc→mc, Preview3D strip).
-- **Adım 4 — Hunyuan TEXTURE ÜRETİLDİ ✅ (2026-07-08, uçtan uca lokal kanıtlandı):** `Mesh_Texturing`
-  workflow'u 16GB'da OOM'suz çalıştı (~2 dk, exit 0). Prova script'i adapter helper'larını yeniden
-  kullandı: `Hy3D21LoadMesh.glb_path`←v002 GLB, `LoadImageWithTransparency`←cutout, Preview3D strip.
-  Çıktı: **`alien_tower_hero_001_v002_tex.glb` (6.8 MB)** — baseColor 1024² + metallicRoughness 1024²
-  PBR gömülü, her vertex UV'li. Blender render doğrulandı: **hibrit dil birebir konseptte** (patina
-  brutalist taban → örülü cyan-yeşil biyolüminesan taç), hero-kalite, çamur yok. **KRİTİK BULGU:
-  16GB texture'ı kaldırıyor → yüksek-VRAM (5090) bu iş için GEREKMİYOR.** Tek zayıflık: view-projection
-  texturing "elle boyanmış" his + tepe tendrillerde hafif smear (uzak skyline landmark'ı için sorun değil).
-  Prova script'i `scratchpad/texture_prova.py` (tek seferlik — adapter'a branch OLARAK EKLENMEDİ henüz).
-- **Adım 5 — Blender temizlik + OYUNA KONDU ✅ (2026-07-08 öğleden sonra).** Kule game-ready ve Godot'ta
-  skyline'da duruyor. (İlk deneme başka chat/Sonnet'e verildi → decimate silüeti düz blob'a ezdi + texture
-  uçtu, ÇÖP çıktı → Claude kaynaktan yeniden yaptı.) Doğru pipeline: zemin plakası kesildi (z<-0.94 bisect
-  + holes_fill), UV-aware decimate **200k→44k** (30k değil — silüet kutsal, her adım render'la doğrulandı),
-  normals recalc, base-center pivot (Y=0), uniform ölçek 60m yükseklik (dims **24.9×60×24.6m**), convex
-  collider (342 tri, `-col`), export **Draco OFF + yup + JPEG** → `assets/_exports/alien_tower_hero/
-  alien_tower_hero_lod0.glb`. **Re-import doğrulandı** (Sonnet'in atladığı adım): 44k tri, UV+texture
-  bağlı, pivot Y=0. DistrictLandmarks'a `textured:true` (noir shader ATLA), pos `(34,0,-34)` sağ kanat,
-  scale `0.32` (~19m focal spire — 0.5 frame'i deldi). **KRİTİK BULGU: Blender/editor'ın sert directional
-  ışığında tepe beyaz specular veriyordu → oyunun HDRI/noir env'inde SORUN DEĞİL, biyolüminesan taç gibi
-  okuyor** (metallicRoughness bake'i). Kalan tek şey saf kompozisyon zevki (scale/pos = insan %10).
-  DERS: mekanik görünen Blender temizlik aslında ince ayar (decimate oranı+UV+normal+export birbirini
-  ezer) — Sonnet'e körlemesine verilince hero çöpe döndü. Bağlamı taşıyan (kaynağı gören) yapmalı.
-- **Adım 5b — HAM GLB oyunda, Blender ÇÖPE ATILDI ✅ (2026-07-08 akşam, commit 439766e).** Cem "ham
-  modeli olduğu gibi koy, Blender'a dokunma" dedi → Blender-cleaned LOD0 SİLİNDİ, ham `v002_tex.glb`
-  kondu. **KÖK BULGU (kritik, tekrar edecek): Hunyuan GLB texture'ı JPEG ama data-URI'de `image/png`
-  diye YANLIŞ etiketli → Godot PNG decoder'ı `ERR_FILE_CORRUPT` verip texture'ı reddediyor.** Çözüm
-  Blender DEĞİL: saf-Python repack (`scratchpad/repack_glb.py` — Pillow gerçek formatı tanır, temiz
-  PNG'ye re-encode eder, GLB'yi yeniden yazar). ~1 dk, sıfır Blender. Sonuç: `alien_tower_hero.glb`
-  (200k tri, texture'lı, Godot'ta temiz). Placement: scale 10 (ham 1.88m native → ~19m), `base_offset_y`
-  ham GLB base-center değil diye zemine oturtur. **matte override KALDI** (glTF metallicFactor=1 mirror'ı
-  öldürür → taç patlamaz) ama **albedo tint DÜŞÜRÜLDÜ** — texture kendi gerçek rengiyle gelir, uydurma yok.
-  Oyunda doğrulandı: taç kendi biyolüminesan yeşil-cyan rengiyle okuyor, beyaz blowout YOK. **DERS:
-  ham Hunyuan GLB Godot'a girmiyorsa ilk şüphe = JPEG-as-PNG mislabel, repack script'i çöz — Blender'a koşma.**
-- **✅ KULE BİTTİ — polish defteri kapandı (2026-07-10, Cem kararı).** Mesh + material + oyun-içi okuma
-  hero-kalite ve concept-sadık; kalan üç ince ayar (base plaka kes / sıcak sodyum washout + taban tonu /
-  skyline kompozisyon master'a tam otursun) **KOVALANMAYACAK** — diminishing returns, insan %10 zevk
-  rötuşu, mekaniği bloke etmiyor. Kule kapanmış bir iş; yeniden açılmaz, açık madde bırakılmadı.
-- **Adım 6 — texturing'i adapter'a branch yap** (sonra): `hunyuan.py`'ye `Mesh_Texturing` route ekle →
-  gelecekteki her hero `--stage texture` tek komut. Ayrıca `repack_glb.py`'yi pipeline'a kalıcı adım yap
-  (her Hunyuan GLB'nin JPEG-as-PNG'sini otomatik düzeltsin).
-- **YEDEK PLAN — Trellis A/B (DÜZELTME 2026-07-08: Trellis lokalde YOK).** ComfyUI'da tek lokal mesh
-  paketi `ComfyUI-Hunyuan3d-2-1`. `object_info` taraması: Trellis node'u sıfır. Görünen `Tripo*Node`'lar
-  **bulut Tripo API** (key+kredi ister, lokal ağırlık değil). Yani lokal bedava mesh = SADECE Hunyuan3D.
-  Trellis denemek istenirse: (a) `ComfyUI-Trellis` custom node + ~2GB model indir, ya da (b) HF Space'te
-  online. Deneme DOĞRU zamanı = Hunyuan kule skyline'da texture smear'i rahatsız ederse — o an kur/dene.
-  Şu an gereksiz (Hunyuan hero-kalite verdi).
-
-## 💳 Hero geometri — kredi doktrini (referans)
-
-Krediyi SADECE **kimlik taşıyan hero geometriye** harca (master'ın focal landmark'ları + 2-3 imza
-prop). Çevre/dolgu/materyal = Sketchfab+PolyHaven bedava, oraya kredi YAKMA.
-
-- **Bakiye: ~40K kredi** (45K havuz). MCP'de `unlimitedAppliesHere:false` → her generate kredi yakar.
-  Kredi bol; darboğaz Blender temizlik emeği, o yüzden az sayıda gerçek hero'ya odaklan.
-- **Model fiyatları (MCP/UI, kesin):** Trellis 2 @512=610 (ucuz ama UV kötü/baked → sadece uzak landmark
-  veya PROVA) · Tripo P1=775 · Tripo v3.1 detailed=1160 (PBR'a yakın) · Meshy 6=1160 (en temiz topoloji/UV,
-  hero için en güvenli, en az Blender emeği).
-- **Doktrin:** önce ucuz **Trellis 610 prova** (silüet/kompozisyon master'a oturuyor mu Godot'ta gör) →
-  onaylıysa o pozisyona **Meshy 6 / Tripo v3.1 detailed @1160 hero** bas. 1160'ı yanlış objeye yakma.
-- Her çıktı **provisional**: Blender (retopo, base-center pivot, trim UV, LOD, collider) → GLBValidator → Godot testi.
-- **Paralı generate ÖNCESİ Cem'e gerçek maliyet + belirsizlik sun, onay al.** Model seçimi Cem'in kararı.
-- **ZAMANLAMA:** diğer asset'ler (haul + prop pipeline) master'a oturduktan SONRA bas. Şu an sıra değil.
-
-## ⚠️ Açık kararlar / bilinen sorunlar
-
-- Kompozisyon henüz master'a uymuyor (kümeli, küçük) — prop'lardan sonra tek geçişte düzeltilecek.
-- Codex kotası **10 Temmuz'a kadar yok** (3 gün) — Blender'ı Claude kendi MCP'siyle sürüyor.
-- Subagent'lar Blender MCP'ye erişemez (client Claude session'ında kayıtlı) — Blender işi ana thread veya ayrı chat.
-- Prop UID'lerinin bir kısmı re-verify istiyor (crane thumbnail, boat isim/görsel uyumu).
+- `test_territory_loss_p08b` **SceneTree-tabanlı** → `-s` ile koşulur; `.tscn`'i olarak koşarsan
+  instance edilemez ve süreç ASILI kalır (suite loop tuzağı). SceneTree testleri: economy,
+  job_lifecycle, kit_assembler, territory_loss.
+- Boot smoke baseline: 5 "leaked at exit" satırı + 1 PagedAllocator hatası **pre-existing**
+  (HEAD'de doğrulandı) — yeni satır yoksa temiz.
+- Portre yedekleri scratchpad'de (ephemeral) — sadece seçilen 4'ü repoda.
+- Codex kotası geri geldi (triage çalıştı). Magnific bakiye ~40K (bu push'ta harcama YOK).
 
 ## 🔑 Kilit dosyalar (bu faz)
 
 | Dosya | Ne |
 |---|---|
-| `src/presentation/district_landmarks.gd` | landmark yerleştirme (`PLACEMENTS`) — `textured` flag burada |
-| `docs/glass-wharf-buildout-plan.md` | prop UID'leri + hedef boyutlar + yerleştirme niyeti |
-| `docs/glass-wharf-asset-research.md` | Sonnet'in tam asset araştırması (20 geo + 20 material) |
-| `assets/ATTRIBUTIONS.md` | CC-BY attribution logu (Steam ticari şart) |
-| `docs/asset-standard.md` | GLBValidator spec (per-category bütçe, base-center pivot) |
-| `assets/city/glasswharf_dock/` | tüm kit + landmark GLB'leri buraya |
+| `src/narrative/` | P16 omurga (director + beats + jobs) |
+| `src/presentation/cinematic_world_provider.gd` (+mesh/splat) | S2.2 dünya seam'i |
+| `src/presentation/cinematic_transition.gd` | round-trip; S2.3 checkpoint buraya |
+| `scenes/cinematic/reveal_scene.gd`, `crime_scene.gd` | FP sahneler; provider'a geçecek |
+| `tools/validation/narrative_probe.tscn` | P16 kanıtı; P18 probe'una şablon |
+| `tests/unit/test_narrative_p16.tscn` | P16 unit süiti |
 
 ---
 
 ## Geçmiş (özet — detay git log + claude-mem'de)
 
-- **P08b TERRITORY_LOSS origin** (2026-07-10): rival toprak kazanınca "Contested Ground" fixer job.
-  Yeni JobOrigin; seed nötr venue (`gw_saltworks`) EXPAND yemi; betrayal artık venue'yü RECRUIT eden
-  rival'e verir (owner+INFLUENCED, `recruited_by_faction` CharacterData'da); iki trigger arm (EXPAND +
-  betrayal-committed) tek job; resolve `objective≥0.5` → venue player'a CONTESTED döner. Deterministik,
-  save-safe, 2 varyant. **DERS:** seed'e nötr venue eklemek rival AI'ın "sakin dünyada bekle" beat'ini
-  kırdı (rival hep bedava toprağı EXPAND'ler) → `_fresh_world` test helper'ı yemi drop eder; probe
-  kanıtladı nötr toprak GEÇİCİ (alınınca rival WAIT/FRAME/PROBE'a döner, kalıcı skew değil).
-  `docs/superpowers/plans/2026-07-08-p08b-territory-loss-contested-ground.md`.
-- **Month 2 COMPLETE + gate PASSED** (2026-07-04): tam Night-Cycle loop, P05–P11, deterministik/zero-RNG/save-safe.
-  Feel verdict "fun, stress, very good". Month 3 (asset üretimi) AUTHORIZED.
-- **Month 1** (2026-07-04): data model, GameState, TimeService, Economy, WorldSeed, greybox, save/load.
-- **Splat: SPLAT_OK** (2026-07-02): 542k splat @ 483 fps 1080p, kill criterion çözüldü.
+- **Month 3 KAPANDI** (2026-07-10→12): P12 kit (10 GLB, 8/8 validator, KitAssembler canlı) ·
+  P13b/c/d/e VFX katmanları (yağmur/steam/ripple/crowd/trafik — hepsi presentation-only kardeş
+  node) · P14b-lite roster+portreler · Glass Wharf buildout (4 dokulu landmark + DockProps 5 prop,
+  CC-BY loglu; PolyHaven gece HDRI ambient+reflection; neon vitrin bandı; alien hero kule —
+  Hunyuan3D lokal, `PROVEN 2026-07-10` doktrini 4 agent dosyasında; kule polish defteri KAPALI,
+  Cem kararı). Zemin tam-mirror ıslaklık = işaretli mimari sınır, kovalanmıyor. Gate notu:
+  `docs/prompts/notes/P14b-month3-gate.md`.
+- **P08b TERRITORY_LOSS origin** (2026-07-10): rival toprak kazanınca "Contested Ground" job'ı;
+  probe TERRITORY LOSS CLOSES. Seed'e nötr yem venue (`gw_saltworks`) eklendi.
+- **P17b/P17c cinematic reveal'ler** (2026-07-06/07): confront + crime-scene FP sahneleri,
+  round-trip + persistence testli — Month-4'ün yarısı o zamandan hazırmış.
+- **Month 2 COMPLETE + gate PASSED** (2026-07-04): P05–P11 tam Night-Cycle loop, deterministik/
+  zero-RNG/save-safe. Feel verdict "fun, stress, very good". Month 3 authorized.
+- **Month 1** (2026-07-02): data model, GameState, TimeService, Economy, WorldSeed, greybox,
+  save/load (var_to_str, byte-identical), P03 job skeleton.
+- **Splat: SPLAT_OK** (2026-07-02): 542k splat @ 483 fps 1080p (GDGS + push-constant patch);
+  provider interface borcu S2.2'de ödendi.

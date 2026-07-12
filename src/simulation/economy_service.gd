@@ -51,6 +51,9 @@ func settle_info(faction_id: StringName) -> Dictionary:
 func set_racket_paused(venue: VenueData, paused: bool) -> void:
 	if venue.type == BM.VenueType.RACKET:
 		venue.paused = paused
+		# P19 pillar 2: a paused racket is a visibly closed business — let the proxy
+		# city re-render (the same signal the seed/load path uses; presentation-only).
+		GameState.districts_changed.emit()
 
 ## Spend clean_capital to raise a front's laundering capacity. Returns false (no-op,
 ## never a negative pool) when the venue isn't the faction's front, the ceiling is

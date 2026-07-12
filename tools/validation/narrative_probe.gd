@@ -85,6 +85,13 @@ func _ready() -> void:
 		if GameState.narrative_flags.get(&"accord_stance", &"") != &"":
 			break
 
+	# P19: tick through the settle window — the epilogue must latch deterministically.
+	for t in NarrativeBeats.ENDING_LEAD_TICKS + 10:
+		TimeService._do_tick()
+		_resolve_due(TimeService.tick_index)
+	_check(GameState.narrative_flags.get(&"ending", &"") == &"ending_armed_peace",
+		"the leverage stance reaches the armed-peace ending after the settle window")
+
 	# Phase 2 — assertions over the whole run (fresh lookups — same staleness rule).
 	var district := GameState.get_district(&"glass_wharf")
 	_check(&"beat_ledger" in _beats_fired, "beat_ledger fired after the cold open")
@@ -109,6 +116,8 @@ func _ready() -> void:
 	_check(SaveService.load_game(SLOT), "final load succeeds")
 	_check(GameState.narrative_flags.get(&"accord_stance", &"") == stance_before,
 		"accord stance survives a full save/load")
+	_check(GameState.narrative_flags.get(&"ending", &"") == &"ending_armed_peace",
+		"the reached ending survives a full save/load")
 
 	if _failures == 0:
 		print("[PASS] NARRATIVE CHAIN CLOSES — authored spine, crisis, persistence all hold")

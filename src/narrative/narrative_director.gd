@@ -7,12 +7,18 @@ extends Node
 ## after a load this node just reads the restored flags. Pure logic: NarrativeBeats.
 
 signal beat_fired(beat: StringName, job: JobData)
+signal ending_reached(ending: StringName)
 
 func _ready() -> void:
 	TimeService.strategic_tick.connect(_on_strategic_tick)
 	JobDirector.job_resolved.connect(_on_job_resolved)
 
 func _on_strategic_tick(tick: int) -> void:
+	# P19: the epilogue window after the accord settles. Latched by the flag — fires once.
+	var ending := NarrativeBeats.ready_ending(GameState.narrative_flags, tick)
+	if ending != &"":
+		GameState.narrative_flags[&"ending"] = ending
+		ending_reached.emit(ending)
 	var beat := NarrativeBeats.ready_beat(GameState.narrative_flags, tick)
 	if beat == &"":
 		return

@@ -12,6 +12,7 @@ const JobPanelScript := preload("res://scenes/ui/job_panel.gd")
 var _hud
 var _night_cycle: NightCycle
 var _relationships: RelationshipService
+var _narrative: NarrativeDirector
 var _transition: CinematicTransition
 var _city: Node3D
 var _management_camera: Camera3D
@@ -155,9 +156,9 @@ func _build_relationships() -> void:
 	_relationships.name = "RelationshipService"
 	add_child(_relationships)
 	# P16: the authored beat chain rides the same bootstrap-wired pattern.
-	var narrative := NarrativeDirector.new()
-	narrative.name = "NarrativeDirector"
-	add_child(narrative)
+	_narrative = NarrativeDirector.new()
+	_narrative.name = "NarrativeDirector"
+	add_child(_narrative)
 
 ## P17b: the enter/resolve round-trip into the reveal scene. Bootstrap-wired like
 ## RelationshipService — the test drives its sim-effect path with city_root null.
@@ -179,6 +180,10 @@ func _build_hud() -> void:
 	var roster := RosterPanel.new()      # P14b-lite: R toggles the principals roster
 	add_child(roster)
 	_transition.hud_layers.append(roster)  # hide the roster during the reveal too
+	var ending := EndingPanel.new()      # P19: the slice epilogue (accord stance verdict)
+	add_child(ending)
+	ending.bind(_narrative)
+	_transition.hud_layers.append(ending)
 
 func _build_jobs() -> void:
 	var panel := CanvasLayer.new()

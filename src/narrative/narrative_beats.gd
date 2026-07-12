@@ -108,6 +108,30 @@ static func apply_resolution(job: JobData, characters: Array[CharacterData],
 				_:                    # walked out, or stood her up (expired)
 					flags[&"accord_stance"] = &"war"
 
+## --- P19: the ending decision --------------------------------------------------
+## The accord IS the slice's significant ending decision (brief §12.1); the epilogue
+## surfaces a settle-window after it resolves. Three reachable endings, one per stance —
+## a pure function of the flags, deterministic and save-safe like everything else here.
+
+const ENDING_LEAD_TICKS := 120  ## ~2 min at NORMAL — the city settles before the verdict
+
+const STANCE_ENDINGS := {
+	&"truce": &"ending_accord",
+	&"leverage": &"ending_armed_peace",
+	&"war": &"ending_war",
+}
+
+## The ending due at this tick, or &"" (not yet / already reached).
+static func ready_ending(flags: Dictionary, tick: int) -> StringName:
+	if flags.has(&"ending"):
+		return &""
+	var stance: StringName = flags.get(&"accord_stance", &"")
+	if stance == &"" or not flags.has(&"resolved@job_meridian_accord"):
+		return &""
+	if tick < int(flags[&"resolved@job_meridian_accord"]) + ENDING_LEAD_TICKS:
+		return &""
+	return STANCE_ENDINGS.get(stance, &"ending_war")
+
 static func _find(characters: Array[CharacterData], id: StringName) -> CharacterData:
 	for c in characters:
 		if c.id == id:

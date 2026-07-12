@@ -23,6 +23,19 @@ func _ready() -> void:
 	add_child(CrowdProxy.new())   # P13d pedestrian crowd illusion: MultiMesh, presentation-only
 	add_child(TrafficProxy.new()) # P13e traffic illusion: MultiMesh flow on the service road, presentation-only
 	GameState.districts_changed.connect(rebuild)
+	# P19 (pillar 2 — the city shows the STATE, live): re-render on the discrete sim
+	# beats that change what a venue looks like. Before this, the proxy only rebuilt on
+	# seed/load — ownership flips and inspections never reached the render mid-session.
+	RivalDirector.rival_action_landed.connect(func(_f, _v, _a): rebuild())
+	JobDirector.job_resolved.connect(func(_j): rebuild())
+	EconomyService.inspection_started.connect(func(_d): rebuild())
+	EconomyService.inspection_ended.connect(func(_d): rebuild())
+	_connect_betrayal.call_deferred()  # RelationshipService is bootstrap-wired later (P08 lesson)
+
+func _connect_betrayal() -> void:
+	var rs := get_tree().root.find_child("RelationshipService", true, false)
+	if rs:
+		rs.betrayal_committed.connect(func(_c, _v, _r): rebuild())
 
 func _build_ground() -> void:
 	var ground := MeshInstance3D.new()
@@ -62,7 +75,31 @@ func _make_marker(venue: VenueData) -> StaticBody3D:
 	var faction := GameState.get_faction(venue.owner_faction)
 	if faction:
 		base = base.lerp(faction.accent_color, 0.45)
-	_tint_building(building, base)
+	# P19 state variations (pillar 2), all on the existing tint rail — deterministic
+	# pure function of venue state, no new systems:
+	#   contested ground reads grey-washed (nobody's flag holds), compromised reads
+	#   darkened, fortified reads a shade brighter; an active sabotage wound goes dark;
+	#   institutional disruption cools the block toward petrol; a paused racket kills
+	#   its shopfront (a closed business is a dark frontage).
+	var glow := 1.0
+	match venue.control_state:
+		BM.ControlState.CONTESTED:
+			base = base.lerp(Color(0.45, 0.46, 0.5), 0.55)
+			glow = minf(glow, 0.35)
+		BM.ControlState.COMPROMISED:
+			base = base.darkened(0.3)
+			glow = minf(glow, 0.5)
+		BM.ControlState.FORTIFIED:
+			base = base.lightened(0.15)
+	if venue.sabotage_ticks > 0:
+		base = base.darkened(0.45)
+		glow = minf(glow, 0.15)
+	if venue.disruption > 0.0:
+		base = base.lerp(Color(0.35, 0.45, 0.6), clampf(venue.disruption, 0.0, 1.0) * 0.5)
+	if venue.type == BM.VenueType.RACKET and venue.paused:
+		base = base.darkened(0.35)
+		glow = 0.0
+	_tint_building(building, base, glow)
 	body.add_child(building)
 
 	var shape := BoxShape3D.new()
@@ -87,24 +124,25 @@ const SHOPFRONT_GLOW := Color(1.0, 0.72, 0.38)
 ## solid block. We branch here, at the band level, then tint each band's inner meshes accordingly —
 ## the inner GLB meshes sit at local y≈0, so the band identity must be read from the band node, not
 ## the leaf mesh (which is why an earlier leaf-level y check lit the whole stack).
-func _tint_building(building: Node3D, color: Color) -> void:
+func _tint_building(building: Node3D, color: Color, glow: float = 1.0) -> void:
 	for band in building.get_children():
 		var lit := band is Node3D and (band as Node3D).position.y < KitAssembler.CELL
-		_tint_meshes(band, color, lit)
+		_tint_meshes(band, color, lit, glow)
 
-## Apply the per-instance material to every MeshInstance3D under a band. `lit` = ground frontage.
-func _tint_meshes(node: Node, color: Color, lit: bool) -> void:
+## Apply the per-instance material to every MeshInstance3D under a band. `lit` = ground
+## frontage; `glow` scales the shopfront emission (0 = closed/dark business, P19).
+func _tint_meshes(node: Node, color: Color, lit: bool, glow: float = 1.0) -> void:
 	if node is MeshInstance3D:
 		var mat := StandardMaterial3D.new()
 		mat.albedo_color = color
 		mat.roughness = 0.6
-		if lit:
+		if lit and glow > 0.0:
 			mat.emission_enabled = true
 			mat.emission = color.lerp(SHOPFRONT_GLOW, 0.6)  # warm the accent toward sodium neon
-			mat.emission_energy_multiplier = 0.9            # low — the env glow does the bloom, not raw brightness
+			mat.emission_energy_multiplier = 0.9 * glow     # low — the env glow does the bloom, not raw brightness
 		(node as MeshInstance3D).material_override = mat
 	for child in node.get_children():
-		_tint_meshes(child, color, lit)
+		_tint_meshes(child, color, lit, glow)
 
 func _on_marker_input(_camera: Node, event: InputEvent, _pos: Vector3, _normal: Vector3,
 		_idx: int, venue: VenueData) -> void:

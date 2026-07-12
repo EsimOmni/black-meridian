@@ -46,24 +46,24 @@
   `narrative_probe.tscn` verdict **NARRATIVE CHAIN CLOSES** (telegraph/defuse/mid-chain +
   final save-load byte-identical) + 23 test süiti yeşil + roundtrip + boot smoke.
 
-## ⏭️ Şu anki iş: S2.2 P17-lite (yarıda — dosyalar yazıldı, wiring kaldı)
+## ⏭️ Şu anki iş: 🎮 CEM GATE #1 — cinematic feel seansı (S2 BİTTİ, bekliyor)
 
-`CinematicWorldProvider` seam'i yazıldı (P01'in deferred borcu): `cinematic_world_provider.gd`
-(USE_SPLAT flag'li selector) + `splat_world_provider.gd` (GDGS yolu, P17b kodundan taşındı) +
-`mesh_world_provider.gd` ($0 depo back-room: 8×6 m kabuk, pallet_pack×2 + fishing_supplies
-prop'ları, sarkan sodyum lamba + petrol fill + kapı altı ışık sızıntısı). **KALAN:**
-1. `reveal_scene.gd` + `crime_scene.gd` `_build_splat()` → provider çağrısına geçir
-   (BOUNDS_HALF const → provider'dan gelen değer).
-2. Görsel doğrula (godot-ai screenshot, cinematic'e gir).
-3. S2.3 P18: `CinematicTransition.enter/enter_crime_scene`'e **checkpoint save** ekle +
-   Month-4 gate integration probe'u (consequence persist + save/load'dan sağ çıkma — P17b/c
-   persistence testleri ZATEN var, probe onları round-trip'le birleştirir).
-4. 🎮 **CEM GATE #1**: cinematic feel seansı (10-15 dk) — S2 bitince dur, Cem'e haber ver.
+**S2.2 + S2.3 ✅ ŞİPPED (b79e894):** `CinematicWorldProvider` seam (P01 borcu ödendi;
+USE_SPLAT flag'iyle splat'a tek-satır swap) + `MeshWorldProvider` $0 interior (8×6 m depo
+back-room: primitive kabuk + pallet_pack×2 + fishing_supplies, gölgeli sodyum lamba + petrol
+fill + kapı ışık sızıntısı) + her iki sahne provider'a geçti (sahne-içi güneş silindi — ışık
+dünyanın işi) + `CinematicTransition.enter/enter_crime_scene` artık **checkpoint** yazıyor.
+**Month-4 gate: kanıt üstünde PASSED** (`docs/prompts/notes/P18-month4-gate.md`) — P17b/c
+persistence + P18 checkpoint testleri + narrative probe. Görsel: gerçek bootstrap ışığı
+altında screenshot'la doğrulandı (`cinematic_view_probe.tscn` — noir back-room okuyor).
 
-**Kritik keşif (S2 scope'unu küçülten):** P17b/P17c ZATEN tam round-trip'i kuruyor
-(pause → node swap → FP walk (WASD+mouse) → E incele / R verb / Q çık → consequence MEVCUT
-verb'lerle (reassure / remove_case) → restore). Eksik SADECE: dünya (splat bench → mesh interior),
-checkpoint save, gate probe'u.
+**Cem'in seansı (10-15 dk, ne test edilecek):** oyunu aç (F5) → normal oyna; bir betrayal
+telegraph'ı açıldığında HUD'daki **"Confront … (walk the floor)"** butonuna bas → içeri gir:
+WASD+mouse yürü, E crate'i incele, R sit-down (reassure) YA DA Q çekip git → şehre dönüş temiz
+mi, consequence HUD'da görünüyor mu? Aynısını rival sabotage sonrası **"Walk the scene"**
+butonuyla crime-scene için (E incele, R kanıtı kaldır, Q çık). Ayrıca R ile roster'a bak
+(portreler). His notunu bildir — gate koşulu kanıtlandı, seans TAT içindir.
+Bilinen kırpma: "obje KOYMA" verb'i yok (remove var); aktörler greybox kapsül.
 
 ## ⚠️ Açık kararlar / bilinen durumlar
 

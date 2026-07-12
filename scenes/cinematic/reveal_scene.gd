@@ -11,12 +11,14 @@ extends Node3D
 
 signal reveal_resolved(character_id: StringName, reassured: bool)
 
-const SPLAT_PATH := "res://assets/splat/bench_542k.ply"
 const WALK_SPEED := 2.0
 const MOUSE_SENS := 0.003
 const EYE_HEIGHT := 1.6
 const INSPECT_RANGE := 1.8
-const BOUNDS_HALF := 2.0  ## the ~4×4 walkable box around the splat center (spec: hardcoded)
+
+## The hard walk clamp around the world's center — supplied by the world provider
+## (P17-lite: the world technique is a seam, not this scene's business).
+var _bounds_half := 2.0
 
 var transition  # CinematicTransition — set by the round-trip helper before setup()
 
@@ -34,40 +36,28 @@ var _prompt: Label
 
 func setup(character_id: StringName) -> void:
 	_character_id = character_id
-	_build_splat()
+	_build_world()
 	_build_proxies()
 	_build_camera()
 	_build_ui()
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
-## The proxy splat world — same GDGS setup as splat_bench.gd (proven P01 path).
-func _build_splat() -> void:
-	var res: Resource = load(SPLAT_PATH)
-	if res == null:
-		printerr("reveal_scene: could not load %s — greybox only" % SPLAT_PATH)
-		return
-	var splat := GaussianSplatNode.new()
-	splat.gaussian = res
-	add_child(splat)
-	var effect_script := load("res://addons/gdgs/runtime/compositor/gaussian_compositor_effect.gd")
-	var compositor := Compositor.new()
-	compositor.compositor_effects = [effect_script.new()]
-	var env := WorldEnvironment.new()
-	env.compositor = compositor
-	add_child(env)
-	var aabb: AABB = res.aabb
-	_center = aabb.get_center()
-	_floor_y = _center.y - 0.8
+## The cinematic world comes from the provider seam (P17-lite): mesh interior by
+## default, the proven GDGS splat route behind the same contract for a later swap.
+func _build_world() -> void:
+	var world := CinematicWorldProvider.build(self)
+	_center = world["center"]
+	_floor_y = world["floor_y"]
+	_bounds_half = world["bounds_half"]
 
 ## Conventional-3D greybox actors: the lieutenant (capsule) and the tell (box).
+## Lighting belongs to the world provider (an interior lamp, not a sun).
 func _build_proxies() -> void:
-	var light := DirectionalLight3D.new()
-	light.rotation_degrees = Vector3(-50, 30, 0)
-	light.light_color = Color(0.95, 0.82, 0.62)
-	add_child(light)
-
 	var lieutenant := MeshInstance3D.new()
-	lieutenant.mesh = CapsuleMesh.new()
+	var capsule := CapsuleMesh.new()
+	capsule.radius = 0.28  # human-width silhouette — the default 0.5 reads as a tank indoors
+	capsule.height = 1.8
+	lieutenant.mesh = capsule
 	lieutenant.position = _center + Vector3(0.0, 0.0, -1.4)
 	lieutenant.position.y = _floor_y + 0.9
 	add_child(lieutenant)
@@ -144,8 +134,8 @@ func _process(delta: float) -> void:
 	if input != Vector3.ZERO:
 		var dir := Basis(Vector3.UP, _yaw) * input.normalized()
 		var pos := _cam.position + dir * WALK_SPEED * delta
-		pos.x = clampf(pos.x, _center.x - BOUNDS_HALF, _center.x + BOUNDS_HALF)
-		pos.z = clampf(pos.z, _center.z - BOUNDS_HALF, _center.z + BOUNDS_HALF)
+		pos.x = clampf(pos.x, _center.x - _bounds_half, _center.x + _bounds_half)
+		pos.z = clampf(pos.z, _center.z - _bounds_half, _center.z + _bounds_half)
 		pos.y = _floor_y + EYE_HEIGHT
 		_cam.position = pos
 	_update_prompt()

@@ -32,6 +32,9 @@ var _prev_camera: Camera3D
 func enter(character_id: StringName) -> void:
 	# Pause the strategic sim for the duration of the confrontation (brief §14.2).
 	TimeService.set_speed(BM.Speed.PAUSED)
+	# P18: checkpoint BEFORE the sequence — a crash inside the cinematic can never
+	# cost the player their strategic state (brief §14.2 pause→checkpoint→enter).
+	SaveService.save_game("checkpoint")
 	if city_root == null or _reveal != null:
 		return  # nothing to swap (headless) or already inside the scene
 	_prev_camera = get_viewport().get_camera_3d()
@@ -82,6 +85,8 @@ func resolve(character_id: StringName, reassured: bool) -> void:
 func enter_crime_scene(district_id: StringName) -> void:
 	# Pause the strategic sim for the duration of the walk-through (brief §14.2).
 	TimeService.set_speed(BM.Speed.PAUSED)
+	# P18: checkpoint BEFORE the sequence (same contract as the confrontation path).
+	SaveService.save_game("checkpoint")
 	if city_root == null or _reveal != null:
 		return  # nothing to swap (headless) or already inside a cinematic
 	# The scene is built around the district's STRONGEST open case (the spec's one

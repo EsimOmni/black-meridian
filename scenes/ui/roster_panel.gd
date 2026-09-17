@@ -48,7 +48,8 @@ func _ready() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return  # the transition hides this layer during a reveal — R belongs to the cinematic there
-	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_R:
+	if event is InputEventKey and event.pressed and not event.echo \
+			and event.is_action_pressed(&"bm_roster"):  # P20: rebindable
 		toggle()
 		get_viewport().set_input_as_handled()
 

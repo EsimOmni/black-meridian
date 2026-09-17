@@ -84,6 +84,7 @@ func _build_lighting() -> void:
 	e.fog_light_color = Color(0.12, 0.16, 0.22)
 	e.fog_sky_affect = 0.0
 	env.environment = e
+	env.add_to_group(&"bm_env")  # P20 perf tier: lite drops SSR here
 	add_child(env)
 
 	# Key — sodium amber, high 3/4 to echo the master's raking light; shadows ON so the
@@ -96,6 +97,7 @@ func _build_lighting() -> void:
 	sun.shadow_enabled = true
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
 	sun.shadow_bias = 0.04
+	sun.add_to_group(&"bm_key_light")  # P20 perf tier: lite drops key shadows
 	add_child(sun)
 
 	# Cold rim/fill from the opposite-rear — separates the dark landmark masses from the
@@ -184,6 +186,14 @@ func _build_hud() -> void:
 	add_child(ending)
 	ending.bind(_narrative)
 	_transition.hud_layers.append(ending)
+	var settings := SettingsPanel.new()  # P20: ESC — rebinding / text size / perf / audio
+	add_child(settings)
+	_transition.hud_layers.append(settings)
+	var nudges := OnboardingNudges.new() # P20: first-time contextual toasts
+	add_child(nudges)
+	_transition.hud_layers.append(nudges)
+	add_child(AudioCues.new())           # P20: rain bed + UI click + stingers
+	SettingsService.apply_perf.call_deferred()  # VFX/env groups exist now — apply the tier
 
 func _build_jobs() -> void:
 	var panel := CanvasLayer.new()
@@ -202,30 +212,32 @@ func _on_venue_clicked(venue: VenueData) -> void:
 		_hud.show_selection(venue)
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo:
-		match event.keycode:
-			KEY_SPACE:
-				TimeService.toggle_pause()
-			KEY_X:
-				TimeService.cycle_speed()
-			KEY_C:
-				_toggle_skyline_camera()
-			KEY_F9:
-				SaveService.save_game("quick")
-				print("Quick-saved.")
-			KEY_L:
-				# NOT F8/F10: editor-launched games receive the editor's debug shortcuts —
-				# F8 stops the game process outright, F10 is swallowed by the debugger.
-				# Deferred so the world rebuild happens outside the input flush.
-				_quick_load.call_deferred()
-			KEY_B:
-				# DEBUG: jump straight into the first-person reveal scene (P17b) without
-				# waiting for a betrayal telegraph. Arms bengal_lt's intent, then enters.
-				_debug_enter_reveal()
-			KEY_N:
-				# DEBUG: jump straight into the crime-scene (P17c) — deposits a case on
-				# Glass Wharf, then enters. A letter key: F-keys go to the editor debugger.
-				_debug_enter_crime_scene()
+	if not (event is InputEventKey and event.pressed and not event.echo):
+		return
+	# P20: the management verbs are rebindable InputMap actions (SettingsService
+	# registers them at runtime and persists overrides in user://settings.cfg).
+	if event.is_action_pressed(&"bm_pause"):
+		TimeService.toggle_pause()
+	elif event.is_action_pressed(&"bm_speed"):
+		TimeService.cycle_speed()
+	elif event.is_action_pressed(&"bm_camera"):
+		_toggle_skyline_camera()
+	elif event.is_action_pressed(&"bm_save"):
+		SaveService.save_game("quick")
+		print("Quick-saved.")
+	elif event.is_action_pressed(&"bm_load"):
+		# NOT F8/F10: editor-launched games receive the editor's debug shortcuts —
+		# F8 stops the game process outright, F10 is swallowed by the debugger.
+		# Deferred so the world rebuild happens outside the input flush.
+		_quick_load.call_deferred()
+	elif event.keycode == KEY_B:
+		# DEBUG: jump straight into the first-person reveal scene (P17b) without
+		# waiting for a betrayal telegraph. Arms bengal_lt's intent, then enters.
+		_debug_enter_reveal()
+	elif event.keycode == KEY_N:
+		# DEBUG: jump straight into the crime-scene (P17c) — deposits a case on
+		# Glass Wharf, then enters. A letter key: F-keys go to the editor debugger.
+		_debug_enter_crime_scene()
 
 func _debug_enter_reveal() -> void:
 	var c := GameState.get_character(&"bengal_lt")

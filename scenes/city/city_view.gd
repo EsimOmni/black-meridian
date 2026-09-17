@@ -17,11 +17,11 @@ func _ready() -> void:
 	rebuild()
 	DistrictLandmarks.spawn_all(self)  # P12b hero landmarks: static district skyline, not venues
 	DockProps.spawn_all(self)  # scatter dressing: containers, crane, market, pallets, bollards — static, no venue state
-	add_child(RainCurtain.new())  # P13b static rain curtain: atmosphere, presentation-only, no venue state
-	add_child(SteamVents.new())   # P13c sparse ground steam: atmosphere, presentation-only
-	add_child(RainSplashes.new()) # P13c rain-on-ground ripple accents: atmosphere, presentation-only
-	add_child(CrowdProxy.new())   # P13d pedestrian crowd illusion: MultiMesh, presentation-only
-	add_child(TrafficProxy.new()) # P13e traffic illusion: MultiMesh flow on the service road, presentation-only
+	# P13 VFX layers, all presentation-only; the bm_vfx group is the P20 lite-tier switch.
+	for vfx: Node3D in [RainCurtain.new(), SteamVents.new(), RainSplashes.new(),
+			CrowdProxy.new(), TrafficProxy.new()]:
+		vfx.add_to_group(&"bm_vfx")
+		add_child(vfx)
 	GameState.districts_changed.connect(rebuild)
 	# P19 (pillar 2 — the city shows the STATE, live): re-render on the discrete sim
 	# beats that change what a venue looks like. Before this, the proxy only rebuilt on

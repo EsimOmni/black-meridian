@@ -121,7 +121,7 @@ func _ready() -> void:
 
 	_hint_label = Label.new()
 	_hint_label.theme_type_variation = &"HintLabel"
-	_hint_label.text = "SPACE pause/resume   X cycle speed   WASD pan   wheel zoom   click venue   R roster   F9 save   L load"
+	_hint_label.text = "SPACE pause/resume   X cycle speed   WASD pan   wheel zoom   click venue   R roster   ESC settings   F9 save   L load"
 	vb.add_child(_hint_label)
 
 	# Live updates.

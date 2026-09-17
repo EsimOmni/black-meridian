@@ -119,19 +119,32 @@ S16 Package + QA                        ★ GATE C — slice complete
 
 ## 6. First executable action after approval
 
-> **Resolve D-05 (repo hosting + LFS), then execute S0** —
-> [13_REPOSITORY_BOOTSTRAP.md](13_REPOSITORY_BOOTSTRAP.md) §1–§9.
+> ### **S0 COMPLETE — 2026-09-18.** Evidence: `Docs/gates/S0.md` in the Unreal repo.
+>
+> | | |
+> |---|---|
+> | **Unreal repo** | `D:\black-meridian-ue` -> `EsimOmni/black-meridian-ue` (private, LFS, no CI — D-05) |
+> | **Godot repo** | preserved, tagged **`godot-final`**, still runs (headless exit 0) — D-08 |
+> | **Checklist** | 11/11 passed, including packaging and Godot integrity |
+>
+> S0 produced **four corrections to this package** — D-01's premise ([12](12_DECISIONS_REQUIRED.md)),
+> the `.gitattributes` globs ([10](10_RISK_REGISTER.md) R-07 / [13](13_REPOSITORY_BOOTSTRAP.md) §4.1),
+> the non-existent glTF Importer plugin (§1.1) and the .NET 10 build path (§0, §8). All are folded in.
+>
+> **Next: S1 — Determinism Core.** Not started; it needs the D-01 IDE half for debugging, and the
+> golden-vector extraction run against the Godot oracle.
 
-Concretely, in order:
-1. Confirm **D-05** (GitHub private + LFS recommended) — this gates repository creation.
-2. Create `D:\black-meridian-ue` — Blank **C++** project, UE 5.8.2, plugins per §1.1.
-3. Commit `.gitattributes` + `.gitignore` **before any asset** (LFS retrofitting rewrites history).
-4. Build `BlackMeridianEditor Win64 Development`.
-5. Run the `BM.Smoke` automation test.
-6. Run the S0 validation checklist (§11), **including check 11: the Godot repo is unchanged**.
+The executed sequence, for the record:
+1. ~~Confirm **D-05**~~ — approved; private GitHub repo under EsimOmni, LFS, no CI.
+2. ~~Create `D:\black-meridian-ue`~~ — Blank **C++**, UE 5.8.2, plugins per §1.1 (as corrected).
+3. ~~Commit `.gitattributes` + `.gitignore` **before any asset**~~ — first commit `1da360f`.
+4. ~~Build `BlackMeridianEditor Win64 Development`~~ — succeeded, 0 warnings.
+5. ~~Run `BM.Smoke`~~ — `Result={Success}`, exit 0.
+6. ~~Run the S0 validation checklist (§11)~~ — 11/11, Godot repo verified unchanged and runnable.
 
-Recommended alongside: **D-01** (install VS 2022 Community before S1) and **D-08/D-09** (clean the
-Godot tree before archiving).
+WARNING: step 2 could not proceed until the **NetFx SDK** was installed — see
+[13 §0.1](13_REPOSITORY_BOOTSTRAP.md). **D-01** is therefore half-done (SDK yes, IDE still open);
+**D-08/D-09** are complete.
 
 ---
 
@@ -139,7 +152,7 @@ Godot tree before archiving).
 
 | Gate | Slice | Condition | Judge |
 |---|---|---|---|
-| **S0** | Bootstrap | Editor builds, smoke test passes, LFS active, Godot repo untouched | Automated |
+| **S0** | Bootstrap | Editor builds, smoke test passes, LFS active, Godot repo untouched | Automated — **PASSED 2026-09-18** |
 | **S1** | Determinism | **Every hash golden vector matches exactly** | Automated |
 | **S2–S8** | Simulation | All golden vectors + unit tests pass per slice | Automated |
 | **★ A** | S10 Greybox | Full 20–30 min cycle is fun **on cubes**, and **at least as good as the Godot build**; the four legibility questions answerable | **Cem** |
@@ -174,7 +187,7 @@ Gate B, and effectively committed after Gate B passes.
 
 | # | Decision | Recommendation | Blocks |
 |---|---|---|---|
-| **D-05** | Repo hosting, LFS, CI | GitHub private + LFS, no CI | **S0 — the immediate next step** |
+| **D-05** | Repo hosting, LFS, CI | GitHub private + LFS, no CI | **DONE in S0** — `EsimOmni/black-meridian-ue` |
 | **D-08** | Uncommitted P20 work | Commit, then archive | Clean archive |
 | **D-09** | `docs/astra-recovery/` (misnamed log dumps) | Delete or rename | Archive clarity |
 | **D-01** | Visual Studio IDE | Install VS 2022 Community | S1 debugging |

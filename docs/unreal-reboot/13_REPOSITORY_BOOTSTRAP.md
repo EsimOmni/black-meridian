@@ -16,10 +16,10 @@ Tags: `[V]` Verified in this environment · `[P]` Proposed · `[U]` Unverified
 | **Unreal Engine** | **5.8.2** (`++UE5+Release-5.8`, CL 56702186, promoted build) | `C:\Program Files\Epic Games\UE_5.8\Engine\Build\Build.version` |
 | Editor binaries | `UnrealEditor.exe`, `UnrealEditor-Cmd.exe` present | `Engine\Binaries\Win64\` |
 | Build scripts | `Build.bat`, `RunUAT.bat` present | `Engine\Build\BatchFiles\` |
-| **C++ toolchain** | **VS Build Tools 2022 17.14.37411.7** — ⚠️ Build Tools only, no IDE (D-01) | `vswhere` |
+| **C++ toolchain** | **VS Build Tools 2022 17.14.35** + **NetFx SDK 4.8** — ⚠️ the NetFx SDK is **mandatory even for S0** (see D-01 note below); IDE still absent | `vswhere` |
 | MSVC | **14.44.35207**, `cl.exe` present (Hostx64/x64) | `VC\Tools\MSVC\` |
 | Windows SDK | **10.0.26100.0** | `Windows Kits\10\Include\` |
-| .NET | **8.0.425** | `dotnet --version` |
+| .NET | system **8.0.31** — ⚠️ **not sufficient on its own**; UE 5.8.2's UnrealBuildTool targets **.NET 10**. The engine ships its own at `Engine\Binaries\ThirdParty\DotNet\10.0\win-x64\`, which `Build.bat` uses automatically. No system install needed. (S0 finding 4.) | `dotnet --list-runtimes` |
 | **Git LFS** | **3.7.0** | `git lfs version` |
 | Disk (D:) | **1.2 TB free** of 1.9 TB | `df -h` |
 | Disk (C:) | 187 GB free of 931 GB | `df -h` |
@@ -27,6 +27,52 @@ Tags: `[V]` Verified in this environment · `[P]` Proposed · `[U]` Unverified
 
 `[P]` **Place the repo on D:** — `D:\black-meridian-ue`, sibling to `D:\black-meridian`. C: has only
 187 GB free and an Unreal project with DDC will consume a lot of it.
+
+### 0.1 `[V]` Mandatory prerequisite — the .NET Framework SDK (D-01 correction)
+
+> WARNING: **S0 cannot build without this.** An earlier revision assumed S0 could proceed on the
+> standalone Build Tools and that D-01 (Visual Studio) was only needed before S1. **That was wrong.**
+> `UnrealEd.Build.cs` lists **`SwarmInterface`** as an *unconditional* dependency, and SwarmInterface
+> requires the **.NET Framework 4.6+ SDK**, which the standalone Build Tools install does not carry:
+>
+> ```
+> Unable to instantiate module 'SwarmInterface': Could not find NetFxSDK install dir
+> (referenced via BlackMeridianEditor -> ... -> UnrealEd.Build.cs)
+> ```
+>
+> There is no NetFxSDK-free path to an editor build — the dependency is not optional or configurable.
+
+Install it into the existing Build Tools (a full IDE is **not** required for S0):
+
+```powershell
+& "C:\Program Files (x86)\Microsoft Visual Studio\Installer\setup.exe" modify `
+    --channelId VisualStudio.17.Release `
+    --productId Microsoft.VisualStudio.Product.BuildTools `
+    --add Microsoft.Net.Component.4.8.SDK `
+    --add Microsoft.Net.Component.4.8.TargetingPack `
+    --add Microsoft.Net.ComponentGroup.TargetingPacks.Common
+```
+
+`[V]` Installer command-line traps, each of which cost a failed run on installer 4.7.25:
+
+| Trap | Reality |
+|---|---|
+| `--wait` | Does not exist on this installer version. Use `Start-Process -Wait`. |
+| `--norestart` alone | Rejected — requires `--quiet` or `--passive` alongside it. |
+| `--quiet` / `--passive` | Require the process to be **already elevated**, else exit **5007**. |
+| `--installPath "C:\Program Files (x86)\..."` | Truncates at the first space; the 8.3 short path is rejected outright. Use `--channelId` + `--productId` and sidestep paths entirely. |
+| Another installer window open | Exit **5007**. Close it first. |
+
+**Verify** (both must exist before attempting §8):
+
+```sh
+ls "/c/Program Files (x86)/Windows Kits/NETFXSDK/"                                   # -> 4.8
+ls "/c/Program Files (x86)/Reference Assemblies/Microsoft/Framework/.NETFramework/"  # -> v4.8
+```
+
+The **IDE** half of D-01 (VS 2022 Community, for debugging) remains open and is unaffected by this —
+S0 needs the SDK components, not the IDE.
+
 
 ---
 
@@ -59,11 +105,17 @@ generates correct module boilerplate).
 | **Functional Testing Editor** | Test strategy |
 | **Editor Scripting Utilities** | Asset validation + commandlets |
 | **Data Validation** | `UBMAssetValidator` |
-| **glTF Importer** | `[V]` Existing validated assets are GLB |
+| ~~glTF Importer~~ | ⚠️ **`[V]` No such plugin in UE 5.8 — do NOT list it.** glTF *import* is provided by **Interchange** (built in, always enabled); `GLTFExporter` is export-only. Naming it fails the build outright: `Unable to find plugin 'GLTFImporter'`. Existing validated GLB assets import with no plugin entry. (S0 finding 3.) |
 
 **Explicitly disable / do not enable:** World Partition (Locked #10), Chaos Vehicles (`[V]` brief
 §12.3), Gameplay Ability System ([04](04_UNREAL_ARCHITECTURE.md) §9), Online Subsystem / networking
 (single-player), Niagara Fluids, any marketplace plugin.
+
+`[V]` **Do not write these into the `.uproject` as `"Enabled": false`.** They are off by default, so
+an explicit entry buys nothing and creates a plugin *name* that can go stale and hard-fail the build
+— which is exactly how `GLTFImporter` above broke S0. Absence is the enforcement; a list of names is
+a liability. Verify a plugin's real name against the engine's own
+`Engine\Plugins\**\*.uplugin` files before adding any entry.
 
 ---
 
@@ -136,6 +188,22 @@ PublicDependencyModuleNames.AddRange(new[]{ "Core","CoreUObject","Engine","Unrea
     "DataValidation","BMCore","BMSim","Json","JsonUtilities" });
 ```
 
+### 3.1 `[V]` BMGame is the PRIMARY game module
+
+```cpp
+// Source/BMGame/Private/BMGame.cpp
+IMPLEMENT_PRIMARY_GAME_MODULE(FBMGameModule, BMGame, "BlackMeridian")
+```
+
+Exactly one module must use `IMPLEMENT_PRIMARY_GAME_MODULE`; the other four take plain
+`IMPLEMENT_MODULE`. It supplies `GInternalProjectName`, `GIsGameAgnosticExe`, `GForeignEngineDir` and
+the `FMemory_*` engine-loop symbols.
+
+> WARNING: **The editor target builds clean either way** — the editor carries its own launch module.
+> The failure appears only in the monolithic Shipping link, as
+> `LNK1120: 6 unresolved externals`. This is precisely why packaging (§10) is an S0 gate item and is
+> not deferred: nothing else in the checklist surfaces it. (S0 finding.)
+
 ---
 
 ## 4. Source control
@@ -155,18 +223,50 @@ PublicDependencyModuleNames.AddRange(new[]{ "Core","CoreUObject","Engine","Unrea
 *.upack   filter=lfs diff=lfs merge=lfs -text
 
 # ---- Source art / media → LFS ----
-*.fbx *.glb *.gltf *.blend *.obj                       filter=lfs diff=lfs merge=lfs -text
-*.png *.jpg *.jpeg *.tga *.psd *.exr *.hdr *.dds *.tif  filter=lfs diff=lfs merge=lfs -text
-*.wav *.mp3 *.ogg *.flac                                filter=lfs diff=lfs merge=lfs -text
-*.mp4 *.mov                                             filter=lfs diff=lfs merge=lfs -text
-*.ttf *.otf                                             filter=lfs diff=lfs merge=lfs -text
+*.fbx   filter=lfs diff=lfs merge=lfs -text
+*.glb   filter=lfs diff=lfs merge=lfs -text
+*.gltf  filter=lfs diff=lfs merge=lfs -text
+*.blend filter=lfs diff=lfs merge=lfs -text
+*.obj   filter=lfs diff=lfs merge=lfs -text
+*.png   filter=lfs diff=lfs merge=lfs -text
+*.jpg   filter=lfs diff=lfs merge=lfs -text
+*.jpeg  filter=lfs diff=lfs merge=lfs -text
+*.tga   filter=lfs diff=lfs merge=lfs -text
+*.psd   filter=lfs diff=lfs merge=lfs -text
+*.exr   filter=lfs diff=lfs merge=lfs -text
+*.hdr   filter=lfs diff=lfs merge=lfs -text
+*.dds   filter=lfs diff=lfs merge=lfs -text
+*.tif   filter=lfs diff=lfs merge=lfs -text
+*.wav   filter=lfs diff=lfs merge=lfs -text
+*.mp3   filter=lfs diff=lfs merge=lfs -text
+*.ogg   filter=lfs diff=lfs merge=lfs -text
+*.flac  filter=lfs diff=lfs merge=lfs -text
+*.mp4   filter=lfs diff=lfs merge=lfs -text
+*.mov   filter=lfs diff=lfs merge=lfs -text
+*.ttf   filter=lfs diff=lfs merge=lfs -text
+*.otf   filter=lfs diff=lfs merge=lfs -text
 
 # ---- Text stays text (LF, per the Godot lesson about CRLF churn) ----
-*.h *.cpp *.cs *.ini *.json *.md *.txt *.uproject  text eol=lf
+*.h        text eol=lf
+*.cpp      text eol=lf
+*.cs       text eol=lf
+*.ini      text eol=lf
+*.json     text eol=lf
+*.md       text eol=lf
+*.txt      text eol=lf
+*.uproject text eol=lf
 ```
 
 `[V]` The LF pinning mirrors the Godot `.gitattributes`, which exists because `core.autocrlf` caused
 every re-import to show phantom modifications.
+
+> ⚠️ **`[V]` One pattern per line — this is not cosmetic.** An earlier revision of this section wrote
+> the art rules as space-separated globs (`*.fbx *.glb *.gltf ... filter=lfs ...`). Git reads exactly
+> **one pattern per line** and parses everything after it as attributes, so only `*.fbx` would have
+> been tracked; `.glb`, `.png`, `.wav` and the rest would have entered the repository as raw blobs —
+> precisely the R-07 failure this section exists to prevent, and invisible until a retroactive history
+> rewrite. Corrected during S0 (`Docs/gates/S0.md`, finding 2). Verify with
+> `git check-attr filter -- Content/X.uasset Content/Y.png Source/Z.cpp` before trusting the rules.
 
 ### 4.2 `.gitignore`
 
@@ -181,6 +281,7 @@ Builds/
 *.opensdf
 *.sdf
 *.sln
+*.slnx
 *.suo
 *.xcodeproj
 *.xcworkspace
@@ -298,13 +399,21 @@ UE="C:/Program Files/Epic Games/UE_5.8"
 PROJ="D:/black-meridian-ue/BlackMeridian.uproject"
 
 # 1. Generate project files
-"$UE/Engine/Binaries/DotNET/UnrealBuildTool/UnrealBuildTool.exe" \
+#    NOT UnrealBuildTool.exe directly: it targets .NET 10 and dies with
+#    "You must install or update .NET" against a system .NET 8. Use the engine's
+#    bundled runtime against the .dll (S0 finding 4).
+"$UE/Engine/Binaries/ThirdParty/DotNet/10.0/win-x64/dotnet.exe" \
+    "$UE/Engine/Binaries/DotNET/UnrealBuildTool/UnrealBuildTool.dll" \
     -projectfiles -project="$PROJ" -game -rocket -progress
 
-# 2. Build the editor target
+# 2. Build the editor target  (Build.bat picks the bundled runtime itself)
 "$UE/Engine/Build/BatchFiles/Build.bat" BlackMeridianEditor Win64 Development \
     -Project="$PROJ" -WaitMutex -FromMsBuild
 ```
+
+`[V]` **Close any running `UnrealEditor.exe` first** — Live Coding holds the module DLLs and the
+build aborts with *"Unable to build while Live Coding is active."* Any open editor blocks it, even
+one on an unrelated project.
 
 **Expected:** `Build succeeded`, non-zero-size `Binaries/Win64/UnrealEditor-BM*.dll`.
 
@@ -346,6 +455,7 @@ editor `[V]` (brief §18 Technical acceptance).
 |---|---|---|---|
 | 1 | Engine version | `cat "$UE/Engine/Build/Build.version"` | 5.8.2, CL 56702186 |
 | 2 | Toolchain | `vswhere -requires …VC.Tools.x86.x64 -property installationPath` | non-empty |
+| 2b | **NetFx SDK (§0.1)** | `ls "/c/Program Files (x86)/Windows Kits/NETFXSDK/"` | **4.8** — blocks the editor build if missing |
 | 3 | LFS | `git lfs version` | 3.7.0+ |
 | 4 | Project files | §8 step 1 | `.sln` generated |
 | 5 | Editor build | §8 step 2 | `Build succeeded` |

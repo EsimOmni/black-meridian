@@ -116,6 +116,25 @@ Tags: `[V]` Verified from repository · `[I]` Inferred · `[P]` Proposed
 | **Trigger** | Repo >5 GB, or a binary committed outside LFS |
 | **Fallback** | LFS migrate (rewrites history — coordinate); or split art into a separate repo/drive |
 
+> ### ⚠️ `[V]` S0 near-miss — the mitigation itself was defective
+>
+> The `.gitattributes` prescribed in [13](13_REPOSITORY_BOOTSTRAP.md) §4.1 wrote its art rules as
+> **space-separated globs** on one line:
+>
+> ```
+> *.fbx *.glb *.gltf *.blend *.obj    filter=lfs diff=lfs merge=lfs -text
+> ```
+>
+> Git reads **one pattern per line** and treats the rest as attributes. Only `*.fbx` would have been
+> tracked; `.glb`, `.png`, `.wav`, `.psd` and every other type would have entered the repository as
+> **raw blobs** — this exact risk, realised, while the file that was supposed to prevent it sat in the
+> repo looking correct. It would have surfaced only as unexplained repo growth, fixable then only by a
+> history rewrite.
+>
+> Corrected before the first asset (S0 finding 2). **Detection is now mandatory, not optional:** run
+> `git check-attr filter -- Content/X.uasset Content/Y.png Source/Z.cpp` after any `.gitattributes`
+> edit and confirm `lfs`/`lfs`/`unspecified`. An LFS rule file is not evidence that LFS works.
+
 ---
 
 ## R-08 — Shader compilation / iteration drag

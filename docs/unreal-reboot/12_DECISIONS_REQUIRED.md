@@ -18,10 +18,23 @@ the IDE for debugging, IntelliSense and hot reload. Install VS 2022 Community, u
 **Recommended: install Visual Studio 2022 Community** (free for this use) with the "Game development
 with C++" workload.
 
-**Why.** Build Tools can *compile*, so S0 will succeed — but the first non-trivial determinism bug will
-need a breakpoint in `FBMRivalScoring::ChooseMove`, and printf-debugging a hash mismatch across 1260
-ticks is a bad trade. R-03 is a Medium/High risk specifically because it is *silent*; a debugger is the
-main tool against it.
+**Why.** The first non-trivial determinism bug will need a breakpoint in
+`FBMRivalScoring::ChooseMove`, and printf-debugging a hash mismatch across 1260 ticks is a bad trade.
+R-03 is a Medium/High risk specifically because it is *silent*; a debugger is the main tool against it.
+
+> ### ⚠️ RESOLVED IN PART DURING S0 — this question's premise was wrong
+>
+> This section originally read *"Build Tools can compile, so S0 will succeed."* **It does not.**
+> `UnrealEd.Build.cs` depends unconditionally on `SwarmInterface`, which requires the **.NET Framework
+> 4.6+ SDK** — absent from a standalone Build Tools install. The S0 editor build fails outright with
+> `Could not find NetFxSDK install dir`. **S0 was itself blocked by D-01**, not merely S1.
+>
+> Resolved 2026-09-18 by adding `Microsoft.Net.Component.4.8.SDK` + targeting packs to the existing
+> Build Tools — see [13 §0.1](13_REPOSITORY_BOOTSTRAP.md) for the exact command and its traps. The
+> editor target, `BM.Smoke` and the packaged Shipping build all pass on Build Tools + NetFx SDK.
+>
+> **What remains open is only the IDE question above** — a debugger for S1+ determinism work. That is
+> still a real need and still recommended; it is simply no longer a prerequisite for S0.
 
 **Alternatives.**
 - **JetBrains Rider** — arguably better UE tooling; paid (personal licence ~$15/mo).
@@ -279,7 +292,7 @@ Medium-High). Whatever the answer, it should be recorded, since the intake manif
 | **D-05** | Repo hosting + LFS + CI | GitHub private + LFS, no CI | **Before S0** | Repository creation |
 | **D-08** | Uncommitted P20 work | Commit, then archive | Before archiving | Clean archive |
 | **D-09** | `docs/astra-recovery/` | Delete or rename | Before archiving | Clarity |
-| **D-01** | VS IDE | Install VS 2022 Community | **Before S1** | Debugging determinism |
+| **D-01** | VS IDE | Install VS 2022 Community | **Before S1** | Debugging determinism. ⚠️ NetFx SDK half was **mandatory for S0** and is DONE; IDE half still open. |
 | **D-10** | Canonical character package | Supply, else authorize the fallback | **Before S12** | Hero character |
 | **D-02** | Hero character route | Local Hunyuan + noir-forward design | Before S12 | Gate B ceiling |
 | **D-04** | Voice acting | ~10–20 key lines | Before S13 | Scene impact |

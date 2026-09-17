@@ -95,8 +95,17 @@ because everything downstream inherits them.
   `RandRange`, `FRandomStream`, `FDateTime::Now`, `GetTimeSeconds`.
 
 **Validation.**
+
+> WARNING: **`tools/export_golden_vectors.gd` DOES NOT EXIST YET — S1 authors it.** The command below
+> is the target, not something ready to run. Writing that script (a new **read-only** GDScript in the
+> Godot repo, `extends SceneTree`) is S1's first task; the spec is
+> [08_TEST_STRATEGY.md](08_TEST_STRATEGY.md) §4.2. `Tests/Golden/` in the Unreal repo stays empty
+> until it runs. Use the **`_console`** binary: the plain `.exe` detaches from the console on Windows,
+> so `print()` never reaches stdout for capture.
+
 ```sh
 # 1) EXTRACT vectors from the Godot build (read-only; run in D:\black-meridian)
+#    NOTE: author this script first — see 08_TEST_STRATEGY.md §4.2.
 D:/Godot/Godot_v4.7-stable_win64_console.exe --headless --path . -s tools/export_golden_vectors.gd
 # 2) COMPARE in Unreal
 UnrealEditor-Cmd.exe <proj> -ExecCmds="Automation RunTests BM.Determinism; Quit" -unattended -nullrhi

@@ -6,16 +6,16 @@ Guidance for Claude Code (and any AI agent) working in this repository. Codex, G
 read `AGENTS.md` (and their respective synced mirrors `CODEX.md` and `GEMINI.md`). The authoritative design + production spec is
 **`docs/OMNI-BLACK-MERIDIAN-brief.pdf`** — read it before any non-trivial change.
 
-> # ENGINE REBOOT — READ THIS BEFORE ANYTHING ELSE (2026-09-18)
+> # 🚨 ENGINE REBOOT — READ THIS BEFORE ANYTHING ELSE (2026-09-18)
 >
 > **This repository is no longer where the game is built.** OMNI: BLACK MERIDIAN moved from
 > **Godot 4.7 to Unreal Engine 5.8.2**.
 >
 > | | |
 > |---|---|
-> | **Active development** | **`D:\black-meridian-ue`** -> `EsimOmni/black-meridian-ue` (private) |
+> | **Active development** | **`D:\black-meridian-ue`** → `EsimOmni/black-meridian-ue` (private) |
 > | **This repo** | **ARCHIVE + behavioral oracle.** Never deleted, never rewritten, kept runnable. |
-> | **Final Godot state** | tag **`godot-final`** -> `aff9e43`, verified running (headless exit 0) |
+> | **Final Godot state** | tag **`godot-final`** → `aff9e43`, verified running (headless exit 0) |
 >
 > **Do NOT write new game code here.** This repo's only remaining jobs are (a) golden-vector
 > extraction — it is the oracle S1 measures Unreal against — and (b) the side-by-side cinematic
@@ -26,15 +26,15 @@ read `AGENTS.md` (and their respective synced mirrors `CODEX.md` and `GEMINI.md`
 > `D:\black-meridian-ue\Docs\plan\`. **S0 is complete**; evidence at
 > `D:\black-meridian-ue\Docs\gates\S0.md`. **Next is S1 — Determinism Core**, not started.
 >
-> WARNING — **name collision:** the old Godot push had its own "S1" (Month-3 close, finished). The
-> reboot's **S1 = Determinism Core**. They are unrelated — always confirm which one is meant.
+> ⚠️ **Name collision:** the old Godot push had its own "S1" (Month-3 close, finished). The reboot's
+> **S1 = Determinism Core**. They are unrelated — always confirm which one is meant.
 
 
 > **🎯 READ `docs/NOW.md` FIRST — every session, before anything else.** It is the LIVE state:
-> what we'''re doing right now, the next step, open decisions, key files for the active phase. This
-> file holds the permanent rules; `NOW.md` holds the current situation. The "Current status"
-> section below is a coarse milestone marker and can lag — `NOW.md` is the source of truth for
-> "where did we leave off." **After finishing any slice/commit, UPDATE `docs/NOW.md`** (push the
+> what we're doing right now, the next step, open decisions, key files for the active phase. This
+> file (CLAUDE.md) holds the permanent rules; `NOW.md` holds the current situation. The "Current
+> status" section below is a coarse milestone marker and can lag — `NOW.md` is the source of truth
+> for "where did we leave off." **After finishing any slice/commit, UPDATE `docs/NOW.md`** (push the
 > old state into its "Geçmiş" summary) so the next chat opens with full context. Cem should never
 > have to re-explain where we are — that is what NOW.md is for.
 
@@ -50,13 +50,13 @@ read `AGENTS.md` (and their respective synced mirrors `CODEX.md` and `GEMINI.md`
 ## What this is
 
 A single-player **real-time-with-pause mafia empire management strategy game** for Windows / Steam,
-built in **Godot 4.7 (Forward+)**. Original IP. You play **Aiko Velora, the Resolver** — the ruling
+built in **Unreal Engine 5.8.2** (`D:\black-meridian-ue`). Original IP. *This repo holds the
+earlier Godot 4.7 build, now the behavioral oracle — see the banner above.* You play **Aiko Velora, the Resolver** — the ruling
 Meridian Compact's fixer in *Black Meridian*, a rain-soaked interspecies metropolis. The player is a
 **problem architect**, not a general or a shooter: "I decide which problem becomes somebody else's war."
 
-This is a brand-new standalone repo (its own git), separate from the `personax` repo. The game is
-inspired by the *structure* of a TV crime drama but is 100% original expression — see the IP boundary
-rules below; they are non-negotiable.
+The game is inspired by the *structure* of a TV crime drama but is 100% original expression — see
+the IP boundary rules below; they are non-negotiable.
 
 ## The one decision that governs everything (brief §1)
 
@@ -67,8 +67,9 @@ narrative consequences. We **visualize** those through traffic, crowds, weather,
 deterioration. We never build a city-scale life simulation. The cinematic first-person (Gaussian-splat)
 scenes follow the same rule: small, controlled spaces for emotional weight — never a second open-world game.
 
-Corollary: **never put authoritative simulation state inside city-scene nodes.** State lives in
-`src/` services (autoloads + data Resources). Scenes read from it; they don't own it.
+Corollary: **never put authoritative simulation state inside presentation.** In Unreal that means
+`BMSim` subsystems and `BMCore` types own it, never an Actor, Level or Widget. (In the Godot oracle it
+was the `src/` autoloads — same rule, different nouns.)
 
 ## Current status
 
@@ -100,6 +101,9 @@ probed. Splat benchmark resolved SPLAT_OK (542k @ 483 fps), but **D-07 excludes 
 vertical slice**. Deferred-and-now-moot Godot backlog: P05b, P06b/c, P07b/c, P08b, P10b, P19 polish.
 
 
+<details>
+<summary><b>GODOT-ERA DOCTRINE (historical) — Godot architecture &amp; autoloads</b>  ·  <i>click to expand; this describes how the ORACLE was built, not current practice</i></summary>
+
 ## Architecture (brief §13.2–§13.4)
 
 Deterministic strategic simulation **separated from presentation**. Core services live in `src/`:
@@ -125,6 +129,9 @@ Data shapes are **typed Godot Resources** (`src/core/*_data.gd`): `DistrictData`
 /tools      import, validation
 /docs       the brief PDF + prompts/ (the build series)
 ```
+
+
+</details>
 
 ## Design pillars — do not violate (brief §6)
 
@@ -159,6 +166,9 @@ Honor the roadmap gates:
   open-world exploration, no runtime AI generation, no console ports before PC validation, no more
   than one splat sequence in the vertical slice. Respect these.
 
+<details>
+<summary><b>GODOT-ERA DOCTRINE (historical) — Splat kill criterion (resolved; D-07 excludes splats from the UE slice)</b>  ·  <i>click to expand; this describes how the ORACLE was built, not current practice</i></summary>
+
 ## Splat risk (brief §14, §7.7) — the kill criterion
 
 Godot has no built-in Gaussian-splat support; we rely on the community **GDGS** plugin. Month 1
@@ -166,6 +176,9 @@ includes a benchmark. **If 500k splats can't run acceptably on the target deskto
 mesh provider immediately — do not postpone the decision.** Use Marble's high-quality GLB +
 collider GLB as the `MeshWorldProvider` fallback behind a `CinematicWorldProvider` interface.
 Do NOT migrate the whole project to Unity to preserve one cinematic technique.
+
+
+</details>
 
 ## AI asset pipeline (brief §10, §16) — buy nothing by default
 
@@ -284,6 +297,9 @@ full loop mechanics + brief/report schemas. The queue is authoritative; don't an
 memory. The coordinator-session ID that owns the queue is recorded at the top of `QUEUE.md`;
 if it goes stale, update it there.
 
+<details>
+<summary><b>GODOT-ERA DOCTRINE (historical) — GDScript conventions &amp; the godot-ai MCP rail</b>  ·  <i>click to expand; this describes how the ORACLE was built, not current practice</i></summary>
+
 ## Conventions
 
 - GDScript, typed where practical. `class_name` for reusable data/util scripts; autoloads stay
@@ -296,6 +312,12 @@ if it goes stale, update it there.
   autoload script referenced via `preload` resolves to the singleton and static calls fail).
 - Commit directly to the current branch. No PRs unless asked.
 - Don't add features/refactors beyond the current slice. Minimal footprint.
+
+
+</details>
+
+<details>
+<summary><b>GODOT-ERA DOCTRINE (historical) — Godot headless verification commands</b>  ·  <i>click to expand; this describes how the ORACLE was built, not current practice</i></summary>
 
 ## Verify before "done"
 
@@ -311,8 +333,17 @@ GODOT="D:/Godot/Godot_v4.7-stable_win64.exe"
 For gameplay-feel changes, also run the editor (`--editor --path .`) and play (F5) — type-checking
 and headless boot are not feature testing.
 
+
+</details>
+
+<details>
+<summary><b>GODOT-ERA DOCTRINE (historical) — Running the Godot build</b>  ·  <i>click to expand; this describes how the ORACLE was built, not current practice</i></summary>
+
 ## Running
 
 Open in Godot 4.7 (desktop shortcut "BLACK MERIDIAN (Godot)" or `--editor --path .`). Main scene =
 `scenes/bootstrap/bootstrap.tscn`. In-game: SPACE pause/resume, X cycle speed, WASD pan, wheel zoom,
 click a venue to inspect.
+
+
+</details>

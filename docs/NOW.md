@@ -6,6 +6,11 @@
 
 **Son güncelleme:** 2026-09-18 · **Aktif faz:** 🔁 **UNREAL REBOOT — S0 BİTTİ, S1 BEKLİYOR**
 
+> UYARI: **Bu dosya ARŞİV repo'sunun durumudur.** Aktif geliştirmenin canlı durumu
+> **`D:\black-meridian-ue\NOW.md`**'dir — slice ilerlemesi, S1+ notları ve günlük durum ORADA güncellenir.
+> Burası sadece "bu repo artık ne işe yarıyor" sorusunu cevaplar ve nadiren değişir.
+> İkisi çelişirse **UE repo'sundaki NOW.md kazanır**.
+
 ---
 
 ## 🚨 EN ÖNEMLİ: motor değişti — Godot ARTIK GELİŞTİRİLMİYOR

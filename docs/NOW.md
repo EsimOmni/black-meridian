@@ -4,92 +4,95 @@
 > bu dosya "şu an neredeyiz, sıradaki adım ne, hangi kararlar açık" durumunu tutar. Claude her
 > slice/commit sonunda bunu günceller — Cem elle yazmaz. Eski durum "Geçmiş" bölümüne düşer.
 
-**Son güncelleme:** 2026-07-12 (gece) · **Aktif faz:** 🚢 **ANAHTAR TESLİM PUSH** (onaylı plan:
-`~/.claude/plans/reis-ben-bu-projeden-breezy-badger.md` — sprint sırası + locked kararlar orada).
-**S1 (Month-3 kapanışı) ✅ + S2.1 (P16) ✅ BİTTİ** — şu an **S2.2 P17-lite mesh cinematic** ortasında.
+**Son güncelleme:** 2026-09-18 · **Aktif faz:** 🔁 **UNREAL REBOOT — S0 BİTTİ, S1 BEKLİYOR**
 
-## 🔒 Push'un locked kararları (2026-07-12, Cem — yeniden tartışılmaz)
+---
 
-1. **"Oyun bitsin, sonra her şeyi değiştiririz."** Her kararda en hızlı kabul-edilebilir yol;
-   polish defteri AÇILMAZ; her asset/ekran/ses swappable placeholder. Deferred backlog (P05b,
-   P07b/c-artıkları, P10b-artıkları) sadece oynanışta delik açarsa girer.
-2. **P17 cinematic dünya = mesh interior, $0** (Marble YOK, splat YOK); `CinematicWorldProvider`
-   interface'i ile splat'a sonradan swap edilebilir kalır.
-3. **Karakterler = 2D portre roster** (3D model/rig/anim YOK).
-4. **Teslim = Windows build + paket (P22+P24); P23 (Steam store/trailer) ERTELENDİ.**
-5. **Playtest = Cem + 1-2 kişi.** Deterministik sim disiplini + IP boundary taviz görmez.
+## 🚨 EN ÖNEMLİ: motor değişti — Godot ARTIK GELİŞTİRİLMİYOR
 
-## ✅ Bu push'ta bitenler (hepsi commit + verify'lı)
+Proje **Godot 4.7'den Unreal Engine 5.8.2'ye** taşındı (onaylı reboot, 2026-09-18).
 
-- **S1a — P13e trafik illüzyonu** (2395880): `TrafficProxy` tek MultiMesh, 24 araç, 2 zıt şerit
-  (z=10.5/12.5 koridoru), akış tamamen GPU (vertex shader sawtooth, TIME+hash-faz, RNG yok).
-  Shader-taşınan span için custom AABB şart (yoksa pan kenarında cull) — bilinen tuzak.
-- **S1b — P14b-lite roster** (bee3089): `RosterPanel` (R toggle) — portre, PUBLIC motive network
-  (gizli motiveler ASLA render edilmez, o asimetri tasarımın kendisi), ilişki edge'leri, betrayal
-  tell. Read-only, state sahibi değil. R guard: transition layer'ı gizlediğinde input yutulur
-  (cinematic'lerin R'siyle çakışma).
-- **S1b — portre seti** (f316c1b): 4 principal noir portresi `assets/characters/portraits/`
-  (ChatGPT runner Instant, $0; Codex triage set-coherence 9/10). Placeholder statüsü: world-bible
-  kimlik kilidi (brief §20) gelince yeniden üretilebilir; roster portresizken monograma düşer.
-- **S1c — Month-3 gate NOTU + README** (5d6022e): gate PASSED — "1 char anim" maddesi ship-first
-  kararıyla kapsam dışı (3D karakter yok ki anime edilsin), "1 vehicle" TrafficProxy + üç kez
-  kanıtlanmış GLB pipeline ile karşılandı. `docs/prompts/notes/P14b-month3-gate.md`.
-- **S2.1 — P16 NarrativeDirector** (3ca1e80): authored omurga — Intercepted Shipment →
-  **Inspector's Ledger** (authored evidence beat; loud yol GERÇEK case eker → P06b zinciri) →
-  **Lieutenant's Debt** (ilk loyalty krizi: beat fire'da leverage kurulur, YAKLAŞIM barı geçip
-  geçmeyeceğine karar verir — pay_it/buy_marker altında tutar, bait/expiry üstüne iter, hepsi
-  ≥0.05 float marjla; iki-kapılı telegraph + reassure-defuse aynen) → **Meridian Accord**
-  (stance truce/leverage/war → P19 ending'lerinin tohumu). Mimari: bootstrap-wired
-  `NarrativeDirector` + pure `NarrativeBeats` + `NarrativeJobs` (code-as-data, JobTemplates
-  registry; **data/jobs .tres migrasyonu ship-first ile CUT** — "UI'ya gömme" kuralı korunuyor).
-  Beat state `GameState.narrative_flags` (SaveService meta, additive). Kanıt: unit test +
-  `narrative_probe.tscn` verdict **NARRATIVE CHAIN CLOSES** (telegraph/defuse/mid-chain +
-  final save-load byte-identical) + 23 test süiti yeşil + roundtrip + boot smoke.
-
-## ⏭️ Şu anki iş: 🎮 CEM GATE #1 — cinematic feel seansı (S2 BİTTİ, bekliyor)
-
-**S2.2 + S2.3 ✅ ŞİPPED (b79e894):** `CinematicWorldProvider` seam (P01 borcu ödendi;
-USE_SPLAT flag'iyle splat'a tek-satır swap) + `MeshWorldProvider` $0 interior (8×6 m depo
-back-room: primitive kabuk + pallet_pack×2 + fishing_supplies, gölgeli sodyum lamba + petrol
-fill + kapı ışık sızıntısı) + her iki sahne provider'a geçti (sahne-içi güneş silindi — ışık
-dünyanın işi) + `CinematicTransition.enter/enter_crime_scene` artık **checkpoint** yazıyor.
-**Month-4 gate: kanıt üstünde PASSED** (`docs/prompts/notes/P18-month4-gate.md`) — P17b/c
-persistence + P18 checkpoint testleri + narrative probe. Görsel: gerçek bootstrap ışığı
-altında screenshot'la doğrulandı (`cinematic_view_probe.tscn` — noir back-room okuyor).
-
-**Cem'in seansı (10-15 dk, ne test edilecek):** oyunu aç (F5) → normal oyna; bir betrayal
-telegraph'ı açıldığında HUD'daki **"Confront … (walk the floor)"** butonuna bas → içeri gir:
-WASD+mouse yürü, E crate'i incele, R sit-down (reassure) YA DA Q çekip git → şehre dönüş temiz
-mi, consequence HUD'da görünüyor mu? Aynısını rival sabotage sonrası **"Walk the scene"**
-butonuyla crime-scene için (E incele, R kanıtı kaldır, Q çık). Ayrıca R ile roster'a bak
-(portreler). His notunu bildir — gate koşulu kanıtlandı, seans TAT içindir.
-Bilinen kırpma: "obje KOYMA" verb'i yok (remove var); aktörler greybox kapsül.
-
-## ⚠️ Açık kararlar / bilinen durumlar
-
-- `test_territory_loss_p08b` **SceneTree-tabanlı** → `-s` ile koşulur; `.tscn`'i olarak koşarsan
-  instance edilemez ve süreç ASILI kalır (suite loop tuzağı). SceneTree testleri: economy,
-  job_lifecycle, kit_assembler, territory_loss.
-- Boot smoke baseline: 5 "leaked at exit" satırı + 1 PagedAllocator hatası **pre-existing**
-  (HEAD'de doğrulandı) — yeni satır yoksa temiz.
-- Portre yedekleri scratchpad'de (ephemeral) — sadece seçilen 4'ü repoda.
-- Codex kotası geri geldi (triage çalıştı). Magnific bakiye ~40K (bu push'ta harcama YOK).
-
-## 🔑 Kilit dosyalar (bu faz)
-
-| Dosya | Ne |
+| | |
 |---|---|
-| `src/narrative/` | P16 omurga (director + beats + jobs) |
-| `src/presentation/cinematic_world_provider.gd` (+mesh/splat) | S2.2 dünya seam'i |
-| `src/presentation/cinematic_transition.gd` | round-trip; S2.3 checkpoint buraya |
-| `scenes/cinematic/reveal_scene.gd`, `crime_scene.gd` | FP sahneler; provider'a geçecek |
-| `tools/validation/narrative_probe.tscn` | P16 kanıtı; P18 probe'una şablon |
-| `tests/unit/test_narrative_p16.tscn` | P16 unit süiti |
+| **Aktif geliştirme repo'su** | **`D:\black-meridian-ue`** → `EsimOmni/black-meridian-ue` (private) |
+| **Bu repo (`D:\black-meridian`)** | **ARŞİV + behavioral oracle.** Silinmez, yeniden yazılmaz, çalışır kalır. Yeni oyun kodu BURAYA YAZILMAZ. |
+| **Godot son durumu** | `godot-final` tag'i → `aff9e43`. Headless exit 0 ile çalıştığı doğrulandı. |
+
+**Bu repo'nun tek işlevi artık:** golden vector çıkarımı (S1'de Unreal'in doğruluğunu ölçen oracle)
+ve Gate B'de Unreal cinematic'iyle yan yana oynanacak referans. Godot tarafında feature/slice
+geliştirmesi YOK.
+
+> ⚠️ **"S1" adı çakışıyor — dikkat.** Bu dosyanın eski sürümündeki "S1" *Godot push'unun Month-3
+> kapanışıydı ve BİTTİ*. Şu an sıradaki **S1 = Unreal reboot'un Determinism Core** slice'ı. Biri
+> diğerinin devamı değil. Aşağıdaki S1 her zaman Unreal olanıdır.
+
+---
+
+## ✅ S0 TAMAM (2026-09-18) — gate PASSED, 11/11
+
+Kanıt: **`D:\black-meridian-ue\Docs\gates\S0.md`** (okumadan S1'e başlama).
+
+- Unreal repo kuruldu, **LFS ilk commit'te** (`1da360f`), asset'ten önce — R-07 kapalı.
+- 5 modül: `BMCore` (Engine bağımlılığı YOK — determinizm duvarı) · `BMSim` · `BMGame` · `BMUI` · `BMEditor`.
+- `BlackMeridianEditor Win64 Development` → **Succeeded, 0 uyarı**, 5 non-zero DLL.
+- `BM.Smoke` → **Result={Success}**, exit 0, log'da 0 `Error:`.
+- Shipping paketleme → **BUILD SUCCESSFUL**, `Builds/Windows/BlackMeridian.exe` + pak/utoc.
+- `ATTRIBUTIONS.md` + `lessons.md` Unreal repo'ya göç etti (devam, sıfırlama değil).
+
+**S0, planlama paketinde 4 hata buldu; hepsi düzeltildi** (`6fb3c97`) — detay `Docs/gates/S0.md`:
+D-01'in premisi yanlıştı (NetFx SDK S0 için de zorunluymuş) · `.gitattributes` glob'ları LFS'i
+sessizce bozuyordu · glTF Importer plugin'i UE 5.8'de yok · `UnrealBuildTool.exe` .NET 10 istiyor
+(`Build.bat`'tan git).
+
+---
+
+## ⏭️ Sıradaki iş: **S1 — Determinism Core** (BAŞLANMADI)
+
+Spec: `docs/unreal-reboot/07_IMPLEMENTATION_ROADMAP.md` → S1 · mimari:
+`04_UNREAL_ARCHITECTURE.md` · test: `08_TEST_STRATEGY.md`.
+(Aynı paketin kopyası Unreal repo'da: `Docs/plan/`.)
+
+**Gate koşulu:** *her hash golden vector'ü birebir eşleşecek.* Otomatik, tavizsiz.
+
+Başlamadan önce iki ön koşul:
+1. **Golden vector çıkarımı** — bu Godot repo'sunu oracle olarak çalıştırıp JSON vektörleri üret,
+   `black-meridian-ue/Tests/Golden/` altına koy. S1'in ilk işi budur.
+2. **D-01'in IDE yarısı** — VS 2022 Community. Determinizm hatası *sessiz* (R-03); breakpoint'siz
+   1260 tick'lik hash uyuşmazlığı kovalamak kötü takas. SDK yarısı S0'da halledildi.
+
+---
+
+## ⚠️ Açık kararlar
+
+- **D-01 (yarım)** — NetFx SDK ✅ kuruldu; **VS 2022 Community IDE hâlâ yok.** S1 öncesi önerilir.
+- **D-02 / D-10 (AÇIK)** — karakter kimliği + prodüksiyon rotası. **S12'ye kadar çözülecek.**
+  ⚠️ `OMNI_CERT_AIKO_2026_0001_v1.0.0`'ın oyun karakteri Aiko Velora'yı temsil ettiği
+  **varsayılmayacak** — Cem'in açık talimatı.
+- **D-07** — Gaussian splat vertical slice'tan ÇIKARILDI; ancak Gate B'den sonra yeniden değerlendirilebilir.
+
+---
+
+## 🔑 Kilit dosyalar
+
+**Unreal (aktif geliştirme):**
+- `D:\black-meridian-ue\Docs\gates\S0.md` — S0 kanıtı + 4 bulgu
+- `D:\black-meridian-ue\Source\BMCore\` — saf logic, Engine YOK
+- `D:\black-meridian-ue\Docs\plan\` — düzeltilmiş planlama paketi aynası
+- `D:\black-meridian-ue\Docs\lessons.md` — Godot'dan devralınan dersler
+
+**Bu repo (arşiv/oracle):**
+- `docs/unreal-reboot/` — planlama paketinin **authoring** evi (düzeltmeler buraya işlenir)
+- `docs/archive/astra-recovery-2026-09/` — tarihsel kanıt, **authoritative DEĞİL** (D-09 modified)
+- `src/` + `tests/unit/` — golden vector'lerin çıkarılacağı oracle (24/24 test geçiyor)
 
 ---
 
 ## Geçmiş (özet — detay git log + claude-mem'de)
 
+- **UNREAL REBOOT S0** (2026-09-18): repo bootstrap, 5 modül, build+smoke+paketleme yeşil,
+  `godot-final` tag'i, astra-recovery arşivlendi, planlama paketine 4 düzeltme işlendi.
+- **P20 — Godot hattının son feature'ı** (`de05ef9`): settings paneli, rebindable input,
+  audio cues, onboarding nudges. 24/24 test, import temiz, boot smoke exit 0. Godot'da son commit bu.
 - **Month 3 KAPANDI** (2026-07-10→12): P12 kit (10 GLB, 8/8 validator, KitAssembler canlı) ·
   P13b/c/d/e VFX katmanları (yağmur/steam/ripple/crowd/trafik — hepsi presentation-only kardeş
   node) · P14b-lite roster+portreler · Glass Wharf buildout (4 dokulu landmark + DockProps 5 prop,

@@ -4,6 +4,30 @@ Guidance for Claude Code (and any AI agent) working in this repository. Codex, G
 read `AGENTS.md` (and their respective synced mirrors `CODEX.md` and `GEMINI.md`). The authoritative design + production spec is
 **`docs/OMNI-BLACK-MERIDIAN-brief.pdf`** — read it before any non-trivial change.
 
+> # 🚨 ENGINE REBOOT — READ THIS BEFORE ANYTHING ELSE (2026-09-18)
+>
+> **This repository is no longer where the game is built.** OMNI: BLACK MERIDIAN moved from
+> **Godot 4.7 to Unreal Engine 5.8.2**.
+>
+> | | |
+> |---|---|
+> | **Active development** | **`D:\black-meridian-ue`** → `EsimOmni/black-meridian-ue` (private) |
+> | **This repo** | **ARCHIVE + behavioral oracle.** Never deleted, never rewritten, kept runnable. |
+> | **Final Godot state** | tag **`godot-final`** → `aff9e43`, verified running (headless exit 0) |
+>
+> **Do NOT write new game code here.** This repo's only remaining jobs are (a) golden-vector
+> extraction — it is the oracle S1 measures Unreal against — and (b) the side-by-side cinematic
+> comparison at Gate B. Everything below about Godot slices (P01–P20), GDScript conventions and the
+> `godot-ai` MCP rail describes **how the oracle was built**, not what to do next.
+>
+> **Authoritative plan:** `docs/unreal-reboot/` (authoring home) · mirrored at
+> `D:\black-meridian-ue\Docs\plan\`. **S0 is complete**; evidence at
+> `D:\black-meridian-ue\Docs\gates\S0.md`. **Next is S1 — Determinism Core**, not started.
+>
+> ⚠️ **Name collision:** the old Godot push had its own "S1" (Month-3 close, finished). The reboot's
+> **S1 = Determinism Core**. They are unrelated — always confirm which one is meant.
+
+
 > **🎯 READ `docs/NOW.md` FIRST — every session, before anything else.** It is the LIVE state:
 > what we're doing right now, the next step, open decisions, key files for the active phase. This
 > file (CLAUDE.md) holds the permanent rules; `NOW.md` holds the current situation. The "Current
@@ -46,26 +70,33 @@ Corollary: **never put authoritative simulation state inside city-scene nodes.**
 
 ## Current status
 
-- **Engine binary:** `D:\Godot\Godot_v4.7-stable_win64.exe` (+ `_console.exe` for headless).
-- **Milestone:** Month 2 COMPLETE — the full systemic Night-Cycle loop is built and gate-passed
-  (2026-07-04). Month 1 (Architecture + Risk Spikes) done: data model, GameState, TimeService, Economy,
-  WorldSeed, greybox city, save/load, splat spike. Month 2 slices, all committed + independently probed
-  (deterministic, zero-RNG, save-safe): **P05** economy squeeze (pause racket / pressure front) · **P06**
-  heat→disruption→income + latched inspection · **P07** RivalDirector (telegraph→land sabotage) · **P08**
-  systemic job generation (sim-triggered, byte-identical rebuild) · **P09** Night-Cycle phase machine
-  (COUNCIL→OPERATIONS→CRISIS→RECKONING, per-tick settle preserved) · **P10** loyalty/betrayal motive
-  network (two-gate, telegraphed, *preventable*) · **P11** first-pass noir UI theme (Palette + generated
-  theme.tres).
-- **Splat kill criterion: RESOLVED → SPLAT_OK** (2026-07-02). GDGS v2.2.0 + Godot-4.7 push-constant patch
-  renders 542k splats at 483 avg / 420 low fps @1080p on the 5060 Ti (`docs/prompts/notes/P01-splat-benchmark.md`).
-- **Month-2 gate: PASSED** (`docs/prompts/notes/P08-month2-gate.md`, `P11-month2-gate.md`). Feel verdict
-  "fun, stress, very good" (short session) + a full-cycle integrity probe proving the chain
-  money→heat→inspection→rival→job→phases is INTACT and self-feeding (rival sabotage spawns jobs). **Month 3
-  (asset production) is authorized** under the existing discipline: proxy first, Sketchfab license-gated,
-  no GLB replaces a validated mechanic, AI 90 / human 10.
-- **Open (deferred, not blocking):** P05b operative pool · P06b evidence chains · P06c Central Pressure ·
-  P07b rival noise/actions · P07c rival memory · P08b more job origins · P10b hidden motives + multi-lieutenant ·
-  P19 final UI polish. See `docs/prompts/` for the ordered build slices.
+> **Phase: UNREAL REBOOT. S0 complete (2026-09-18), S1 not started.** See the banner at the top of
+> this file — active development is in `D:\black-meridian-ue`, not here.
+
+**S0 — repository bootstrap: PASSED, 11/11.** Evidence: `D:\black-meridian-ue\Docs\gates\S0.md`.
+Unreal 5.8.2 (CL 56702186) · five modules (`BMCore` with **no Engine dependency** — that absence is
+the determinism wall — plus `BMSim`/`BMGame`/`BMUI`/`BMEditor`) · LFS committed before any asset ·
+editor build succeeded with 0 warnings · `BM.Smoke` passed · Shipping package built. S0 also produced
+**four corrections to the planning package** (D-01's premise, the `.gitattributes` globs, the
+non-existent glTF Importer plugin, the .NET 10 build path), all folded back in at `6fb3c97`.
+
+**Next: S1 — Determinism Core.** Gate: *every hash golden vector matches exactly.* Two prerequisites —
+extract the golden vectors by running this Godot oracle, and (recommended) the IDE half of D-01.
+
+**Open decisions:** D-01 half-done (NetFx SDK installed; VS 2022 Community IDE still missing) ·
+**D-02 / D-10 OPEN** — character identity + production route, resolved before S12; do **not** assume
+`OMNI_CERT_AIKO_2026_0001_v1.0.0` represents Aiko Velora · D-07 splats excluded from the vertical
+slice, revisitable only after Gate B.
+
+### Godot line — final state (archive, for oracle use)
+
+The Godot build reached **Month 4** and ends at **P20** (`de05ef9`): settings panel, rebindable input,
+audio cues, onboarding nudges — 24/24 unit tests, clean import, boot smoke exit 0. Everything through
+Month 2 (P05–P11 Night-Cycle loop, gate-passed "fun with cubes"), Month 3 (P12–P14 kit + VFX +
+landmarks) and Month 4 (P16 NarrativeDirector, P17/P18 cinematic seam, P19 endings) is committed and
+probed. Splat benchmark resolved SPLAT_OK (542k @ 483 fps), but **D-07 excludes splats from the Unreal
+vertical slice**. Deferred-and-now-moot Godot backlog: P05b, P06b/c, P07b/c, P08b, P10b, P19 polish.
+
 
 ## Architecture (brief §13.2–§13.4)
 

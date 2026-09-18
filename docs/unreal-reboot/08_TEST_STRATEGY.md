@@ -173,8 +173,20 @@ tolerance, it is a bug.*
 
 ### 5.2 Behavioral equivalence — the real bar
 
-`[P]` Beyond per-formula vectors, a **trajectory test**: run the Unreal sim 1260 ticks from the seeded
-world with a scripted policy, and compare against the Godot probe.
+`[P]` Beyond per-formula vectors, a **trajectory test**: run the Unreal sim **1800 ticks** from the
+seeded world with a scripted policy, and compare against the Godot probe.
+
+> ⚠️ **Corrected 2026-09-18 — this said 1260, which cannot work.** 1260 is the *retuned slice* phase
+> budget from [06](06_VERTICAL_SLICE.md) §2 (180/660/300/120), not the oracle's. The Godot probe
+> ([`tools/validation/full_cycle_probe.gd`](../../tools/validation/full_cycle_probe.gd)) runs
+> **1800** (240+1080+360+120), and every reference value below is sampled from that run. Phase
+> transitions must match **exactly**; a 1260-tick Unreal run transitions on different ticks and can
+> never match an 1800-tick oracle.
+>
+> The two coexist because `BMConstants.h` ships the **Godot budgets as the golden-vector baseline**
+> ([05](05_DATA_MODEL.md) §3.2: "the C++ values are the defaults and the golden-vector baseline; a
+> DataTable override is applied at load"). The 1260 retune arrives later as a `DT_BMBalance`
+> override — a pacing decision, not a correctness one. **Equivalence is measured at 1800.**
 
 | Property | Requirement |
 |---|---|
@@ -193,7 +205,7 @@ tick 1800 `dirty $298,022`, `clean $1,119,300`, central peak `0.420`, heat `0.41
 
 `[P]` **Rationale for tolerances:** discrete events must match exactly because they are *decisions* —
 if the Unreal rival attacks a different venue, the games are not equivalent. Accumulated currency may
-drift slightly from rounding order across 1260 ticks of `roundf`; 0.5% over ~$300k is ≈$1,500, far
+drift slightly from rounding order across 1800 ticks of `roundf`; 0.5% over ~$300k is ≈$1,500, far
 below one job's reward and invisible to a player.
 
 ### 5.3 Re-running determinism the way this audit did
@@ -201,8 +213,8 @@ below one job's reward and invisible to a player.
 `[V]` The method that proved Godot determinism, ported:
 
 ```sh
-UnrealEditor-Cmd.exe <proj> -ExecCmds="BM.RunProbe 1260 -out=A.log; Quit" -unattended -nullrhi
-UnrealEditor-Cmd.exe <proj> -ExecCmds="BM.RunProbe 1260 -out=B.log; Quit" -unattended -nullrhi
+UnrealEditor-Cmd.exe <proj> -ExecCmds="BM.RunProbe 1800 -out=A.log; Quit" -unattended -nullrhi
+UnrealEditor-Cmd.exe <proj> -ExecCmds="BM.RunProbe 1800 -out=B.log; Quit" -unattended -nullrhi
 fc /b A.log B.log        # must be identical
 ```
 

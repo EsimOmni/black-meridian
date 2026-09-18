@@ -193,15 +193,34 @@ void UBMSimulationCoordinator::AdvanceTick(int32 TickIndex)
 
     if (TickIndex % BMConst::RivalTickInterval == 0)  // 10
     {
-        Relationships->OnRivalTick(TickIndex); // 7. advance open intents, then score new
-        Rival->OnRivalTick(TickIndex);         // 8. telegraph → land, grudge decay
+        Rival->OnRivalTick(TickIndex);         // 7. telegraph → land, grudge decay
+        Relationships->OnRivalTick(TickIndex); // 8. advance open intents, then score new
     }
 }
 ```
 
 `[V]` Steps 1→3 reproduce the verified intra-`EconomyService` order (settle all factions, then heat,
-then central pressure). Step 7-before-8 preserves the observed Godot behavior where relationship
-intents resolve within the rival tick.
+then central pressure).
+
+`[V]` **Steps 7→8 are Rival BEFORE Relationships — corrected 2026-09-18.** An earlier revision of
+this document had them reversed and claimed the reversed order "preserves the observed Godot
+behavior." It does not. Measured at runtime by enumerating `TimeService.rival_tick.get_connections()`
+in a headless probe:
+
+```
+0: RivalDirector
+1: RelationshipService
+```
+
+`RivalDirector` is an autoload (`project.godot` `[autoload]`, registered at engine init);
+`RelationshipService` is bootstrap-wired (`bootstrap.gd::_build_relationships` → `new()` in
+`_ready`), so it always connects later and therefore always runs second.
+
+**This is a decision order, not a formula** — and 08 §5.2 requires discrete decisions to match the
+oracle *exactly*. `RivalDirector::_land` can flip a venue's owner (EXPAND) and add district heat
+(FRAME); `RelationshipService` re-checks its betrayal gates against that state. Running Relationships
+first means betrayal decisions cannot see the rival action that landed on the same tick — a
+different, still-deterministic game. Port the measured order.
 
 **Tick source `[P]`:** `UBMTimeSubsystem::Tick` (a `FTSTicker` or `UGameInstanceSubsystem` tick)
 accumulates `DeltaSeconds × SpeedScale` and **drains in a while-loop**, exactly as Godot does:

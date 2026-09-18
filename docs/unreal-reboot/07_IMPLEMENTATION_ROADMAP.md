@@ -130,8 +130,21 @@ would be invalid, and the failure is silent — a different but still-determinis
 **Depends on:** S1.
 
 **Creates.** `BMCore`: `FBMEconomyMath`, `FBMEvidence`, `FBMPressureMath`, `FBMOperativeMath`,
-state structs. `BMSim`: `UBMCampaignSubsystem`, `UBMTimeSubsystem`, `UBMSimulationCoordinator`,
+`BMTypes.h` (**deferred out of S1** — the first types are consumed here), state structs.
+`BMSim`: `UBMCampaignSubsystem`, `UBMTimeSubsystem`, `UBMSimulationCoordinator`,
 `UBMEconomySubsystem`, `UBMHeatSubsystem`, `UBMPressureSubsystem`.
+Also **`BM.RunProbe <ticks> -out=<path>`** — the headless probe console command. It does not exist
+anywhere in `Source/` yet, and both the determinism re-run and the trajectory gate below depend on
+it; budget it as S2 work rather than discovering it at the gate.
+
+**Build note.** `BMSim` has no `Json` dependency. Golden-vector tests either stay in `BMCore` (which
+already has `Json` private, "used ONLY by the golden-vector test") or `BMSim` gains it as a private
+dep with the same justifying comment. Do not add `Json` publicly.
+
+**Oracle note.** The `GV-*` vectors for this slice **do not exist yet** — S1 emitted only `GV-HASH-*`.
+Extend `D:\black-meridian\tools\export_golden_vectors.gd` first. Every math class this slice ports
+(`EconomyMath`, `EvidenceMath`, `PressureMath`, `OperativeMath`) is an autoload-free `RefCounted`, so
+the extractor drives them directly under `-s`, exactly as S1 did — no `.tscn` harness needed.
 
 **Tests.** `GV-ECON-01..05`, `GV-HEAT-01..02`, `GV-EVID-01..03`, `GV-PRESS-01`;
 `Test_Economy_SettleOrder`, `Test_Economy_OverflowPressure`, `Test_Economy_PressureFrontCapAndCost`,
@@ -148,6 +161,36 @@ trajectory within tolerance ([08](08_TEST_STRATEGY.md) §5).
 **Prohibited.** ⛔ Deriving inspection thresholds from literals in tests — read `BMConst`
 (`[V]` the P06d instrument-error lesson). ⛔ Parking a test value exactly on a float threshold;
 ≥0.05 margin, boundaries get integer-only dedicated tests.
+
+### `[V]` Behaviors that look like bugs and are not — read before porting
+
+Measured against the shipped GDScript 2026-09-18. Each one survives a careless "tidy-up" as a
+compiling, deterministic, **different** game — the S1 failure class. Sources:
+`economy_service.gd`, `economy_math.gd`, `evidence_math.gd`, `pressure_math.gd`, `operative_math.gd`.
+
+| Behavior | The trap |
+|---|---|
+| `laundered` uses **stock + flow** (`dirty_cash + dirty_income`); `unlaundered_overflow` uses **flow only** (`dirty_income − laundering_capacity`) | Different denominators, deliberately. Unifying them changes the economic squeeze. |
+| Heat **rise** clamps `[0,1]`; heat **decay** uses `maxf(0, …)` | Asymmetric on purpose. |
+| Heat decay is **suppressed while `inspection_ticks > 0`** | "Attention doesn't relax while inspectors are on site." |
+| `combined_pressure` is **unclamped** — can exceed 1.0 (heat 1.0 + 0.5 cases) | Clamping it silently lowers every downstream latch. |
+| Inspection fires on the **`elif`** — the countdown is *not* decremented on the firing tick | The beat is 30 **full** ticks *after* firing. An `if` costs one tick. |
+| The latch tests **combined pressure**, not raw heat — both to fire *and* to re-arm | |
+| Central-alert relief lowers **only the fire threshold**; re-arm stays a hard `0.30` | |
+| Central alert polarity is **inverted** vs. the district latch: `central_alert == true` means *spent*; `inspection_armed == true` means *ready* | Mirroring the district naming inverts the machine. |
+| Inspection disruption is a **floor** (`maxf`); sabotage is **additive on top**, then clamped | |
+| Sabotage ticks decrement inside the **economy** pass, not `RivalDirector` | |
+| Disruption is written **after** income is computed — a deliberate **one-tick lag** | |
+| `disruption_from_heat` divides by **`(1.0 − Grace)`**, never a literal `0.7` | |
+| `erode_strongest` does **not** clamp before its `<= 0.0` erase check | |
+| `strongest_case` uses strict `>` — **ties break to the earliest** | |
+| At the 4-case cap the **oldest (index 0)** grows; no new case is created | |
+| `kind_for` uses Godot's built-in `String.hash()` (DJB2) — a **different** hash from `_avalanche` | Confirm `BMHash::StringHash` covers it before writing `GV-EVID-02`. |
+| `free_pool` is **derived, never stored**; `operative_pool` is never written by `OperativeMath` | |
+| Ownership flips (rival EXPAND, betrayal, reclaim) move `owner_faction` **without touching `operational_staff`** — operatives transfer with the venue, and `free_pool`'s `maxi(0, …)` absorbs the mismatch | Current Godot behavior. Port as-is or flag it as a deliberate deviation; **do not "fix" it silently.** |
+
+⛔ **Do not transcribe these from this table into C++ without re-reading the GDScript.** The table is
+a warning list, not the source of truth.
 
 ---
 

@@ -55,7 +55,7 @@ was *incidental*; Unreal's must be **declared in one place** and asserted by a t
 | System | Existing behavior | Evidence | Disposition | Unreal owner | Acceptance test |
 |---|---|---|---|---|---|
 | **Local heat rise/decay** | Rise `+= tick_exposure × 0.05` when `exposure ≥ 0.008`; else decay `−0.0006`, **only when no inspection is running** | `[V]` `_update_district_heat` | **PRESERVE** | `UBMHeatSubsystem` | `GV-HEAT-01` |
-| **Heat → disruption** | 0 below heat 0.3; then linear `(h−0.3)/0.7 × 0.6` | `[V]` `disruption_from_heat` | **PRESERVE** | `FBMEconomyMath` | `GV-HEAT-02` |
+| **Heat → disruption** | 0 at/below `Grace`; then linear `(h−Grace)/(1−Grace) × Max`. ⚠️ The divisor is **`(1.0 − HeatDisruptionGrace)`, not a literal `0.7`** — equal today (1−0.3), divergent the moment Grace is retuned via `DT_BMBalance`. Port the expression, not the number. | `[V]` `disruption_from_heat` | **PRESERVE** | `FBMEconomyMath` | `GV-HEAT-02` |
 | **Inspection latch/re-arm** | Fires once per excursion at combined ≥ 0.45; runs 30 ticks; disruption floor 0.8; re-arms only below **0.30** | `[V]` `HEAT_INSPECTION_*`, `INSPECTION_*` | **PRESERVE** — hysteresis is the point | `UBMHeatSubsystem` | `Test_Heat_InspectionHysteresis` (must exercise a full fire→cool→re-arm→re-fire cycle) |
 | **Evidence cases** | Max 4 per district; `combined = heat + 0.5 × Σweights`; at cap the **oldest (index 0)** grows instead of a new case | `[V]` `evidence_math.gd` | **PRESERVE** incl. the index-0 rule | `FBMEvidence` | `GV-EVID-01` |
 | **Case kind selection** | `posmod(hash(source_id), 4)` — deterministic hash, explicitly *not* a roll | `[V]` `kind_for` | **ADAPT** — same behavior, hash re-specified (§9) | `FBMEvidence::KindFor` | `GV-EVID-02` |

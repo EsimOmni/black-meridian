@@ -132,7 +132,12 @@ kendi tavanını aşamaz.
 - `docs/archive/astra-recovery-2026-09/` — tarihsel kanıt, **authoritative DEĞİL** (D-09 modified)
 - `src/` + `tests/unit/` — golden vector'lerin çıkarıldığı oracle. ⚠️ 24 unit test'in **20'si
   `-s` ile koşmuyor** (autoload gerektiriyorlar); import temiz. CLAUDE.md'deki "24/24" iddiası bayat.
-- `tools/export_golden_vectors.gd` — **vektör çıkarıcı** (salt-okunur; koşular arası bayt-aynı)
+- **Üç oracle çıkarıcı** (hepsi salt-okunur, hepsi koşular arası bayt-aynı):
+  - `tools/export_golden_vectors.gd` — hash katmanları (S1), `-s`
+  - `tools/export_sim_vectors.gd` — econ/heat/evidence/pressure/operatives (S2), `-s`
+  - `tools/export_trajectory.gd` + `.tscn` — 1800 tick eğrisi (S2), **sahne olarak**
+- `tools/validation/full_cycle_probe.gd` — *sağlık* aleti, golden vector DEĞİL (iş çözer, yani
+  eğrisi narrative içeriğine bağlıdır). Referans üretmek için kullanma.
 
 ---
 

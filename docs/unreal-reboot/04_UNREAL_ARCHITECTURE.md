@@ -183,7 +183,7 @@ fragile. The source spec flags it as "a dependency to check before finalizing UE
 ```cpp
 void UBMSimulationCoordinator::AdvanceTick(int32 TickIndex)
 {
-    // Order is CONTRACT. Changing it changes the game. Asserted by Test_Tick_ExplicitOrder.
+    // Order is CONTRACT. Changing it changes the game. Asserted by BM.Time.TickOrderIsContract.
     Economy->Settle(TickIndex);        // 1. clear exposure → settle each faction (array order)
     Heat->UpdateDistricts(TickIndex);  // 2. consumes THIS tick's exposure
     Pressure->UpdateCentral(TickIndex);// 3. consumes THIS tick's district heat
@@ -198,6 +198,21 @@ void UBMSimulationCoordinator::AdvanceTick(int32 TickIndex)
     }
 }
 ```
+
+> ⚠️ **As built (S2, 2026-09-18) steps 1–3 are ONE call, not three.** The sketch above is the
+> *ordering* contract, not the call shape. `FBMSimulation::AdvanceTick` (in **BMCore**) runs
+> steps 1–3 internally **and owns the `TickIndex` increment**, and that function is the unit the
+> golden vectors and the probe measure. Splitting the three passes at the coordinator would move
+> the increment somewhere else and create a **second definition of what a tick is** — two places
+> that could disagree about whether a tick happened.
+>
+> So the coordinator calls `FBMSimulation::AdvanceTick(State)` and steps 4–8 hook in around it as
+> their slices land. The per-pass entry points still exist on the subsystems for the probe, the HUD
+> and later slices; they are simply not how the tick is driven.
+>
+> The deeper reason the passes live in BMCore at all: **the whole tick must run with no world, no
+> engine tick and no `UObject`.** That is what makes the headless probe and the golden-vector tests
+> possible. BMSim schedules; it does not contain rules.
 
 `[V]` Steps 1→3 reproduce the verified intra-`EconomyService` order (settle all factions, then heat,
 then central pressure).

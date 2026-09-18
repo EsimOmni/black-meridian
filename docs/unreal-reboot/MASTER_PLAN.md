@@ -40,6 +40,60 @@ found**. See **D-08**.
 
 ---
 
+## 1b. Plan vs. reality after S0–S2 `[V]`
+
+*Added 2026-09-18, after three slices shipped. Read this before trusting any `[P]` in the package.*
+
+**Shipped: S0, S1, S2 — all three gates passed.** 23/23 automation tests, exit 0. The plan's
+architecture held; its *factual claims about the Godot source* did not.
+
+| | |
+|---|---|
+| Documents **never needing a correction** | 8 of 16 — `00`, `01`, `02`, `06`, `09`, `11`, `ADR-0001`, and (until S2) `05` |
+| Documents corrected | 8 — `03`, `04`, `05`, `07`, `08`, `10`, `12`, `13` |
+| Total drift | **+341 / −55 lines** against the approved `aff9e43` |
+
+**The pattern is the useful part, and it is consistent across all three slices:**
+
+> **Structural judgments were right. Empirical claims about the existing build were wrong roughly
+> whenever they were not marked `[V]`.**
+
+Everything load-bearing survived contact: the module split with `BMCore` free of `Engine`; extracting
+golden vectors before writing logic; "the strategic simulation is authoritative"; the gate-per-slice
+discipline; deferring splats. **Nothing in `00`, `02` or `ADR-0001` has needed a word changed.**
+
+What broke, every time, was a *detail about how Godot actually behaves* that nobody had measured:
+
+| # | Claim | Reality | Cost |
+|---|---|---|---|
+| 1 | `_avalanche` is splitmix64 (per its own comment) | **MurmurHash3 `fmix64`** | **Red gate.** Hash matched 1719/1719 while avalanche matched 0/1719 |
+| 2 | Do the mix in `uint64`, "where the shift is unambiguous" | Shifts are **arithmetic**; pure-`uint64` matches **0 of 3123** | Caught pre-commit |
+| 3 | `String.hash()` over bytes | Over **UTF-32 code points** — byte-wise passes every current id and breaks on the first non-ASCII one ever authored | Caught by adversarial corpus |
+| 4 | Rival tick is `Relationships → Rival`, and this "preserves observed behavior" | **`Rival → Relationships`** — measured by enumerating the live signal connections | Not yet exercised (S5) |
+| 5 | Disruption ramp `(h−0.3)/0.7` | `(h − Grace)/(1 − Grace)` — equal today, divergent once Grace is retuned | Dormant bug with a scheduled trigger |
+| 6 | Trajectory measured at 1260 ticks | **1800** — 1260 is the *slice retune*, and the quoted reference values were themselves tick-1800 | Contradiction inside one document |
+| 7 | `USTRUCT`/`UENUM` for the state structs | Plain C++ — reflection needs `CoreUObject`, which is the wall | Divergence recorded in `05` §5 |
+| 8 | `BM.RunProbe` assumed to exist | Did not; unbudgeted | Added to S2 scope |
+
+**Four lessons now priced in, not guesses:**
+
+1. **A decimal literal beats the name of the algorithm above it.** Claim 1 shipped a compiling,
+   deterministic, *wrong* game and only the gate caught it.
+2. **A `[P]` about the Godot build is a hypothesis.** Every one that mattered was wrong. `[V]` claims
+   held up throughout.
+3. **First-run green is weak evidence here.** S2's layers all passed immediately; mutation-testing the
+   gate then exposed three holes, two of which would have shipped a silently different game.
+4. **When a gate cannot pass, measure why instead of loosening it.** S2's trajectory comparison
+   failed at 1800 ticks; the diagnosis (the oracle's exposure exceeds this world's zero-disruption
+   ceiling → the surplus is the rival, which is S5) turned a blocked gate into a *scoped* one. The
+   alternative — widening tolerances until green — produces a gate that cannot fail, which is not a
+   gate.
+
+**Unchanged by all of this:** the roadmap's slice order, every acceptance gate, all stop conditions,
+and the open decisions (D-02 / D-10 by S12, D-07 after Gate B). No re-planning is owed.
+
+---
+
 ## 2. Locked decisions
 
 Not reopened by this package (from the task prompt):

@@ -336,6 +336,29 @@ intentional and must be reproduced.
 
 `[P]` One authoritative container. Everything here is saved.
 
+> ⚠️ **As built in S2 (2026-09-18) these are PLAIN C++ structs, not `USTRUCT`, and ids are `FString`,
+> not the typed wrappers.** Four deliberate divergences from the sketch below, all forced by one
+> constraint:
+>
+> 1. **No `USTRUCT` / `UPROPERTY` / `UENUM`.** They require `CoreUObject`, and `BMCore` depends on
+>    `Core` alone — *the absence of that dependency is the determinism wall* (04 §2). Reflection
+>    markup here would quietly breach it. A Blueprint-facing mirror belongs in `BMSim` if one is ever
+>    needed; nothing has needed one yet.
+> 2. **Ids are `FString`, not `TBMId<Tag>`.** The typed wrappers are a good idea and remain worth
+>    doing — but they are `USTRUCT`s in this sketch, so adopting them as written would breach (1).
+>    Revisit as a `Core`-only value type when something actually confuses two id kinds.
+> 3. **`FBMVenueState` carries the definition fields too** (`BaseYield`, `RacketRisk`,
+>    `FrontEfficiency`, `OperatingCost`, `Type`). §4's split of authored-definition vs runtime-state
+>    is right for the data layer, which does not exist yet (S14). Until then the sim needs those
+>    numbers and there is nowhere else to read them from. **Re-split them when the Data Assets land**
+>    — the port matrix's formulas already treat them as immutable.
+> 4. **`FBMEvidenceCase` keeps `Label`.** The Godot resource carries it and the case's display
+>    phrasing is chosen by `KindFor` at deposit time, so dropping it would move a decision into
+>    presentation.
+>
+> Everything else below — field names, defaults, the index-0-is-oldest contract, the preserved venue
+> order — is as built. Actual: `D:\black-meridian-ue\Source\BMCore\Public\BMTypes.h`.
+
 ```cpp
 USTRUCT() struct FBMVenueState {
     FBMVenueId       VenueId;          // → definition

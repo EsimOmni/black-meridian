@@ -4,7 +4,7 @@
 > bu dosya "şu an neredeyiz, sıradaki adım ne, hangi kararlar açık" durumunu tutar. Claude her
 > slice/commit sonunda bunu günceller — Cem elle yazmaz. Eski durum "Geçmiş" bölümüne düşer.
 
-**Son güncelleme:** 2026-09-18 · **Aktif faz:** 🔁 **UNREAL REBOOT — S1 DEVAM EDİYOR** (vektörler çıkarıldı)
+**Son güncelleme:** 2026-09-18 · **Aktif faz:** 🔁 **UNREAL REBOOT — S1 GEÇTİ**, sıra S2'de
 
 > UYARI: **Bu dosya ARŞİV repo'sunun durumudur.** Aktif geliştirmenin canlı durumu
 > **`D:\black-meridian-ue\NOW.md`**'dir — slice ilerlemesi, S1+ notları ve günlük durum ORADA güncellenir.
@@ -51,11 +51,12 @@ sessizce bozuyordu · glTF Importer plugin'i UE 5.8'de yok · `UnrealBuildTool.e
 
 ---
 
-## 🔨 Bu repo'nun S1'deki rolü — **oracle olarak ÇALIŞTI** (2026-09-18)
+## ✅ S1 GEÇTİ (2026-09-18) — bu repo oracle olarak görevini yaptı
 
 `tools/export_golden_vectors.gd` yazıldı ve çalıştırıldı (`970f5c0`) — salt-okunur, iki koşuda
 bayt-aynı çıktı. Vektörler `D:\black-meridian-ue\Tests\Golden\hash_vectors.json` altında
-(1715 hash · 1408 tie_jitter · 240 variant_index satırı). Kanıt: `black-meridian-ue\Docs\gates\S1.md`.
+(1719 hash · 1408 tie_jitter · 240 variant_index satırı, şema 2). Kanıt:
+`black-meridian-ue\Docs\gates\S1.md`. **Gate exit 0, üç test de Success.**
 
 ```sh
 D:/Godot/Godot_v4.7-stable_win64_console.exe --headless --path . \
@@ -68,34 +69,24 @@ kullanılamaz — id'ler `world_seed.gd` kaynağından parse edilir) ve **stdout
 (`_mcp_game_helper` autoload'ı script bittikten *sonra* banner basıyor, yönlendirilen belgeyi bozuyor
 — script dosyayı kendisi yazar).
 
-Planlama paketindeki `08 §4.1` iki hazard'ı da **yazılanın tersine** çıktı; düzeltmeler
-`docs/unreal-reboot/`'a işlendi ve UE repo'suna yeniden aynalandı. **SC-2 tetiklenmedi.**
+Planlama paketinin hash'le ilgili **üç** iddiası da yanlış çıktı; düzeltmeler
+`docs/unreal-reboot/`'a işlendi ve UE repo'suna yeniden aynalandı. Üçüncüsü — `_avalanche`'ın
+"splitmix64" diye adlandırılması, oysa **MurmurHash3 fmix64** olması — C++ portunu bir kez
+gate'ten geçirmedi (hash 1719/1719 tuttu, avalanche 1719/1719 tutmadı). Bu repo'daki iki GDScript
+kopyasına da uyarı notu düşüldü. **SC-2 tetiklenmedi.**
 
 ---
 
-## ⏭️ Sıradaki iş: **S1'in C++ yarısı** (Unreal repo'sunda)
+## ⏭️ Sıradaki iş: **S2 — Economy, heat, evidence, pressure** (Unreal repo'sunda)
 
-Spec: `docs/unreal-reboot/07_IMPLEMENTATION_ROADMAP.md` → S1 · mimari:
-`04_UNREAL_ARCHITECTURE.md` · test: `08_TEST_STRATEGY.md`.
-(Aynı paketin kopyası Unreal repo'da: `Docs/plan/`.)
-
-**Gate koşulu:** *her hash golden vector'ü birebir eşleşecek.* Otomatik, tavizsiz.
-
-Kalan iş Unreal tarafında: `BMHash` + `BMConstants`/`BMTypes`, `BMGoldenVector`, üç test, gate koşusu.
-
-- ✅ **Golden vector çıkarımı BİTTİ** — yukarıya bak.
-- ⏳ **D-01'in IDE yarısı** — VS 2022 Community. Determinizm hatası *sessiz* (R-03); breakpoint'siz
-  1260 tick'lik hash uyuşmazlığı kovalamak kötü takas. SDK yarısı S0'da halledildi.
-
-> ⚠️ `BMHash` yazılmadan önce `black-meridian-ue\Docs\gates\S1.md` okunacak: `String.hash()`
-> **byte değil, UTF-32 code point** üzerinden DJB2; avalanche **aritmetik (işaret genişleten) shift**
-> istiyor. Planın "hepsini uint64'te yap" reçetesi 3123 vektörün **0**'ını tutturuyor.
+Spec: `docs/unreal-reboot/07_IMPLEMENTATION_ROADMAP.md` → S2. Bu repo'nun S2'de bir görevi yok;
+bir sonraki oracle ihtiyacı davranışsal eşdeğerlik vektörleri için doğacak.
 
 ---
 
 ## ⚠️ Açık kararlar
 
-- **D-01 (yarım)** — NetFx SDK ✅ kuruldu; **VS 2022 Community IDE hâlâ yok.** S1 öncesi önerilir.
+- ~~**D-01**~~ — **KAPANDI** (2026-09-18): VS 2022 Community 17.14 kuruldu ve doğrulandı.
 - **D-02 / D-10 (AÇIK)** — karakter kimliği + prodüksiyon rotası. **S12'ye kadar çözülecek.**
   ⚠️ `OMNI_CERT_AIKO_2026_0001_v1.0.0`'ın oyun karakteri Aiko Velora'yı temsil ettiği
   **varsayılmayacak** — Cem'in açık talimatı.
@@ -114,15 +105,18 @@ Kalan iş Unreal tarafında: `BMHash` + `BMConstants`/`BMTypes`, `BMGoldenVector
 **Bu repo (arşiv/oracle):**
 - `docs/unreal-reboot/` — planlama paketinin **authoring** evi (düzeltmeler buraya işlenir)
 - `docs/archive/astra-recovery-2026-09/` — tarihsel kanıt, **authoritative DEĞİL** (D-09 modified)
-- `src/` + `tests/unit/` — golden vector'lerin çıkarıldığı oracle (24/24 test geçiyor)
+- `src/` + `tests/unit/` — golden vector'lerin çıkarıldığı oracle. ⚠️ 24 unit test'in **20'si
+  `-s` ile koşmuyor** (autoload gerektiriyorlar); import temiz. CLAUDE.md'deki "24/24" iddiası bayat.
 - `tools/export_golden_vectors.gd` — **vektör çıkarıcı** (salt-okunur; koşular arası bayt-aynı)
 
 ---
 
 ## Geçmiş (özet — detay git log + claude-mem'de)
 
-- **UNREAL REBOOT S1 — 1. yarı** (2026-09-18): bu repo oracle olarak çalıştı; vektörler çıkarıldı,
-  hash sözleşmesi ampirik olarak çivilendi, planın iki hazard reçetesi de yanlış çıktı ve düzeltildi.
+- **UNREAL REBOOT S1 GEÇTİ** (2026-09-18): bu repo oracle olarak çalıştı; vektörler çıkarıldı, hash
+  sözleşmesi ampirik olarak çivilendi, planın **üç** hash iddiası da yanlış çıktı ve düzeltildi.
+  Taşınacak ders: **ondalık literal, algoritma adını yener** — "splitmix64" yazısına güvenmek
+  derlenen, deterministik ve YANLIŞ bir oyun üretti; gate yakaladı. D-01 kapandı.
 - **UNREAL REBOOT S0** (2026-09-18): repo bootstrap, 5 modül, build+smoke+paketleme yeşil,
   `godot-final` tag'i, astra-recovery arşivlendi, planlama paketine 4 düzeltme işlendi.
 - **P20 — Godot hattının son feature'ı** (`de05ef9`): settings paneli, rebindable input,

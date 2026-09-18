@@ -4,7 +4,7 @@
 > bu dosya "şu an neredeyiz, sıradaki adım ne, hangi kararlar açık" durumunu tutar. Claude her
 > slice/commit sonunda bunu günceller — Cem elle yazmaz. Eski durum "Geçmiş" bölümüne düşer.
 
-**Son güncelleme:** 2026-09-18 · **Aktif faz:** 🔁 **UNREAL REBOOT — S2 GEÇTİ**, sıra S3'te
+**Son güncelleme:** 2026-09-18 · **Aktif faz:** 🔁 **UNREAL REBOOT — S3 GEÇTİ**, sıra S4'te
 
 > UYARI: **Bu dosya ARŞİV repo'sunun durumudur.** Aktif geliştirmenin canlı durumu
 > **`D:\black-meridian-ue\NOW.md`**'dir — slice ilerlemesi, S1+ notları ve günlük durum ORADA güncellenir.
@@ -109,6 +109,29 @@ kendi tavanını aşamaz.
 
 ---
 
+## ✅ S3 GEÇTİ (2026-09-18) — bu repo bir fixture daha üretti
+
+`tools/export_job_vectors.gd` yazıldı ve koşuldu — `job_vectors.json`, dört katman / 73 satır
+(resolution 11 · lifecycle 19 · ids 19 · variant 24), iki koşuda bayt-aynı. Unreal tarafı:
+**38/38 test, exit 0**, Shipping paketi BUILD SUCCESSFUL. Kanıt: `black-meridian-ue\Docs\gates\S3.md`.
+
+`-s` ile koşuyor: **JobDirector dışındaki bütün job katmanı autoload'suz** (grep ile doğrulandı —
+tek eşleşmeler yorum satırları). JobDirector'ın state'i zaten Unreal'de `FBMJobDirector`'a taşındı.
+
+Bu repo'nun ürettiği iki sürpriz — ikisi de kaynağı okuyarak değil, **oracle'ı koşturarak** bulundu:
+
+- **Sayı olmayan tick hata vermiyor.** `gen@retaliation@...@notanumber` → `int()` sessizce `0`
+  veriyor, iş rebuild oluyor ama id artık round-trip etmiyor. `-5` ise temiz round-trip ediyor.
+  Bunu "doğrulayan" bir port, oracle'ın kabul ettiği id'leri reddeder.
+- **`AdvanceTick` içinde biten bir job'ın follow-up'ı LEAD-1 kalıyor, LEAD değil.** Önce deadline'lar
+  koşuyor, sonra follow-up pass *az önce eklenen kaydı da* eksiltiyor. Plan'ın metni tersini
+  söylüyordu; `job_director.gd`'yi doğrudan koşturmak kararı verdi (19, LEAD=20).
+
+⚠️ **Mutation testing dört test boşluğu buldu** — ikisi S1'den beri yeşil olan ve *yapısal olarak
+başarısız olamayan* bir guard'daydı. Detay `Docs/gates/S3.md`'nin mutation tablosunda.
+
+---
+
 ## ⚠️ Açık kararlar
 
 - ~~**D-01**~~ — **KAPANDI** (2026-09-18): VS 2022 Community 17.14 kuruldu ve doğrulandı.
@@ -132,10 +155,11 @@ kendi tavanını aşamaz.
 - `docs/archive/astra-recovery-2026-09/` — tarihsel kanıt, **authoritative DEĞİL** (D-09 modified)
 - `src/` + `tests/unit/` — golden vector'lerin çıkarıldığı oracle. ⚠️ 24 unit test'in **20'si
   `-s` ile koşmuyor** (autoload gerektiriyorlar); import temiz. CLAUDE.md'deki "24/24" iddiası bayat.
-- **Üç oracle çıkarıcı** (hepsi salt-okunur, hepsi koşular arası bayt-aynı):
+- **DÖRT oracle çıkarıcı** (hepsi salt-okunur, hepsi koşular arası bayt-aynı):
   - `tools/export_golden_vectors.gd` — hash katmanları (S1), `-s`
   - `tools/export_sim_vectors.gd` — econ/heat/evidence/pressure/operatives (S2), `-s`
   - `tools/export_trajectory.gd` + `.tscn` — 1800 tick eğrisi (S2), **sahne olarak**
+  - `tools/export_job_vectors.gd` — job resolution/lifecycle/id/variant (S3), `-s`
 - `tools/validation/full_cycle_probe.gd` — *sağlık* aleti, golden vector DEĞİL (iş çözer, yani
   eğrisi narrative içeriğine bağlıdır). Referans üretmek için kullanma.
 

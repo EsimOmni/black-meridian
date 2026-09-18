@@ -522,7 +522,12 @@ func _pressure_vectors() -> Dictionary:
 
 	# The same means, but with cases attached — proves the city signal reads combined
 	# pressure (heat + 0.5 x weights), not raw heat.
-	for heats in [[0.2], [0.2, 0.2], [0.0, 0.6]]:
+	#
+	# `[V]` The last two sets drive a district's COMBINED pressure past 1.0, so the city
+	# mean is only reproducible if combined_pressure stayed unclamped. Without them a port
+	# that clamps it passes this layer while failing the evidence layer — a real gap found
+	# by mutation-testing the gate (clamping combined_pressure left GV-PRESS green).
+	for heats in [[0.2], [0.2, 0.2], [0.0, 0.6], [0.9, 0.9], [1.0, 0.2, 0.95]]:
 		var districts: Array[DistrictData] = []
 		var i := 0
 		for h in heats:

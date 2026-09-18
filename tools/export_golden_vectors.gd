@@ -102,6 +102,14 @@ func _corpus() -> Array[String]:
 		"ışık_çürüyen",     # non-ASCII, Turkish
 		"黑子午线",           # non-ASCII, CJK
 		"héllo wörld",
+		# Non-BMP (astral) code points. Godot counts these as ONE code point; a C++ port
+		# over FString's UTF-16 must recombine the surrogate pair or it silently diverges
+		# (emoji: 306085 as a code point vs 7743522 as a pair). Nothing else in the corpus
+		# can catch that, because every other string here is BMP.
+		"😀",
+		"𐌰",
+		"a😀b",
+		"😀|😀|0|0",
 		"a".repeat(1024),
 		"gen@retaliation@" + "x".repeat(512) + "@corvine@120",
 	])

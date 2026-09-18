@@ -114,6 +114,18 @@ func _resolution_cases() -> Array:
 		JobChoiceData.make(&"p_neg", "neg", "", {&"evidence_generated": -0.6}),
 		JobChoiceData.make(&"p_mixed", "mixed", "",
 			{&"evidence_generated": 0.4, &"operative_injury": -0.3, &"new_leverage": 0.2}),
+		# The OVERSHOOT-AND-RETURN trio. These exist for one reason: a per-term clamp and an
+		# end clamp agree on every monotonic case, so rows that only ever push toward one
+		# bound cannot tell the two implementations apart. Going +0.9, +0.9, -0.9 makes them
+		# disagree — end clamp keeps 0.9, per-term clamp destroys the overshoot and yields 0.1.
+		JobChoiceData.make(&"p_up1", "up1", "", {&"objective_achieved": 0.9}),
+		JobChoiceData.make(&"p_up2", "up2", "", {&"objective_achieved": 0.9}),
+		JobChoiceData.make(&"p_down", "down", "", {&"objective_achieved": -0.9}),
+		# Same shape on a SIGNED axis, pushing through the floor and back up.
+		# end clamp: -0.9 - 0.9 + 0.9 = -0.9. per-term: -0.9 -> -1.0 -> -1.0 -> -0.1.
+		JobChoiceData.make(&"p_dn1", "dn1", "", {&"relationship_change": -0.9}),
+		JobChoiceData.make(&"p_dn2", "dn2", "", {&"relationship_change": -0.9}),
+		JobChoiceData.make(&"p_up3", "up3", "", {&"relationship_change": 0.9}),
 	] as Array[JobChoiceData]
 	var approaches := [
 		JobChoiceData.make(&"a_loud", "loud", "",
@@ -156,6 +168,18 @@ func _resolution_cases() -> Array:
 			"approach_pool": approaches, "coverup_pool": coverups,
 			"chosen_prep": [&"p_big"] as Array[StringName],
 			"chosen_approach": &"a_missing", "chosen_coverup": &"c_missing"},
+		# `[V]` THE rows that separate a per-term clamp from an end clamp. Every other case
+		# here is monotonic toward one bound, where the two implementations AGREE — which is
+		# exactly how a per-term clamp slipped through this gate once (2026-09-18) before
+		# these were added. No approach/cover-up: the prep trio alone carries the argument.
+		{"kind": "overshoot_and_return_unsigned", "prep_pool": prep,
+			"approach_pool": approaches, "coverup_pool": coverups,
+			"chosen_prep": [&"p_up1", &"p_up2", &"p_down"] as Array[StringName],
+			"chosen_approach": &"", "chosen_coverup": &""},
+		{"kind": "undershoot_and_return_signed", "prep_pool": prep,
+			"approach_pool": approaches, "coverup_pool": coverups,
+			"chosen_prep": [&"p_dn1", &"p_dn2", &"p_up3"] as Array[StringName],
+			"chosen_approach": &"", "chosen_coverup": &""},
 	]
 
 ## Stage machine vectors. Each row drives one call against a job in a known stage and

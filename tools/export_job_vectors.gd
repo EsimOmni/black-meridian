@@ -158,8 +158,130 @@ func _resolution_cases() -> Array:
 			"chosen_approach": &"a_missing", "chosen_coverup": &"c_missing"},
 	]
 
+## Stage machine vectors. Each row drives one call against a job in a known stage and
+## records the returned bool AND the resulting state — the guard's whole job is to return
+## false WITHOUT mutating, and only recording the bool would miss a port that returns
+## false after already having written the stage.
 func _lifecycle_vectors() -> Dictionary:
-	return {"rows": []}
+	var rows: Array = []
+
+	for case in _lifecycle_cases():
+		var job := _lifecycle_job()
+		job.stage = case["stage"]
+		job.chosen_prep = case["chosen_prep"].duplicate()
+		job.ticks_remaining = case["ticks_remaining"]
+		var accepted: bool = case["call"].call(job)
+		rows.append({
+			"kind": case["kind"],
+			"stage_before": case["stage"],
+			"accepted": accepted,
+			"stage_after": job.stage,
+			"chosen_prep_after": job.chosen_prep.map(func(s): return String(s)),
+			"chosen_approach_after": String(job.chosen_approach),
+			"chosen_coverup_after": String(job.chosen_coverup),
+			"ticks_remaining_after": job.ticks_remaining,
+			"outcome_after": _outcome_row(job.outcome) if not job.outcome.is_empty() else {},
+		})
+
+	return {
+		"max_prep_actions": BM.JOB_MAX_PREP_ACTIONS,
+		"stage_intake": BM.JobStage.INTAKE,
+		"stage_preparation": BM.JobStage.PREPARATION,
+		"stage_intervention": BM.JobStage.INTERVENTION,
+		"stage_coverup": BM.JobStage.COVER_UP,
+		"stage_resolved": BM.JobStage.RESOLVED,
+		"rows": rows,
+	}
+
+## A job with a known three-option pool in each stage, so prep-cap and toggle rows have
+## something real to select from.
+func _lifecycle_job() -> JobData:
+	var job := JobData.new()
+	job.id = &"lc_probe"
+	job.deadline_ticks = 60
+	job.prep_actions = [
+		JobChoiceData.make(&"p1", "p1", "", {&"objective_achieved": 0.1}),
+		JobChoiceData.make(&"p2", "p2", "", {&"objective_achieved": 0.1}),
+		JobChoiceData.make(&"p3", "p3", "", {&"objective_achieved": 0.1}),
+		JobChoiceData.make(&"p4", "p4", "", {&"objective_achieved": 0.1}),
+	] as Array[JobChoiceData]
+	job.approaches = [
+		JobChoiceData.make(&"a1", "a1", "", {&"objective_achieved": 0.6}),
+	] as Array[JobChoiceData]
+	job.coverups = [
+		JobChoiceData.make(&"c1", "c1", "", {&"evidence_generated": -0.3}),
+	] as Array[JobChoiceData]
+	return job
+
+func _lifecycle_cases() -> Array:
+	var none: Array[StringName] = []
+	var three: Array[StringName] = [&"p1", &"p2", &"p3"]
+	var one: Array[StringName] = [&"p1"]
+
+	return [
+		# --- begin: INTAKE -> PREPARATION, and refused from anywhere else ---
+		{"kind": "begin_from_intake", "stage": BM.JobStage.INTAKE, "chosen_prep": none,
+			"ticks_remaining": 60, "call": func(j): return JobLifecycle.begin(j)},
+		{"kind": "begin_from_preparation_refused", "stage": BM.JobStage.PREPARATION,
+			"chosen_prep": none, "ticks_remaining": 60,
+			"call": func(j): return JobLifecycle.begin(j)},
+		{"kind": "begin_from_resolved_refused", "stage": BM.JobStage.RESOLVED,
+			"chosen_prep": none, "ticks_remaining": 60,
+			"call": func(j): return JobLifecycle.begin(j)},
+
+		# --- choose_prep: select, toggle off, cap, unknown id, wrong stage ---
+		{"kind": "prep_select_first", "stage": BM.JobStage.PREPARATION, "chosen_prep": none,
+			"ticks_remaining": 60, "call": func(j): return JobLifecycle.choose_prep(j, &"p1")},
+		{"kind": "prep_toggle_off", "stage": BM.JobStage.PREPARATION, "chosen_prep": one,
+			"ticks_remaining": 60, "call": func(j): return JobLifecycle.choose_prep(j, &"p1")},
+		{"kind": "prep_at_cap_refused", "stage": BM.JobStage.PREPARATION, "chosen_prep": three,
+			"ticks_remaining": 60, "call": func(j): return JobLifecycle.choose_prep(j, &"p4")},
+		{"kind": "prep_at_cap_toggle_off_allowed", "stage": BM.JobStage.PREPARATION,
+			"chosen_prep": three, "ticks_remaining": 60,
+			"call": func(j): return JobLifecycle.choose_prep(j, &"p2")},
+		{"kind": "prep_unknown_id_refused", "stage": BM.JobStage.PREPARATION, "chosen_prep": none,
+			"ticks_remaining": 60, "call": func(j): return JobLifecycle.choose_prep(j, &"nope")},
+		{"kind": "prep_wrong_stage_refused", "stage": BM.JobStage.INTERVENTION,
+			"chosen_prep": none, "ticks_remaining": 60,
+			"call": func(j): return JobLifecycle.choose_prep(j, &"p1")},
+
+		# --- choose_approach: PREPARATION -> INTERVENTION only ---
+		{"kind": "approach_from_preparation", "stage": BM.JobStage.PREPARATION,
+			"chosen_prep": one, "ticks_remaining": 60,
+			"call": func(j): return JobLifecycle.choose_approach(j, &"a1")},
+		{"kind": "approach_from_intake_refused", "stage": BM.JobStage.INTAKE,
+			"chosen_prep": none, "ticks_remaining": 60,
+			"call": func(j): return JobLifecycle.choose_approach(j, &"a1")},
+		{"kind": "approach_unknown_id_refused", "stage": BM.JobStage.PREPARATION,
+			"chosen_prep": none, "ticks_remaining": 60,
+			"call": func(j): return JobLifecycle.choose_approach(j, &"nope")},
+
+		# --- choose_coverup: the ATOMIC one. INTERVENTION -> COVER_UP -> RESOLVED in a
+		# single call, with the outcome resolved on the way through. A port that stops at
+		# COVER_UP and waits for another call is a different game.
+		{"kind": "coverup_atomic_to_resolved", "stage": BM.JobStage.INTERVENTION,
+			"chosen_prep": one, "ticks_remaining": 60,
+			"call": func(j):
+				j.chosen_approach = &"a1"
+				return JobLifecycle.choose_coverup(j, &"c1")},
+		{"kind": "coverup_from_preparation_refused", "stage": BM.JobStage.PREPARATION,
+			"chosen_prep": none, "ticks_remaining": 60,
+			"call": func(j): return JobLifecycle.choose_coverup(j, &"c1")},
+		{"kind": "coverup_unknown_id_refused", "stage": BM.JobStage.INTERVENTION,
+			"chosen_prep": none, "ticks_remaining": 60,
+			"call": func(j): return JobLifecycle.choose_coverup(j, &"nope")},
+
+		# --- tick: the deadline. Fires exactly once, at the transition to <= 0. ---
+		{"kind": "tick_above_deadline", "stage": BM.JobStage.PREPARATION, "chosen_prep": none,
+			"ticks_remaining": 5, "call": func(j): return JobLifecycle.tick(j)},
+		{"kind": "tick_expires_at_one", "stage": BM.JobStage.PREPARATION, "chosen_prep": none,
+			"ticks_remaining": 1, "call": func(j): return JobLifecycle.tick(j)},
+		{"kind": "tick_already_resolved_noop", "stage": BM.JobStage.RESOLVED,
+			"chosen_prep": none, "ticks_remaining": 1,
+			"call": func(j): return JobLifecycle.tick(j)},
+		{"kind": "tick_from_intake_expires", "stage": BM.JobStage.INTAKE, "chosen_prep": none,
+			"ticks_remaining": 1, "call": func(j): return JobLifecycle.tick(j)},
+	]
 
 func _id_vectors() -> Dictionary:
 	return {"rows": []}

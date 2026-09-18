@@ -46,6 +46,23 @@ The case id is reassembled as `"@".join(parts.slice(3, 7))`. Consequences a care
 4. **`int(parts[N])` on a non-numeric string yields 0 silently** in Godot. Reproduce that, do not
    substitute an error.
 
+### A third constraint the enums carry
+
+`BM.JobOrigin`'s two newest members are **appended, not sorted**, and `enums.gd` says why in a
+comment: *"appended, so saved int values stay stable."*
+
+```gdscript
+enum JobStage  { INTAKE, PREPARATION, INTERVENTION, COVER_UP, RESOLVED }        # 0..4
+enum JobOrigin { FAILED_RACKET, WITNESS, RIVAL_PROVOCATION, INTERNAL_DISPUTE,
+                 INSTITUTIONAL_PRESSURE, EVIDENCE_CHAIN, TERRITORY_LOSS }        # 0..6
+const JOB_MAX_PREP_ACTIONS := 3
+```
+
+`EVIDENCE_CHAIN = 5` and `TERRITORY_LOSS = 6` are the two origins S3's post-outcome branches key
+off. **Do not reorder `EBMJobOrigin` into a "tidier" grouping in the port** — these integers are a
+save-format contract that S4 consumes one slice later, and a reorder silently rewrites the meaning
+of every saved job.
+
 ---
 
 ## File structure
@@ -79,6 +96,37 @@ autoload in the job layer, and its state is precisely what moves to `FBMJobDirec
 
 Two test files, split by what fails: a fixture mismatch and a behavior regression are different
 investigations. Same reason S1 and S2 kept `hash_vectors.json` and `sim_vectors.json` apart.
+
+### Where the job pass slots into the tick
+
+S2 left the seam marked and unambiguous in `Source/BMCore/Private/BMSimulation.cpp`:
+
+```cpp
+void FBMSimulation::AdvanceTick(FBMCampaignState& State)
+{
+	++State.TickIndex;
+
+	// ORDER IS CONTRACT. See the header and 04 §5.
+	Settle(State);                 // 1. clear exposure -> settle each faction (array order)
+	UpdateDistrictHeat(State);     // 2. consumes THIS tick's exposure
+	UpdateCentralPressure(State);  // 3. consumes THIS tick's district heat
+
+	// 4-6 (jobs, night cycle, narrative) and the rival tick arrive in later slices.
+}
+```
+
+**An open design question Task 11 must answer explicitly, not silently:** `AdvanceTick` takes only
+`FBMCampaignState&`, but the job pass needs the director's state (active jobs, pending follow-ups)
+as well. Two honest options:
+
+| Option | Trade-off |
+|---|---|
+| Put `FBMJobDirector` **inside** `FBMCampaignState` as a member | `AdvanceTick`'s signature is unchanged, and jobs automatically participate in the interleaved-campaign determinism test S2 already ships (`TickIsReproducible` advances two campaigns and requires byte-identical state). Jobs become part of "what a campaign is" — which matches S4, where the save contract must serialize them anyway. |
+| Add a second parameter, `AdvanceTick(State, JobDirector)` | Keeps the structs independent, but changes a signature the golden vectors and the probe are both defined against, and risks a second definition of what a tick is — the exact hazard S2's Correction 6 recorded. |
+
+**Recommendation: the first.** S4 has to serialize job state with the campaign regardless, and the
+interleaved-determinism test is free coverage. Whichever is chosen, record it in `Docs/gates/S3.md`
+as a decision with its reason — do not let it be settled by whichever compiles first.
 
 ---
 

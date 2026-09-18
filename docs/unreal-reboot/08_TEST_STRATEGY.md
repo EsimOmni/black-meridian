@@ -80,17 +80,37 @@ Godot build.
 
 ### 4.1 The three hazards
 
-1. **`String.hash()` is Godot-specific.** `[I]` It is DJB2 (`h = h*33 + c`) over the string's bytes,
-   but the exact width, seed and encoding must be **verified empirically**, not assumed.
-2. **Signed shift semantics.** GDScript `>>` on a negative int is arithmetic; the algorithm expects a
-   **logical** shift. `[P]` Fix: do all of it in `uint64`, where the shift is unambiguous.
-3. **Signed overflow is UB in C++.** The Godot multiplications rely on wraparound. `[P]` Fix: `uint64`
-   multiplication, which is defined modular arithmetic.
+> **RESOLVED EMPIRICALLY IN S1 (2026-09-18).** Hazards 1 and 2 below were open questions when this
+> was written; both are now answered, and **both resolve against what this section originally
+> prescribed.** The corrected answers are inline. Full evidence:
+> `D:\black-meridian-ue\Docs\gates\S1.md`.
+
+1. **`String.hash()` is Godot-specific.** `[I]` It is DJB2 (`h = h*33 + c`, seed 5381) — but over the
+   string's **UTF-32 code points**, not its bytes, masked to **unsigned 32-bit**.
+   `[V]` Verified over 1715 corpus strings: code points match 1715/1715; UTF-8 bytes match 1712/1715
+   (failing exactly on the non-ASCII adversarial cases); UTF-16LE matches 1/1715.
+   ⚠️ A C++ implementation that hashes `FString`'s UTF-8 bytes passes every id in the current seed and
+   **breaks on the first non-ASCII string ever authored.** Iterate `TCHAR` code points.
+2. **Signed shift semantics.** GDScript `>>` on a negative int is arithmetic — and the shipped
+   behavior **is** that arithmetic shift, which is load-bearing.
+   ⚠️ `[V]` The original fix here ("do all of it in `uint64`, where the shift is unambiguous") is
+   **WRONG** and produces a silently-different game: pure-`uint64` logical shifts match **0 of 3123**
+   vectors, diverging on the very first one. Do the mix in signed `int64` with arithmetic shifts (or
+   `uint64` with an explicit sign-extending shift helper) and expose the result as `uint64`.
+   ~50% of inputs go negative after the step-1 multiply, so sign extension decides the outcome.
+3. **Signed overflow is UB in C++.** The Godot multiplications rely on wraparound. `[P]` Fix: perform
+   the multiplication in `uint64` (defined modular arithmetic) and cast back — this is compatible
+   with hazard 2, which constrains only the **shifts**, not the multiplies.
 
 ### 4.2 Mandated procedure — S1, before any other logic
 
-**Step 1 — extract vectors from Godot** (a new read-only script in the Godot repo; **not created by
-this task**):
+**Step 1 — extract vectors from Godot.** ✅ **DONE (S1, 2026-09-18).** The script exists:
+`D:\black-meridian\tools\export_golden_vectors.gd`, producing `Tests/Golden/hash_vectors.json`
+(1715 hash · 1408 tie_jitter · 240 variant_index rows). Two constraints it had to solve, worth
+knowing before writing any other oracle script: **autoloads do not exist in a `-s` SceneTree script**
+(so ids are parsed out of `world_seed.gd` rather than read from a built `GameState`), and **stdout is
+not a safe channel** (the `_mcp_game_helper` autoload prints a banner after the script finishes and
+corrupts a redirected document — the script writes its own file). The original sketch:
 
 ```gdscript
 # tools/export_golden_vectors.gd  — extends SceneTree, run with -s
@@ -105,6 +125,11 @@ Cover: every venue/character/faction id in the seed · every generated-job id fo
 **Step 3 — `Test_Hash_MatchesGodotVectors` must pass 100%.** Not "mostly."
 
 ### 4.3 If the hash cannot be reproduced
+
+> **MOOT AS OF S1 (2026-09-18) — SC-2 NOT TRIGGERED.** The hash was reproduced exactly: 1715/1715 on
+> `String.hash()` and 3123/3123 on the avalanche, with the downstream bucket and variant math matching
+> with zero mismatches. **No re-baseline decision is needed**, and direct vector comparison stays
+> available to §5. This section is retained for the record only.
 
 `[P]` Escalate (stop condition SC-2). The fallback, requiring Cem's sign-off:
 

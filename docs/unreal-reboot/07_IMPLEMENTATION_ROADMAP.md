@@ -96,17 +96,17 @@ because everything downstream inherits them.
 
 **Validation.**
 
-> WARNING: **`tools/export_golden_vectors.gd` DOES NOT EXIST YET — S1 authors it.** The command below
-> is the target, not something ready to run. Writing that script (a new **read-only** GDScript in the
-> Godot repo, `extends SceneTree`) is S1's first task; the spec is
-> [08_TEST_STRATEGY.md](08_TEST_STRATEGY.md) §4.2. `Tests/Golden/` in the Unreal repo stays empty
-> until it runs. Use the **`_console`** binary: the plain `.exe` detaches from the console on Windows,
-> so `print()` never reaches stdout for capture.
+> ✅ **`tools/export_golden_vectors.gd` EXISTS as of 2026-09-18** and has been run;
+> `Tests/Golden/hash_vectors.json` is populated (1715 + 1408 + 240 rows). Evidence and the resulting
+> spec corrections: `D:\black-meridian-ue\Docs\gates\S1.md`. Use the **`_console`** binary: the plain
+> `.exe` detaches from the console on Windows. The script **writes its own output file** via `--out=`
+> rather than printing to stdout — the `_mcp_game_helper` autoload emits a banner after the script
+> finishes, which corrupts a redirected document.
 
 ```sh
 # 1) EXTRACT vectors from the Godot build (read-only; run in D:\black-meridian)
-#    NOTE: author this script first — see 08_TEST_STRATEGY.md §4.2.
-D:/Godot/Godot_v4.7-stable_win64_console.exe --headless --path . -s tools/export_golden_vectors.gd
+D:/Godot/Godot_v4.7-stable_win64_console.exe --headless --path . -s tools/export_golden_vectors.gd \
+    -- --out=D:/black-meridian-ue/Tests/Golden/hash_vectors.json
 # 2) COMPARE in Unreal
 UnrealEditor-Cmd.exe <proj> -ExecCmds="Automation RunTests BM.Determinism; Quit" -unattended -nullrhi
 ```

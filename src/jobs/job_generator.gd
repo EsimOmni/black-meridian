@@ -127,6 +127,10 @@ static func _variant_index(seed_str: String, count: int) -> int:
 ## move the bucket and the variant would freeze to one side. rival_scoring.gd is shipped
 ## and gated; per the P08b spec (option A) we copy rather than reopen a green file for a
 ## cross-file refactor. Keep the two copies byte-identical if either ever changes.
+## NOTE (Unreal reboot S1, 2026-09-18): despite the name below, these are MurmurHash3's
+## fmix64 constants (0xFF51AFD7ED558CCD / 0xC4CEB9FE1A85EC53), NOT splitmix64's
+## (0xBF58476D1CE4E5B9 / 0x94D049BB133111EB). The C++ port was written from the name once
+## and mismatched every vector. Trust the decimal literals, not the algorithm name.
 static func _avalanche(x: int) -> int:
 	x = (x ^ (x >> 30)) * -49064778989728563
 	x = (x ^ (x >> 27)) * -4265267296055464877

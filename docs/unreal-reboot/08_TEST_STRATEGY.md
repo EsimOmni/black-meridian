@@ -65,13 +65,21 @@ Claiming it would be dishonest and would fail at the first `roundf`.
 
 ## 4. The hash problem — the port's single highest risk
 
-`[V]` Determinism depends on `_avalanche()`, a splitmix64 finalizer over Godot's `String.hash()`:
+`[V]` Determinism depends on `_avalanche()`, a 64-bit bit-mix finalizer over Godot's `String.hash()`:
 
 ```gdscript
-x = (x ^ (x >> 30)) * -49064778989728563     # 0xBF58476D1CE4E5B9
-x = (x ^ (x >> 27)) * -4265267296055464877   # 0x94D049BB133111EB
+x = (x ^ (x >> 30)) * -49064778989728563     # 0xFF51AFD7ED558CCD
+x = (x ^ (x >> 27)) * -4265267296055464877   # 0xC4CEB9FE1A85EC53
 return x ^ (x >> 31)
 ```
+
+> ⚠️ **CORRECTED (S1, 2026-09-18) — the hex comments above were wrong, and so is the name.** Both
+> the Godot source and earlier versions of this document call this "splitmix64". It is
+> **MurmurHash3's `fmix64`**: the decimal literals are `0xFF51AFD7ED558CCD` / `0xC4CEB9FE1A85EC53`,
+> whereas splitmix64 uses `0xBF58476D1CE4E5B9` / `0x94D049BB133111EB` — different constants
+> entirely. Writing the splitmix64 values compiles, runs, stays deterministic, and mismatches
+> **every** avalanche vector; it cost a red gate before being caught.
+> **Take the decimal literals as authoritative — the algorithm's name here is not evidence.**
 
 It drives **rival tie-breaking** and **job-variant selection** — i.e. *which venue the rival attacks*
 and *which job text the player reads*. Get it subtly wrong and the game is still perfectly

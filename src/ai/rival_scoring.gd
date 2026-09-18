@@ -71,6 +71,10 @@ static func tie_jitter(rival_id: StringName, target_id: StringName, action: int,
 ## splitmix64 finalizer — deterministic integer bit-mix giving full avalanche. Constants
 ## are the standard 0xbf58476d1ce4e5b9 / 0x94d049bb133111eb as signed 64-bit ints;
 ## GDScript int math wraps mod 2^64, which is exactly what the mix needs.
+## NOTE (Unreal reboot S1, 2026-09-18): despite the name below, these are MurmurHash3's
+## fmix64 constants (0xFF51AFD7ED558CCD / 0xC4CEB9FE1A85EC53), NOT splitmix64's
+## (0xBF58476D1CE4E5B9 / 0x94D049BB133111EB). The C++ port was written from the name once
+## and mismatched every vector. Trust the decimal literals, not the algorithm name.
 static func _avalanche(x: int) -> int:
 	x = (x ^ (x >> 30)) * -49064778989728563
 	x = (x ^ (x >> 27)) * -4265267296055464877

@@ -4,7 +4,7 @@
 > bu dosya "şu an neredeyiz, sıradaki adım ne, hangi kararlar açık" durumunu tutar. Claude her
 > slice/commit sonunda bunu günceller — Cem elle yazmaz. Eski durum "Geçmiş" bölümüne düşer.
 
-**Son güncelleme:** 2026-09-18 · **Aktif faz:** 🔁 **UNREAL REBOOT — S1 GEÇTİ**, sıra S2'de
+**Son güncelleme:** 2026-09-18 · **Aktif faz:** 🔁 **UNREAL REBOOT — S2 GEÇTİ**, sıra S3'te
 
 > UYARI: **Bu dosya ARŞİV repo'sunun durumudur.** Aktif geliştirmenin canlı durumu
 > **`D:\black-meridian-ue\NOW.md`**'dir — slice ilerlemesi, S1+ notları ve günlük durum ORADA güncellenir.
@@ -77,10 +77,35 @@ kopyasına da uyarı notu düşüldü. **SC-2 tetiklenmedi.**
 
 ---
 
-## ⏭️ Sıradaki iş: **S2 — Economy, heat, evidence, pressure** (Unreal repo'sunda)
+## ✅ S2 GEÇTİ (2026-09-18) — bu repo İKİ fixture daha üretti
 
-Spec: `docs/unreal-reboot/07_IMPLEMENTATION_ROADMAP.md` → S2. Bu repo'nun S2'de bir görevi yok;
-bir sonraki oracle ihtiyacı davranışsal eşdeğerlik vektörleri için doğacak.
+> Not: bu bölümün eski hali "bu repo'nun S2'de bir görevi yok" diyordu. **Yanlış çıktı** — S2 bu
+> repo'dan iki yeni oracle çıkarımı istedi. Aynı varsayımı S3 için de yapma.
+
+| script | üretti | nasıl koşar |
+|---|---|---|
+| `tools/export_sim_vectors.gd` | `sim_vectors.json` — 2526 satır (econ/heat/evidence/pressure/operatives) | `-s` ile (saf matematik) |
+| `tools/export_trajectory.gd` + `.tscn` | `trajectory.json` — 1800 tick, 120'de bir örnek | **`.tscn` ile** (autoload gerekiyor) |
+
+İkisi de koşular arası bayt-aynı. Unreal tarafı: **23/23 test, exit 0**.
+
+**Neden biri `-s` biri `.tscn`:** vektörler *saf matematiği* ölçüyor (autoload'suz `RefCounted`
+static'leri), o yüzden sabitleri kaynaktan regex'le parse edip autoload adı anmaktan kaçınabiliyor.
+Trajectory ise *servis katmanının zaman içindeki bileşimini* ölçüyor — yani ölçülen şeyin kendisi
+autoload kompozisyonu. Kaçamak yapısal olarak mümkün değil, sahne olarak koşuyor (repo konvansiyonu:
+`tools/validation/*.tscn`).
+
+**Trajectory politikası PASİF** — oyuncu hiçbir şey yapmıyor. `full_cycle_probe.gd` iş çözüyor, ki o
+bir *sağlık* aleti için doğru ama golden vector için yanlış: eğri narrative *içeriğinin* fonksiyonu
+olurdu, bir job template'indeki tek sayıyı değiştirmek referansı kaydırırdı.
+
+⚠️ **Trajectory karşılaştırması tick 240'a kadar geçiyor, sonrası S5'e ertelendi** — ölçümle
+kanıtlanarak, tercihle değil. Oracle gerçek autoload zincirini (`RivalDirector` dahil) sürüyor;
+Unreal'in S2'si sadece ekonomi/heat/pressure. Eğriler tick 240'a kadar birebir, 360'ta ayrışıyor —
+tam olarak oracle'ın kendi `phase` alanının COUNCIL→OPERATIONS döndüğü ve rakibin ilk kez
+davranmasına izin verilen yer. Kesin kanıt: tick 240–360 arası oracle'ın ima ettiği exposure
+(0.018664) bu dünyanın **sıfır-disruption tavanını** (0.016845) aşıyor; ekonomi içi hiçbir hata
+kendi tavanını aşamaz.
 
 ---
 
@@ -113,6 +138,12 @@ bir sonraki oracle ihtiyacı davranışsal eşdeğerlik vektörleri için doğac
 
 ## Geçmiş (özet — detay git log + claude-mem'de)
 
+- **UNREAL REBOOT S2 GEÇTİ** (2026-09-18): bu repo iki fixture daha üretti (`sim_vectors.json`
+  2526 satır, `trajectory.json` 1800 tick), ikisi de bayt-aynı. Unreal 23/23, exit 0. Taşınacak iki
+  ders: **gate'in ilk koşuda yeşil yanması kanıt değil** — mutasyon testi üç boşluk buldu, ikisi
+  derlenen-deterministik-yanlış oyun gönderecekti; ve **bir gate tam geçemiyorsa toleransı gevşetmek
+  değil NEDENİNİ ölçmek doğrusu** (oracle'ın exposure'ı sıfır-disruption tavanını aşıyordu → fazlalık
+  rakipten geliyor, o da S5). Plana altı düzeltme daha işlendi.
 - **UNREAL REBOOT S1 GEÇTİ** (2026-09-18): bu repo oracle olarak çalıştı; vektörler çıkarıldı, hash
   sözleşmesi ampirik olarak çivilendi, planın **üç** hash iddiası da yanlış çıktı ve düzeltildi.
   Taşınacak ders: **ondalık literal, algoritma adını yener** — "splitmix64" yazısına güvenmek

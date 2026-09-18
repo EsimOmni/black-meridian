@@ -410,5 +410,65 @@ func _find_venue_in(districts: Array[DistrictData], venue_id: StringName) -> Ven
 				return v
 	return null
 
+## Variant-pick vectors. `hash` and `avalanche` are emitted as DECIMAL STRINGS because they
+## are 64-bit: 1713 of S1's 1719 avalanche values exceeded the 53-bit double mantissa and
+## silently rounded when written as JSON numbers, failing a CORRECT implementation. Same
+## trap, same fix. The port's test must reject a numeric field here.
+##
+## NOTE the two different non-negative-modulo idioms in the shipped source, which are NOT
+## interchangeable and must not be unified in the port:
+##   JobGenerator._variant_index : ((m % count) + count) % count   over avalanche(String.hash())
+##   EvidenceMath.kind_for       : posmod(hash(...), size)         over the GLOBAL hash(), no avalanche
+## The second is already covered by S2's GV-EVID. Only the first is GV-JOB-04.
 func _variant_vectors() -> Dictionary:
-	return {"rows": []}
+	var rows: Array = []
+
+	for seed_str in _variant_seeds():
+		# Explicit types: String.hash()'s return type is not inferable, so `:=` is a parse
+		# error here. Not a style choice.
+		var h: int = seed_str.hash()
+		var av: int = _avalanche_ref(h)
+		for count in [2, 3]:
+			rows.append({
+				"seed": seed_str,
+				"hash": str(h),
+				"avalanche": str(av),
+				"count": count,
+				"index": ((av % count) + count) % count,
+			})
+
+	return {
+		"retaliation_variants": JobTemplates.RETALIATION_VARIANTS,
+		"bury_case_variants": JobTemplates.BURY_CASE_VARIANTS,
+		"contested_variants": JobTemplates.CONTESTED_VARIANTS,
+		"rows": rows,
+	}
+
+## Byte-identical copy of JobGenerator._avalanche. Copied rather than called because that
+## method is private; if the two ever disagree the extractor is lying, so keep them
+## identical. The constants are MurmurHash3 fmix64 (0xFF51AFD7ED558CCD /
+## 0xC4CEB9FE1A85EC53) despite the shipped comment naming splitmix64 — S1 lost a gate to
+## that comment. The decimal literals below are authoritative; the name is not.
+func _avalanche_ref(x: int) -> int:
+	x = (x ^ (x >> 30)) * -49064778989728563
+	x = (x ^ (x >> 27)) * -4265267296055464877
+	return x ^ (x >> 31)
+
+## Seeds that matter: real generated ids at consecutive ticks (the +1-tick sensitivity the
+## avalanche exists for), plus edge shapes. A port with a broken avalanche typically
+## freezes consecutive ticks to the same index — these rows catch exactly that.
+func _variant_seeds() -> Array:
+	return [
+		"gen@retaliation@gw_contraband@corvine@240",
+		"gen@retaliation@gw_contraband@corvine@241",
+		"gen@retaliation@gw_contraband@corvine@242",
+		"gen@retaliation@gw_contraband@corvine@243",
+		"gen@retaliation@gw_contraband@corvine@0",
+		"gen@contested@gw_contraband@corvine@240",
+		"gen@contested@gw_contraband@corvine@241",
+		"gen@burycase@glasswharf@case@glasswharf@0@120@240",
+		"gen@burycase@glasswharf@case@glasswharf@0@120@241",
+		"gen@followup@gw_contraband@301",
+		"",
+		"a",
+	]

@@ -25,7 +25,7 @@ extends SceneTree
 ## loop that instantiates them never runs. The existing unit tests avoid autoloads for the
 ## same reason.
 
-const SCHEMA := 1
+const SCHEMA := 2
 const SEED_PATH := "res://src/core/world_seed.gd"
 const DEFAULT_OUT := "D:/black-meridian-ue/Tests/Golden/hash_vectors.json"
 
@@ -38,7 +38,7 @@ func _init() -> void:
 		"schema": SCHEMA,
 		"source": "godot-final",
 		"godot_version": Engine.get_version_info().string,
-		"note": "String.hash() and the splitmix64 avalanche, as shipped. Signed 64-bit.",
+		"note": "String.hash() (DJB2 over UTF-32 code points, uint32) and the splitmix64 avalanche (arithmetic shifts). Avalanche values are STRINGS: they exceed the 53-bit double mantissa and a JSON number would silently round.",
 		"hash": _hash_vectors(),
 		"tie_jitter": _tie_jitter_vectors(),
 		"variant_index": _variant_index_vectors(),
@@ -67,13 +67,16 @@ func _out_path() -> String:
 
 # --- Layer 1: raw String.hash() + avalanche over the full corpus ---------------
 
+## The 64-bit avalanche is emitted as a STRING, not a number. JSON numbers are doubles, and
+## 1713 of these 1719 values exceed the 53-bit mantissa — reading them as numbers silently
+## rounds (925186133376537099 -> 925186133376537088) and would fail a correct implementation.
 func _hash_vectors() -> Array:
 	var rows: Array = []
 	for s in _corpus():
 		rows.append({
 			"s": s,
 			"hash": s.hash(),
-			"avalanche": RivalScoring._avalanche(s.hash()),
+			"avalanche": str(RivalScoring._avalanche(s.hash())),
 		})
 	return rows
 
@@ -145,7 +148,7 @@ func _tie_jitter_cases() -> Array:
 						"salt": salt,
 						"s": s,
 						"hash": s.hash(),
-						"avalanche": RivalScoring._avalanche(s.hash()),
+						"avalanche": str(RivalScoring._avalanche(s.hash())),
 						"jitter": RivalScoring.tie_jitter(StringName(f), StringName(t), action, salt),
 					})
 	return rows
@@ -167,7 +170,7 @@ func _variant_index_vectors() -> Dictionary:
 			"s": case["s"],
 			"count": case["count"],
 			"hash": (case["s"] as String).hash(),
-			"avalanche": RivalScoring._avalanche((case["s"] as String).hash()),
+			"avalanche": str(RivalScoring._avalanche((case["s"] as String).hash())),
 			"index": JobGenerator._variant_index(case["s"], case["count"]),
 		})
 	return {"rows": rows}

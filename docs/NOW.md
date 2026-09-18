@@ -4,7 +4,7 @@
 > bu dosya "şu an neredeyiz, sıradaki adım ne, hangi kararlar açık" durumunu tutar. Claude her
 > slice/commit sonunda bunu günceller — Cem elle yazmaz. Eski durum "Geçmiş" bölümüne düşer.
 
-**Son güncelleme:** 2026-09-18 · **Aktif faz:** 🔁 **UNREAL REBOOT — S0 BİTTİ, S1 BEKLİYOR**
+**Son güncelleme:** 2026-09-18 · **Aktif faz:** 🔁 **UNREAL REBOOT — S1 DEVAM EDİYOR** (vektörler çıkarıldı)
 
 > UYARI: **Bu dosya ARŞİV repo'sunun durumudur.** Aktif geliştirmenin canlı durumu
 > **`D:\black-meridian-ue\NOW.md`**'dir — slice ilerlemesi, S1+ notları ve günlük durum ORADA güncellenir.
@@ -51,7 +51,29 @@ sessizce bozuyordu · glTF Importer plugin'i UE 5.8'de yok · `UnrealBuildTool.e
 
 ---
 
-## ⏭️ Sıradaki iş: **S1 — Determinism Core** (BAŞLANMADI)
+## 🔨 Bu repo'nun S1'deki rolü — **oracle olarak ÇALIŞTI** (2026-09-18)
+
+`tools/export_golden_vectors.gd` yazıldı ve çalıştırıldı (`970f5c0`) — salt-okunur, iki koşuda
+bayt-aynı çıktı. Vektörler `D:\black-meridian-ue\Tests\Golden\hash_vectors.json` altında
+(1715 hash · 1408 tie_jitter · 240 variant_index satırı). Kanıt: `black-meridian-ue\Docs\gates\S1.md`.
+
+```sh
+D:/Godot/Godot_v4.7-stable_win64_console.exe --headless --path . \
+    -s tools/export_golden_vectors.gd -- --out=<mutlak yol>.json
+```
+
+Bu repo'da öğrenilen ve gelecekteki her oracle script'ini ilgilendiren iki şey:
+**`-s` SceneTree script'inde autoload YOKTUR** (`WorldSeed.build()` `GameState`'e yazdığı için
+kullanılamaz — id'ler `world_seed.gd` kaynağından parse edilir) ve **stdout güvenli kanal değildir**
+(`_mcp_game_helper` autoload'ı script bittikten *sonra* banner basıyor, yönlendirilen belgeyi bozuyor
+— script dosyayı kendisi yazar).
+
+Planlama paketindeki `08 §4.1` iki hazard'ı da **yazılanın tersine** çıktı; düzeltmeler
+`docs/unreal-reboot/`'a işlendi ve UE repo'suna yeniden aynalandı. **SC-2 tetiklenmedi.**
+
+---
+
+## ⏭️ Sıradaki iş: **S1'in C++ yarısı** (Unreal repo'sunda)
 
 Spec: `docs/unreal-reboot/07_IMPLEMENTATION_ROADMAP.md` → S1 · mimari:
 `04_UNREAL_ARCHITECTURE.md` · test: `08_TEST_STRATEGY.md`.
@@ -59,11 +81,15 @@ Spec: `docs/unreal-reboot/07_IMPLEMENTATION_ROADMAP.md` → S1 · mimari:
 
 **Gate koşulu:** *her hash golden vector'ü birebir eşleşecek.* Otomatik, tavizsiz.
 
-Başlamadan önce iki ön koşul:
-1. **Golden vector çıkarımı** — bu Godot repo'sunu oracle olarak çalıştırıp JSON vektörleri üret,
-   `black-meridian-ue/Tests/Golden/` altına koy. S1'in ilk işi budur.
-2. **D-01'in IDE yarısı** — VS 2022 Community. Determinizm hatası *sessiz* (R-03); breakpoint'siz
-   1260 tick'lik hash uyuşmazlığı kovalamak kötü takas. SDK yarısı S0'da halledildi.
+Kalan iş Unreal tarafında: `BMHash` + `BMConstants`/`BMTypes`, `BMGoldenVector`, üç test, gate koşusu.
+
+- ✅ **Golden vector çıkarımı BİTTİ** — yukarıya bak.
+- ⏳ **D-01'in IDE yarısı** — VS 2022 Community. Determinizm hatası *sessiz* (R-03); breakpoint'siz
+  1260 tick'lik hash uyuşmazlığı kovalamak kötü takas. SDK yarısı S0'da halledildi.
+
+> ⚠️ `BMHash` yazılmadan önce `black-meridian-ue\Docs\gates\S1.md` okunacak: `String.hash()`
+> **byte değil, UTF-32 code point** üzerinden DJB2; avalanche **aritmetik (işaret genişleten) shift**
+> istiyor. Planın "hepsini uint64'te yap" reçetesi 3123 vektörün **0**'ını tutturuyor.
 
 ---
 
@@ -88,12 +114,15 @@ Başlamadan önce iki ön koşul:
 **Bu repo (arşiv/oracle):**
 - `docs/unreal-reboot/` — planlama paketinin **authoring** evi (düzeltmeler buraya işlenir)
 - `docs/archive/astra-recovery-2026-09/` — tarihsel kanıt, **authoritative DEĞİL** (D-09 modified)
-- `src/` + `tests/unit/` — golden vector'lerin çıkarılacağı oracle (24/24 test geçiyor)
+- `src/` + `tests/unit/` — golden vector'lerin çıkarıldığı oracle (24/24 test geçiyor)
+- `tools/export_golden_vectors.gd` — **vektör çıkarıcı** (salt-okunur; koşular arası bayt-aynı)
 
 ---
 
 ## Geçmiş (özet — detay git log + claude-mem'de)
 
+- **UNREAL REBOOT S1 — 1. yarı** (2026-09-18): bu repo oracle olarak çalıştı; vektörler çıkarıldı,
+  hash sözleşmesi ampirik olarak çivilendi, planın iki hazard reçetesi de yanlış çıktı ve düzeltildi.
 - **UNREAL REBOOT S0** (2026-09-18): repo bootstrap, 5 modül, build+smoke+paketleme yeşil,
   `godot-final` tag'i, astra-recovery arşivlendi, planlama paketine 4 düzeltme işlendi.
 - **P20 — Godot hattının son feature'ı** (`de05ef9`): settings paneli, rebindable input,

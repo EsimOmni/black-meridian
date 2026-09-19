@@ -306,6 +306,7 @@ StableOrdering · Shipping_NoCheats
 | `FT_Save_DuringEmbodied` | Save inside the scene → load → correct level and state |
 | `FT_Save_AfterTransition` | Consequences persist through save/load |
 | `FT_Checkpoint_Recovery` | Checkpoint restores pre-scene state (the crash path) |
+| **`FT_Save_LoadLeavesPaused`** `[V]` | **Inherited from S4, which could not write it.** Load → the clock is PAUSED, asserted through a live `UBMTimeSubsystem`. This family is the first place a real `GameInstance` exists, and that is the entire blocker — see §8 item 6. **Whoever builds this family owns closing that hole**; do not treat §8's list as complete without it |
 | `FT_Embodied_AllVerbs` | Inspect, plant, take, stand, speak, walk away |
 | `FT_Embodied_WalkAwayWritesNothing` | `[V]` Verified Godot behavior |
 | `FT_Embodied_ConsequenceVisibleOnReturn` | HUD reflects the change |
@@ -319,26 +320,41 @@ StableOrdering · Shipping_NoCheats
 
 `[V]` The policy is **hard refusal, no migration** — so the tests verify *refusal*, not upgrade paths.
 
-1. `Test_Save_VersionRefusal` — bad version → refused, state untouched, warning logged.
-2. `Test_Save_AdditiveField` — a save written before a defaulted field still loads.
-3. `Test_Save_CorruptFile` — truncated/garbage → refuse cleanly, never crash.
-4. `Test_Save_MissingJobDefinition` — a save referencing a removed job id drops that job with a
-   warning, `[V]` matching Godot's forward-compat behavior.
-5. `Test_Save_StaleCaseReference` — a `burycase` job whose case is gone fails to rebuild and is
-   dropped `[V]` ("the job can't be rebuilt honestly").
+*`[V]` All five shipped in S4, under the names in brackets. They are **not** additional to `07` §S4's
+eight — they were missing FROM it, which is what made the "8" wrong in both directions.*
 
-6. `[V]` **`Test_Save_LoadLeavesPaused` belongs in this list and CANNOT be written at this layer.**
-   Measured in S4: moving the pause after the restore leaves the suite green. Reaching
+1. `Test_Save_VersionRefusal` → **`BM.Save.VersionMismatchIsRefused`** — bad version → refused, state
+   untouched, warning logged. `[V]` Versions 0, −1, 2 and 999 all refuse: the comparison is `!=`, not
+   `<`, so a *future* version refuses exactly like a past one.
+2. `Test_Save_AdditiveField` → **`BM.Save.AdditiveFieldDefaults`** — a save written before a defaulted
+   field still loads. `[V]` Nine defaults, **measured off the running oracle** rather than read from the
+   GDScript, including the two that surprise: a district loads **armed** (`bInspectionArmed = true`), and
+   `intent_action` defaults to the **−1 sentinel**, not 0.
+3. `Test_Save_CorruptFile` → **`BM.Save.CorruptFileIsRefused`** — truncated/garbage → refuse cleanly,
+   never crash. `[V]` Five shapes, and the campaign is asserted byte-identical after each. Needs the
+   `BMSV` magic tag to work at all: the oracle gets this free because `str_to_var` yields a
+   non-Dictionary, but an arbitrary file's first four bytes are a plausible version int.
+4. `Test_Save_MissingJobDefinition` → **`BM.Save.MissingJobDefinitionIsDropped`** — a save referencing a
+   removed job id drops that job with a warning, `[V]` matching Godot's forward-compat behavior.
+   ⚠️ **And the load SUCCEEDS.** That is the whole of `05` §7.2 and the reason `07` §S4's
+   "byte-identical state" is conditional. Asserted on `FBMSaveLoadReport::SkippedJobIds`, not on a log
+   line, and the siblings are asserted intact and in order.
+5. `Test_Save_StaleCaseReference` → **`BM.Save.StaleCaseReferenceFailsRebuild`** — a `burycase` job whose
+   case is gone fails to rebuild and is dropped `[V]` ("the job can't be rebuilt honestly").
+6. ⛔ `[V]` **`Test_Save_LoadLeavesPaused` belongs in this list and CANNOT be written at this layer.**
+   Measured in S4, not assumed: moving the pause after the restore leaves the suite **green**. Reaching
    `UBMTimeSubsystem` needs a live `GameInstance`, and `NewObject`'ing a `UGameInstanceSubsystem` into
-   the transient package trips the CoreUObject `ClassWithin` ensure the framework promotes to a failure.
-   Every *other* load assertion escaped that by moving to static `RestoreInto` / `RebuildJob`; a pause
-   has nothing to assert on outside a `GameInstance`. **Closure is §7's `FT_Save_*` family**, in the
-   slice that first stands up a real world.
+   the transient package trips the CoreUObject `ClassWithin` ensure that the framework promotes to a
+   failure *while every assertion passes*. Every **other** load assertion escaped that by moving to
+   static `RestoreInto` / `RebuildJob`; a pause has nothing to assert on outside a `GameInstance`.
+   **Closure is §7's `FT_Save_*` family.** Until then the ordering is protected by review and a comment
+   on `UBMSaveSubsystem::LoadGame`. **Do not tick it off as done.**
 
-**Fixture policy `[P]` → `[V]`, and it survived contact:** commit a real `.sav` per shipped version
-under `Tests/Fixtures/Saves/`. When the version bumps, the old fixture stays and its test flips to
-expecting refusal. Shipped in S4 as `v1.bmsav` (782 B, deliberately **not** LFS-routed so it stays
-diffable and versioned inline).
+**Fixture policy `[P]` → `[V]`, and it survived contact:** commit a real **`.bmsav`** per shipped
+version under `Tests/Fixtures/Saves/`. When the version bumps, the old fixture stays and its test flips
+to expecting refusal. Shipped in S4 as `v1.bmsav` (782 B, deliberately **not** LFS-routed so it stays
+diffable and versioned inline). *(The extension is `.bmsav`, not `.sav` — `13` §4's tree says `.sav`
+too and is equally stale.)*
 
 ⛔ **The policy needs one rule it did not state: NEVER REGENERATE A FIXTURE TO MAKE ITS TEST PASS.**
 Regenerating it is precisely the act that destroys its value — the new bytes agree with the new field
@@ -445,9 +461,9 @@ UE build agents are heavy and the repo will be LFS-large. Decision **D-05**.
 | Godot practice | Unreal form |
 |---|---|
 | Source-scanning for RNG | `Test_Determinism_NoRandomInSimModule` |
-| Byte-identical save round-trip | `Test_Save_FloatExactRoundTrip` |
-| Replay-after-load determinism | `Test_Save_ReplayAfterLoad` |
-| Version refusal + untouched state | `Test_Save_VersionRefusal` |
+| Byte-identical save round-trip | `[V]` **`BM.Save.RoundTripIsExact`** + **`BM.Save.FixtureStillLoads`** — the second has no Godot counterpart and cannot: `var_to_str` sorts keys, so field order is not part of the oracle's format (§8, `04` §8.1) |
+| Replay-after-load determinism | `[V]` **`BM.Save.ReplayAfterLoadMatches`** |
+| Version refusal + untouched state | `[V]` **`BM.Save.VersionMismatchIsRefused`** + **`RestoreRefusalLeavesStateUntouched`** — the oracle's bool hid the difference between a version refusal and a parse refusal; `EBMLoadResult` separates them |
 | Full-cycle probe with a verdict line | `BM.RunProbe` + `FT_FullCycle_Headless` |
 | Double-run determinism comparison | §5.3 |
 | Gate notes with recorded evidence | `docs/gates/S<n>.md` |

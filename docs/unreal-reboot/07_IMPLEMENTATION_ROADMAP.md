@@ -354,6 +354,13 @@ telegraphs but not open ones.
 **Gate.** The four-job chain completes in order and reaches an ending; a beat blocked by the job cap
 **retries rather than dying**; mid-chain save/load is byte-identical `[V]` (the Godot narrative probe's bar).
 
+⚠️ `[V]` **"byte-identical" carries the same qualifier as §S4's gate** — it holds only while every
+chain job's id still resolves through the registry. S11 is where that matters *most*: the P16 authored
+roster is exactly what `FBMJobTemplates::ById` does **not** resolve today (D-S3-4), so the three narrative
+ids are currently the port's live `MissingJobDefinitionIsDropped` cases. **S11 must add them to the
+registry, or its own gate cannot pass** — a mid-chain save would drop the chain and still report success.
+See `05` §7.2.
+
 **Rollback.** Tag `s7-nightcycle`.
 
 **Prohibited.** ⛔ Letting a beat fire out of order. ⛔ Marking a beat fired when the cap blocked it.

@@ -93,7 +93,10 @@ UBMJobSubsystem           // job offers, cadence cap, lifecycle routing, follow-
 UBMRivalSubsystem         // rival intent: telegraph → land, grudge decay
 UBMRelationshipSubsystem  // betrayal telegraph → land → defuse, reassure
 UBMSaveSubsystem          // save/load/checkpoint, version refusal
-UBMContentRegistry        // resolves job/venue/character definitions by Id (Asset Manager)
+// ⛔ UBMContentRegistry — NOT BUILT (S4, D-S4-4). FBMJobTemplates::ById +
+//    FBMJobGenerator::Rebuild ARE the registry contract's two halves (D-S3-4);
+//    a third type would be a second source of truth. Revisit only if venue and
+//    character definitions need Asset-Manager resolution that jobs do not.
 
 // ---- BMGame: GameMode components (world-lifetime, explicit) ----
 UBMNightCycleComponent    // phase machine
@@ -433,9 +436,21 @@ depend on absolutely.
 **The three rules carried from the verified Godot contract `[V]`:**
 
 1. **Source-of-truth vs rebuilt.** Jobs persist only `{Id, Stage, ChosenPrep[], ChosenApproach,
-   ChosenCoverUp, TicksRemaining, Outcome}`. Authored content is re-resolved on load:
-   `ContentRegistry->FindJobDefinition(Id)` → else `FBMJobGenerator::Rebuild(Id)` → else **drop with a
-   warning**. A generated job's id encodes its own targeting, which is what makes this work.
+   ChosenCoverUp, TicksRemaining, Outcome}` plus a `bOutcomeResolved` discriminator (`05` §7).
+   Authored content is re-resolved on load: **`FBMJobTemplates::ById(Id)`** → else
+   `FBMJobGenerator::Rebuild(Id)` → else **drop with a warning**. A generated job's id encodes its own
+   targeting, which is what makes this work.
+   `[V]` **Corrected in S4** — this said `ContentRegistry->FindJobDefinition(Id)`, and
+   `UBMContentRegistry` was never built (§3.2, D-S4-4). **And "drop with a warning" means the LOAD
+   STILL SUCCEEDS** — see `05` §7.2, because that is what makes "byte-identical state" a conditional
+   claim rather than an absolute one.
+   `[V]` **Then OVERLAY the saved runtime state onto the rebuilt job** — a fresh rebuild returns
+   `Stage = Intake`, `TicksRemaining = 0` and an unresolved outcome, so a port that rebuilt and stopped
+   would silently reset every in-flight job while leaving the save file blameless.
+   `[V]` The two halves have **disjoint domains** (`Rebuild` requires the `gen@` prefix; `ById` matches
+   ids without one), so their **order cannot be pinned by any test** — keep it as written, and do not
+   add an assertion chasing it. `BM.Save.RegistryHalvesAreDisjoint` guards the premise instead, because
+   the day an authored id starts with `gen@` the order becomes behavior silently.
 2. **Hard version refusal, no migration.** Mismatch → refuse the entire load, leave state untouched.
    `[V]` Verified behavior; no partial application, ever.
 3. **Additive tolerance within a version.** New fields default; `SaveVersion` gates container shape.

@@ -149,7 +149,8 @@ D:\black-meridian-ue\
 ├─ Content/BlackMeridian/         ← see 05_DATA_MODEL §10
 ├─ Tests/
 │  ├─ Golden/                     ← JSON vectors extracted from Godot
-│  └─ Fixtures/Saves/             ← one .sav per shipped save version
+│  └─ Fixtures/Saves/             ← one .bmsav per shipped save version; NEVER regenerate one
+│                                   to make its test pass (08 §8)
 ├─ Docs/
 │  ├─ gates/                      ← S<n>.md gate evidence notes
 │  ├─ ATTRIBUTIONS.md             ← migrated, not restarted

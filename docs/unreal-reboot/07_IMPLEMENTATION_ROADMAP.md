@@ -295,12 +295,34 @@ pass** — that is the act that destroys its value.
 `Test_Rival_NoHiddenFieldReads`, `Test_Rival_UnscoredActionsNeverChosen`.
 
 **Gate.** Two identical runs pick identical actions 50/50 `[V]` (the Godot test's own bar).
-Telegraph→land window exact.
+Telegraph→land window exact. **Plus: `BM.Equivalence.TrajectoryMatchesOracle` extended to the full
+1800 ticks** — see "Inherited from S2" below; S5 is where that gate finally closes.
+
+**Inherited from S2 — three items, all recorded in `Docs/gates/S2.md`, none of them optional:**
+
+1. ⚠️ **The trajectory comparison past tick 240 is BLOCKED ON THIS SLICE.** S2's gate passes only
+   over ticks 0–240 and defers the rest here *by measurement, not by choice*: the oracle's reference
+   run drives `RivalDirector`, S2 shipped economy/heat/pressure only, and the curves diverge at 360
+   exactly where the oracle's phase flips COUNCIL→OPERATIONS and the rival is first allowed to act.
+   S2's work list still carries this as an open `[ ]`. **Extending the window to 1800 is S5 work, and
+   S5 is not done until it passes.**
+2. ⚠️ **The rival tick order is `Rival → Relationships`, and S2 CORRECTED the plan to say so** — the
+   old text had it reversed and gave a wrong rationale. Measured from the live autoload connection
+   order: `RivalDirector` is an autoload and connects first; `RelationshipService` is bootstrap-wired
+   and always second. It is a *decision order*, not a formula: `_land` can flip a venue's owner and
+   add district heat, and the betrayal gates re-check against that state. S2 marked it **"not yet
+   exercised — the rival tick arrives in S5."** This slice is the first to run it.
+3. ⚠️ **The seven rival faction fields must be APPENDED to `FBMSaveCodec::SerializeFaction`, never
+   inserted.** A binary archive's field order *is* the format. S4 proved by mutation that swapping
+   two same-type fields leaves 55 of 56 tests green and is caught by the committed
+   `Tests/Fixtures/Saves/v1.bmsav` alone — which must **never be regenerated**. Bump
+   `BMSave::CurrentVersion` and add a `v2.bmsav`; keep `v1.bmsav` loading.
 
 **Rollback.** Tag `s4-save`.
 
 **Prohibited.** ⛔ Behavior Trees (Locked; it is a scored argmax). ⛔ Adding RNG "for variety" —
 jitter is hash-derived. ⛔ Implementing the 5 unscored actions in this slice.
+⛔ **Inserting rival fields anywhere but the END of the faction serializer** (see item 3).
 
 ---
 

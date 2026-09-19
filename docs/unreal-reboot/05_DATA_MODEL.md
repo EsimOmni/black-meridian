@@ -16,9 +16,9 @@ explicitly, because the save contract and the content pipeline both depend on kn
 | Category | Lifetime | Mutable | Saved | Unreal form |
 |---|---|---|---|---|
 | **Authored immutable** | Ships with the build | ❌ | ❌ (referenced by Id) | `UPrimaryDataAsset`, `UDataTable` |
-| **Mutable campaign state** | Campaign | ✅ | ✅ | `USTRUCT` in `FBMCampaignState` |
+| **Mutable campaign state** | Campaign | ✅ | ✅ | **plain `struct`** in `FBMCampaignState` — ⛔ *not* `USTRUCT`; see §5 and `04` §8 |
 | **Transient presentation** | Frame / view | ✅ | ❌ | View-model structs, actors |
-| **Saved state** | Disk | — | ✅ | `UBMSaveGame` mirrors |
+| **Saved state** | Disk | — | ✅ | **`FBMSaveCodec` serializes the campaign through `FArchive`** — ⛔ *not* a `UBMSaveGame`; see §7 |
 | **Derived** | Computed on read | ❌ | ❌ | `static` functions in BMCore |
 
 **Rule `[P]`:** if a value can be recomputed from authored data + campaign state, it is **derived** and
@@ -28,6 +28,19 @@ must not be stored or saved. `[V]` The Godot build already honours this for `dis
 ---
 
 ## 2. Identifiers
+
+> ⛔ **NEVER BUILT, through S4. Ids are plain `FString`.** Recorded 2026-09-19 rather than deleted,
+> because the *reasoning* below is still sound and the type could still be introduced later.
+>
+> Two reasons it did not happen. First, `USTRUCT`/`GENERATED_BODY`/`UPROPERTY` need `CoreUObject`, and
+> `BMCore` depends on `Core` alone — the same wall that killed `UBMSaveGame` (§7, `04` §8). A
+> reflection-free `FBMId` is possible, but then it buys only the tag-type checking, not the editor
+> integration this sketch is written for. Second, `FBMJobIdParser` already parses the structured ids in
+> §2.1 into a typed result, which is where the real risk was.
+>
+> **If it is ever introduced, note that it becomes a SAVE-FORMAT change**: `FBMSaveCodec` writes ids via
+> `FString`'s `operator<<`, so swapping the type changes the bytes. Bump `BMSave::CurrentVersion` and
+> add a new fixture alongside `v1.bmsav` (`04` §8.1).
 
 `[P]` Strong typing prevents the class of bug where a district id is passed where a venue id belongs.
 
@@ -500,39 +513,108 @@ USTRUCT() struct FBMPublicCharacterView {        // hidden motives structurally 
 
 ## 7. Saved state and versioning
 
-```cpp
-namespace BMSave { constexpr int32 CurrentVersion = 1; }   // [V] matches Godot SAVE_VERSION = 1
+> ⛔ **CORRECTED DURING S4 (`Docs/gates/S4.md`, Finding 1 / D-S4-1).** The `UCLASS`/`UPROPERTY` sketch
+> that stood here **could not compile**, and `04` §8 carried a *second, differently shaped* version of
+> the same mistake — that one over mirror types (`FBMFactionSave`, `FBMDistrictSave`), this one over the
+> live BMCore structs. They were never two readings of one design.
+>
+> `UPROPERTY` requires reflection; reflection requires `CoreUObject`; `BMCore` depends on `Core` alone
+> and **that absence IS the determinism wall** (`04` §2). `USTRUCT` appears **zero times** in the whole
+> `Source/` tree. §1's table and §5's divergence list both already said as much — this section
+> contradicted documents it sits next to, and code that had already shipped in S2
+> (`BMCampaignSubsystem.h:48-51` carries a comment explaining exactly why).
+>
+> **What actually ships is below.** `04` §8 is the authority on the design; this section owns the
+> *shapes* and the *versioning policy*.
 
-UCLASS() class UBMSaveGame : public USaveGame {
-    UPROPERTY() int32 SaveVersion = BMSave::CurrentVersion;
-    UPROPERTY() FBMSaveMeta Meta;                     // tick, phase, cycle, pressure, narrative, timestamp
-    UPROPERTY() TArray<FBMFactionState>   Factions;
-    UPROPERTY() TArray<FBMDistrictState>  Districts;  // venues + cases embedded
-    UPROPERTY() TArray<FBMCharacterState> Characters;
-    UPROPERTY() TArray<FBMJobSave>        Jobs;       // RUNTIME ONLY
-    UPROPERTY() TArray<FBMPendingFollowup> PendingFollowups;
+```cpp
+namespace BMSave {
+    constexpr int32 CurrentVersion = 1;       // [V] matches Godot SAVE_VERSION = 1
+    constexpr uint32 Magic = 0x56534D42;      // [V] 'BMSV' — S4 addition, D-S4-3; see 04 §8
+}
+
+// [V] Plain structs. No UCLASS, no USTRUCT, no UPROPERTY — FBMSaveCodec writes them
+// through FArchive, field by field, in ONE FIXED ORDER (04 §8.1).
+struct BMCORE_API FBMSaveMeta {              // tick, pressure, alert, player faction
+    FString PlayerFactionId;
+    int32   TickIndex = 0;
+    float   CentralPressure = 0.0f;
+    bool    bCentralAlert = false;            // POLARITY: true means FIRED and spent
+    int32   CentralAlertTicks = 0;
 };
 
-USTRUCT() struct FBMJobSave {     // [V] exactly the Godot encode_job shape
-    FBMJobId JobId; EBMJobStage Stage;
-    TArray<FName> ChosenPrep; FName ChosenApproach, ChosenCoverUp;
-    int32 TicksRemaining; FBMJobOutcome Outcome; bool bOutcomeValid;
+struct BMCORE_API FBMJobSave {                // [V] exactly the Godot encode_job shape
+    FString Id;
+    uint8   Stage = 0;                        // the enum's INTEGER value — a save contract
+    TArray<FString> ChosenPrep;
+    FString ChosenApproach, ChosenCoverup;
+    int32   TicksRemaining = 0;
+    bool    bOutcomeResolved = false;         // see the warning below
+    float   ObjectiveAchieved = 0.0f; /* ...the other eight dimensions... */
+};
+
+struct BMCORE_API FBMSaveLoadReport {         // [V] S4 addition, D-S4-3
+    EBMLoadResult Result = EBMLoadResult::Success;
+    int32 FoundVersion = 0;
+    TArray<FString> SkippedJobIds;            // non-empty alongside Success is HONEST — see §7.2
 };
 ```
+
+⚠️ **`bOutcomeResolved` is NOT redundant with "are all nine dimensions zero" `[V]`.** The oracle's
+outcome is a Dictionary and it tests `is_empty()`: a job that never resolved has an **empty** dict, a
+job that legitimately resolved to **all zeros** has a full dict of `0.0`, and `apply_outcome` returns
+early only on the former. A port that inferred the flag from the values would skip the reward gate on a
+legitimately-zero resolution. Pinned by the fixture's `fresh` and `resolved_all_zeros` rows.
+
+⚠️ **`FBMSaveMeta` deliberately omits four of the oracle's meta keys (D-S4-2):** `night_cycle`, `phase`,
+`phase_ticks` (→ **S8**; `phase == COUNCIL` gates the rival) and `narrative_flags` (→ **S11**). Plus
+`saved_at_unix`, which nothing reads. **These are the design, not omissions** — S4 ships early precisely
+so later slices stay save-safe, and inventing a struct S6/S8 will reshape would break the format S4
+exists to protect. `EBMPhase` stays declared and unused until S8.
 
 **Versioning policy `[V]`, carried verbatim from the verified build:**
 
 | Change | Version bump? | Handling |
 |---|---|---|
-| New field with a safe default | **No** | Defaulted `UPROPERTY`; old saves load |
+| New field with a safe default, **APPENDED** | **No** | Default member initializer; old saves load |
 | New enum value **appended** | **No** | Append-only rule on `EBMJobOrigin` etc. |
 | Field removed / renamed / retyped | **Yes** | Old saves **refused** |
+| Field **reordered or inserted mid-struct** | **Yes** | ⚠️ Silent break — `04` §8.1. Only the committed fixture catches it |
 | Enum values reordered | **Yes** | Would silently corrupt meaning |
 | Container shape changed | **Yes** | |
+
+⚠️ **"New field with a safe default" means APPENDED, and the row now says so.** The original wording let
+a reader insert one mid-struct, which breaks every existing save while leaving every round-trip test
+green. See `04` §8.1 — this is the single most dangerous edit anyone can make to the save layer.
 
 **On mismatch: hard refusal.** Refuse the whole load, leave campaign state untouched, log at
 `LogBMSave` Warning. No migration, no partial application. `[V]` This is verified behavior
 (`"ok: version mismatch is refused"`, `"ok: refused load leaves state untouched"`).
+
+⚠️ **One detail of the comparison is not what a porter would write `[V]` (S4 Finding 2).** The oracle's
+check is `int(data.get("version", -1)) != SAVE_VERSION` — a **coercion**: a *string* `"1"` and a *float*
+`1.0` both **load**, while `"abc"` coerces to 0 and refuses. A binary format cannot express that
+ambiguity, so the coercion is a **recorded bounded divergence**, not something to imitate; the fixture's
+`port_reproducible` column marks the two affected rows and the test asserts exactly two were skipped, so
+the exemption cannot quietly grow. The `!=` itself **is** load-bearing: a *future* version must refuse
+exactly like a past one (measured — 0, −1 and 2 all refuse), and `<` would load a version-2 file with
+version-1 code, a migration path by accident.
+
+### 7.2 `[V]` A load that DROPS a job still SUCCEEDS — "byte-identical" is conditional
+
+**S4 Finding 5.** `save_service.gd:88-90` `continue`s past any job that neither registry half resolves,
+pushes a warning, and **returns true.** Measured: 3 jobs saved, 1 restored.
+
+So the restored campaign is **legitimately not equal** to the saved snapshot. These are two different
+contracts and conflating them yields either a false pass or a false fail:
+
+- **All ids resolve** → state equal, byte for byte.
+- **An id does not** → load **succeeds**, that job is **absent**, siblings are **intact**, and the state
+  deliberately **differs**.
+
+`FBMSaveLoadReport::SkippedJobIds` carries the difference, so tests assert on it directly rather than
+parsing a log line. A `burycase` job whose evidence case was swept **must** fail to rebuild — the oracle
+returns null and that is correct behavior, not an error path.
 
 ### 7.1 What is deliberately NOT saved
 

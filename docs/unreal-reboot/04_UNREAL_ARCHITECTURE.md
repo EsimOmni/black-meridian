@@ -42,7 +42,7 @@ BlackMeridian.uproject
 
 | Module | Depends on | Contains | Must NOT contain |
 |---|---|---|---|
-| **BMCore** | `Core` only | All math and rules: economy, heat, evidence, pressure, loyalty, rival scoring, job resolution, hashing, state structs | Any `UObject`-derived gameplay type, any Actor, any rendering, any file I/O |
+| **BMCore** | `Core` only | All math and rules: economy, heat, evidence, pressure, loyalty, rival scoring, job resolution, hashing, state structs, **the save FORMAT** (§8) | Any `UObject`-derived gameplay type, any Actor, any rendering, **any file I/O** — `[V]` now enforced by `BM.Save.NoFileIoInBMCore`, and this row is what settled where the save codec lives |
 | **BMSim** | `Core`, `CoreUObject`, `Engine`, `BMCore` | Subsystems, tick coordinator, save, data assets | Actors, widgets |
 | **BMGame** | + `BMSim`, `EnhancedInput`, `LevelSequence` | Player pawn, cameras, city view, transition manager, interaction actors | Authoritative state, game rules |
 | **BMUI** | + `UMG`, `BMSim` | Widgets, view models | Authoritative state, rules |
@@ -376,19 +376,59 @@ play; it does not write.
 
 ## 8. Save model
 
-`[P]` `USaveGame` subclass serialized through `FArchive` (binary, float-exact — the requirement Godot
-met with `var_to_str`).
+> ⛔ **CORRECTED DURING S4 (`Docs/gates/S4.md`, Finding 1 / D-S4-1). The `USaveGame` sketch below
+> CANNOT COMPILE and has been replaced.** It is kept, struck through, only because `05` §7 carried a
+> *second, differently-shaped* version of the same mistake and the two need to be seen together.
+>
+> `UPROPERTY` requires reflection; reflection requires `CoreUObject`; **`BMCore` depends on `Core`
+> alone, and that absence IS the determinism wall** (§2 below). `USTRUCT` appears **zero times** in the
+> whole `Source/` tree. Making the state structs reflected to satisfy this sketch would breach the
+> boundary S0 built to make rule 3 enforceable by the linker.
+>
+> ~~`[P]` `USaveGame` subclass with `UPROPERTY() TArray<FBMFactionSave> Factions;` etc.~~
+> ~~(`04` used mirror types `FBMFactionSave`/`FBMDistrictSave`; `05` §7 used the live BMCore structs.~~
+> ~~Neither compiles, and they were never two readings of one design.)~~
+
+**What actually ships `[V]` — the original GOAL was right, only its wrapper was impossible.** The
+struck-through sketch asked for *"serialized through `FArchive`, binary, float-exact — the requirement
+Godot met with `var_to_str`"*, and that is met **exactly**, because **the whole `FArchive` family lives
+in `Core`, not `CoreUObject`**: `Serialization/Archive.h` (already pulled in by `CoreMinimal.h`, so
+`FArchive` was in scope in `BMCore` *before* S4 touched anything), `MemoryWriter.h`, `MemoryReader.h`,
+`BufferArchive.h`, `Misc/FileHelper.h`, and the `TArray` / `TMap` / `FString` `operator<<` overloads.
+Verified by compiling it: **no `BMCore.Build.cs` change was needed.**
 
 ```cpp
-UCLASS() class UBMSaveGame : public USaveGame {
-    UPROPERTY() int32 SaveVersion = BMSave::CurrentVersion;   // starts at 1
-    UPROPERTY() FBMSaveMeta       Meta;      // clock, phase, pressure, narrative, player faction
-    UPROPERTY() TArray<FBMFactionSave>   Factions;
-    UPROPERTY() TArray<FBMDistrictSave>  Districts;   // venues + evidence embedded
-    UPROPERTY() TArray<FBMCharacterSave> Characters;
-    UPROPERTY() TArray<FBMJobSave>       Jobs;        // RUNTIME STATE ONLY
+// BMCore — the FORMAT. A plain struct. No UCLASS, no USTRUCT, no UPROPERTY.
+struct BMCORE_API FBMSaveCodec {
+    static TArray<uint8>      Encode(const FBMCampaignState& State);
+    static FBMSaveLoadReport  Decode(const TArray<uint8>& Bytes, FBMCampaignState& OutState,
+                                     TArray<FBMJobSave>& OutJobs);
+    static FBMSaveLoadReport  PeekHeader(const TArray<uint8>& Bytes);
+    static FBMJobSave         EncodeJob(const FBMJob& Job);
+    static void               ApplyJobState(FBMJob& Job, const FBMJobSave& Saved);
+    // one Serialize* per shape, each writing its fields in ONE FIXED ORDER
 };
+
+// BMSim — the FILE and the REBUILD LOOP.
+UCLASS() class BMSIM_API UBMSaveSubsystem : public UGameInstanceSubsystem { /* ... */ };
 ```
+
+**The two-piece split is MANDATED by this very document, not a style choice `[V]`:** §2's table lists
+*"any file I/O"* under BMCore's **Must NOT contain** while listing **"save"** under BMSim's *Contains*.
+It is also exactly the oracle's own shape — a pure `SaveCodec` plus a `SaveService` autoload that does
+the I/O. `BM.Save.NoFileIoInBMCore` and `BM.Save.SubsystemIsAThinFacade` enforce both directions.
+
+**What is lost is only reflection-driven auto-serialization. What is GAINED is explicit field-order
+control** — which a hard-version-refusal contract wants anyway, and which §8.1 below turns out to
+depend on absolutely.
+
+**Two additions to the contract the oracle has no equivalent for `[V]` (D-S4-3):**
+
+1. **A 4-byte `BMSV` magic tag**, before the version. The oracle gets this free: `str_to_var` on a
+   non-save file yields a non-Dictionary and `save_service.gd:55` rejects it. A binary format has no
+   such natural guard — an arbitrary file's first four bytes are a plausible version int.
+2. **`EBMLoadResult` instead of a bare bool.** Conflating a version refusal with a parse refusal lets a
+   version bug hide behind a parse bug, and the tests must tell them apart.
 
 **The three rules carried from the verified Godot contract `[V]`:**
 
@@ -399,13 +439,71 @@ UCLASS() class UBMSaveGame : public USaveGame {
 2. **Hard version refusal, no migration.** Mismatch → refuse the entire load, leave state untouched.
    `[V]` Verified behavior; no partial application, ever.
 3. **Additive tolerance within a version.** New fields default; `SaveVersion` gates container shape.
-   Use `FCustomVersion` to formalize what Godot did with `.get(key, default)`.
+   ⛔ ~~Use `FCustomVersion` to formalize what Godot did with `.get(key, default)`.~~ **Corrected in
+   S4 (D-S4-1): `FCustomVersion` does NOT apply here** — it is a mechanism for engine-versioned
+   *reflected* serialization, and there is no reflection. A hand-rolled codec gets additive tolerance
+   from **one explicit version int plus default member initializers**, which is simpler and is what
+   `BM.Save.AdditiveFieldDefaults` actually measures against the oracle's nine measured defaults.
+
+⚠️ **Rule 2's "hard version refusal" is right, and one detail of it is NOT what a porter would
+write `[V]` (S4 Finding 2).** The oracle's check is `int(data.get("version", -1)) != SAVE_VERSION` — a
+**coercion**, under which a *string* `"1"` and a *float* `1.0` both LOAD while `"abc"` refuses. A binary
+format cannot express that ambiguity, so **the coercion is a recorded bounded divergence, not something
+to imitate**; only the refusal semantics port. But the `!=` is load-bearing and must be copied
+literally: a **future** version refuses exactly like a past one (measured: 0, −1 and 2 all refuse), and
+a `<` here would load a version-2 file with version-1 code — a migration path by accident, which rule 2
+forbids outright.
 
 **Slots `[P]`:** `quick`, `checkpoint`, `auto`. Path `FPaths::ProjectSavedDir()/SaveGames/`.
+`SaveGame(FString Slot)` is the shape §12's S17 checkpoint call needs, so it was fixed in S4.
+
 **Load leaves the game paused** `[V]` — an asserted Godot behavior.
+⚠️ **But it has NO automated coverage, and S4 measured that rather than assuming it.** Moving the pause
+after the restore leaves the suite green at 56/56. Reaching `UBMTimeSubsystem` needs a live
+`GameInstance`, and `NewObject`'ing a `UGameInstanceSubsystem` into the transient package trips the
+CoreUObject ensure the automation framework promotes to a failure (S2). Every *other* load assertion
+escaped that by moving to static `RestoreInto` / `RebuildJob`; a pause has nothing to assert on outside
+a `GameInstance`. **The ordering is protected by review and a header comment only.** Closure is `08`
+§7's `FT_Save_*` family, in the slice that first stands up a real world.
 
 **Explicitly excluded from the save:** UI state. `[V]` The Godot build stores `ending_seen` in
-`narrative_flags`; the port moves it to a separate UI-state save (`Test_Save_NoUIStateInCampaign`).
+`narrative_flags`; the port moves it to a separate UI-state save (`BM.Save.NoUIStateInCampaign`).
+
+### 8.1 `[V]` Field order IS the format — and no round-trip test can see it change
+
+**Discovered in S4 (Finding 3) and it has no counterpart in the Godot build, which is exactly why the
+package missed it.**
+
+The oracle's save round-trip test compares snapshots as `var_to_str(...)` strings — and **`var_to_str`
+SORTS dictionary keys alphabetically.** Field order is simply not part of its format, and its runner
+*literally could not* catch a reordered encode.
+
+In a binary archive, field order **is** the format. And the failure is silent: the reader and the writer
+are **the same function body** (`FArchive::operator<<` is bidirectional), so swapping two `Ar <<` lines
+moves both halves together and every round-trip assertion follows them. Measured: swapping two
+**same-type** fields inside `SerializeVenue` turns **exactly one test red and leaves 55 green** — and
+because the types match, the byte *count* is unchanged, so even a size check misses it.
+
+⛔ **Therefore: APPEND fields, never insert or reorder.** Every `Serialize*` function carries that
+instruction in a comment.
+
+**The only thing that can catch a violation is a committed binary from a PREVIOUS build**
+(`Tests/Fixtures/Saves/v1.bmsav`, 782 B, deliberately **not** LFS-routed so it stays diffable).
+`BM.Save.FixtureStillLoads` compares against it and localises the first differing byte.
+
+⛔ **NEVER regenerate that fixture to make its test pass.** Regenerating it is precisely the act that
+destroys its value, because the new bytes agree with the new field order by construction. If the format
+changes deliberately: bump `BMSave::CurrentVersion` and add a **new** fixture *alongside* the old one.
+
+### 8.2 `[V]` `Encode(Decode(x)) == x` is FALSE, by design
+
+Cost one red gate in S4 to establish, so it is written down here. `Decode` hands jobs out **separately**
+as `FBMJobSave` runtime state, because turning one back into an `FBMJob` requires the registry
+(`ById` → `Rebuild`) and rebuilding is a BMSim concern — `UBMSaveSubsystem::RestoreInto` closes the
+loop. A campaign straight out of `Decode` therefore has **empty `ActiveJobs`** and re-encodes short.
+
+The property worth asserting is **stability, not equality**: once the jobs are put back, encoding is
+idempotent.
 
 ---
 
@@ -504,7 +602,7 @@ BMCore and BMSim for `FMath::Rand`, `RandRange`, `FRandomStream`, `FDateTime::No
 | `EconomyMath`/`EvidenceMath`/`PressureMath`/`LoyaltyScoring`/`OperativeMath`/`RivalScoring`/`JobResolution` | BMCore static structs | 1:1; these are already pure |
 | `JobDirector` | `UBMJobSubsystem` | |
 | `RivalDirector` | `UBMRivalSubsystem` | |
-| `SaveService` + `SaveCodec` | `UBMSaveSubsystem` + `UBMSaveGame` | |
+| `SaveService` + `SaveCodec` | `UBMSaveSubsystem` + **`FBMSaveCodec`** | `[V]` S4. The two-piece split is preserved exactly: the codec is pure and lives in BMCore, the subsystem owns the file. **NOT `UBMSaveGame`** — see §8 |
 | `NightCycle` (scene-wired) | `UBMNightCycleComponent` on GameMode | Lifetime distinction preserved |
 | `RelationshipService` (scene-wired) | `UBMRelationshipSubsystem` | **Exception:** promoted to subsystem because betrayal intents must survive the cinematic round-trip |
 | `NarrativeDirector` (scene-wired) | `UBMNarrativeComponent` | |

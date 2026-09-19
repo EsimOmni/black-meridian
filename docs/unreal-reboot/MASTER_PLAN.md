@@ -40,20 +40,22 @@ found**. See **D-08**.
 
 ---
 
-## 1b. Plan vs. reality after S0–S2 `[V]`
+## 1b. Plan vs. reality after S0–S4 `[V]`
 
-*Added 2026-09-18, after three slices shipped. Read this before trusting any `[P]` in the package.*
+*Added 2026-09-18 after three slices; extended 2026-09-19 after S3 and S4. Read this before trusting
+any `[P]` in the package.*
 
-**Shipped: S0, S1, S2 — all three gates passed.** 23/23 automation tests, exit 0. The plan's
-architecture held; its *factual claims about the Godot source* did not.
+**Shipped: S0, S1, S2, S3, S4 — all five gates passed.** 56/56 automation tests, exit 0. The plan's
+architecture held; its *factual claims about the Godot source* did not — and S4 added a second failure
+mode: **two documents prescribing the same impossible thing in two different shapes.**
 
 | | |
 |---|---|
-| Documents **never needing a correction** | 8 of 16 — `00`, `01`, `02`, `06`, `09`, `11`, `ADR-0001`, and (until S2) `05` |
-| Documents corrected | 8 — `03`, `04`, `05`, `07`, `08`, `10`, `12`, `13` |
-| Total drift | **+341 / −55 lines** against the approved `aff9e43` |
+| Documents **never needing a correction** | 6 of 16 — `00`, `01`, `02`, `06`, `09`, `11` (+ `ADR-0001`) |
+| Documents corrected | 9 — `03`, `04`, `05`, `07`, `08`, `10`, `12`, `13`, `MASTER_PLAN` |
+| Corrections folded in | S0 (4) · S1 (3) · S2 (6) · **S3 (5)** · **S4 (9)** = **27** |
 
-**The pattern is the useful part, and it is consistent across all three slices:**
+**The pattern is the useful part, and it held across all five slices:**
 
 > **Structural judgments were right. Empirical claims about the existing build were wrong roughly
 > whenever they were not marked `[V]`.**
@@ -74,8 +76,16 @@ What broke, every time, was a *detail about how Godot actually behaves* that nob
 | 6 | Trajectory measured at 1260 ticks | **1800** — 1260 is the *slice retune*, and the quoted reference values were themselves tick-1800 | Contradiction inside one document |
 | 7 | `USTRUCT`/`UENUM` for the state structs | Plain C++ — reflection needs `CoreUObject`, which is the wall | Divergence recorded in `05` §5 |
 | 8 | `BM.RunProbe` assumed to exist | Did not; unbudgeted | Added to S2 scope |
+| 9 | A follow-up scheduled by a job expiring inside `AdvanceTick` "keeps the FULL lead" | **`LEAD − 1`** — deadlines run first, then the pass decrements every entry including the new one | **An assertion written from the prose passed the MUTANT and would have failed the correct port** |
+| 10 | Dedupe-before-cap ordering is a behavior worth a test | **It is not.** Both guards are side-effect-free predicates; swapping them is unobservable | Would have added a bogus assertion chasing nothing |
+| 11 | `UBMSaveGame : USaveGame` with `UPROPERTY() TArray<FBMDistrictState>` | **Cannot compile.** Reflection needs `CoreUObject`; BMCore has `Core` alone — the wall. `USTRUCT` appears **0 times** in `Source/` | **Prescribed in TWO documents, in TWO different shapes** (`04` mirror types, `05` live structs), both contradicting code that shipped in S2 |
+| 12 | The save version check is a typed comparison | **A coercion** — `int(version)`, so a *string* `"1"` and a *float* `1.0` both LOAD | Unreproducible in binary; recorded as a bounded divergence |
+| 13 | "Byte-identical state" as an unconditional gate | **Conditional.** A load that cannot rebuild a job DROPS it and still returns true | Two contracts conflated → a false pass or a false fail |
+| 14 | `JSON.stringify` is fine for fixture floats | **Truncates float64 to 15 digits** — `0.1+0.2` becomes `"0.3"`, a different number | Caught in Step 1; would have failed a **correct** port at `==` |
+| 15 | `FCustomVersion` formalizes additive tolerance | Only for *reflected* serialization; there is none. Default member initializers do it | Prescription dropped |
+| 16 | `FBMId` / `FBMDistrictId` strong-id types | **Never built through S4** — ids are plain `FString` | Sketch kept, marked unbuilt; introducing it later is a save-format change |
 
-**Four lessons now priced in, not guesses:**
+**Seven lessons now priced in, not guesses:**
 
 1. **A decimal literal beats the name of the algorithm above it.** Claim 1 shipped a compiling,
    deterministic, *wrong* game and only the gate caught it.
@@ -89,8 +99,29 @@ What broke, every time, was a *detail about how Godot actually behaves* that nob
    alternative — widening tolerances until green — produces a gate that cannot fail, which is not a
    gate.
 
+5. **`[V]` "Prove the assertion can FAIL" — "add an assertion" is not enough.** S4 found three gaps by
+   mutation and they were **three different failure modes**, not one mistake repeated: one compared
+   against an expectation the mutation had already corrupted (and so hid a *real defect* — `Encode`
+   mutating the live campaign through a `const_cast`, which would have made quicksaving alter the
+   running game); one chased an order that is not a behavior; one asserted something **true by
+   construction** (`Num() == 0` on a map the test never populated). Across S2–S4 that is **ten gaps
+   found by mutation and zero by a gate failing.**
+6. **`[V]` When a document prescribes something impossible, check whether ANOTHER document prescribes
+   it too — differently.** `UBMSaveGame` appeared in `04` §8 over mirror types and in `05` §7 over the
+   live structs. Two sketches, one impossibility, and they were never two readings of one design.
+   **Correcting only the one you happened to open leaves the other as authority.**
+7. **`[V]` A gate can be STRICTER than the oracle, and then the oracle's tests are no guide.**
+   `var_to_str` sorts dictionary keys, so field order is not part of the Godot save format and its
+   round-trip runner *could not* catch a reordered encode. In a binary archive field order **is** the
+   format, and the reader and writer are the same function body — so a reorder leaves **55 of 56 tests
+   green**. That needed a committed-binary fixture the oracle never had.
+
 **Unchanged by all of this:** the roadmap's slice order, every acceptance gate, all stop conditions,
 and the open decisions (D-02 / D-10 by S12, D-07 after Gate B). No re-planning is owed.
+
+> `[V]` **The one thing S4 changed about HOW to work, not just what is true:** run mutations **as each
+> step lands**, not in a batch at the end. Deferring them means building later steps on tests that might
+> measure nothing — and S4's first gap was in Step 2's tests, which Steps 3–5 would have been built on.
 
 ---
 

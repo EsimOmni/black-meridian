@@ -200,12 +200,17 @@ a warning list, not the source of truth.
 
 **Depends on:** S2.
 
-**Creates.** `BMCore`: `FBMJobLifecycle`, `FBMJobResolution`, `FBMJobGenerator`, `FBMJobIdParser`.
+**Creates.** `BMCore`: `FBMJobLifecycle`, `FBMJobResolution`, `FBMJobGenerator`, `FBMJobIdParser`,
+**`FBMJobDirector`** (`[V]` **S3 correction** — the list omitted it and the slice cannot be built
+without it: it holds the per-campaign job state, and it is a **member of `FBMCampaignState`** so job
+state serializes with the campaign rather than through a second path. D-S3-1).
 `BMSim`: `UBMJobSubsystem`. Job content stays **temporarily** in C++ tables (moved to Data Assets in S14).
 
 **Tests.** `GV-JOB-01..04`; `Test_Job_StageMachine`, `Test_Job_CoverUpAtomic`,
 `Test_Job_PrepCapAndToggle`, `Test_Job_CadenceCap`, `Test_Job_GenerationTriggers`,
-`Test_Job_IdRoundTrip`, `Test_Job_OriginBranches`.
+`Test_Job_IdRoundTrip`, `Test_Job_OriginBranches`. `[V]` **Shipped as 15 tests; test files live in
+`Source/BMCore/Private/`, NOT a `Tests/` source directory — that directory does not exist and
+`BMCore.Build.cs` registers no extra source dir.**
 
 **Gate.** A generated job's id round-trips byte-identically through rebuild. All four origins fire.
 
@@ -213,6 +218,20 @@ a warning list, not the source of truth.
 
 **Prohibited.** ⛔ Changing the id format (the save contract parses it). ⛔ Queueing jobs at the cap —
 Godot **drops** them; reproduce that. ⛔ Clamping outcome dimensions per-term instead of once at the end.
+
+> `[V]` **Three S3 findings that contradict prose elsewhere in this package. Read them before touching
+> the job layer** (`Docs/gates/S3.md`):
+>
+> 1. **A job expiring inside `AdvanceTick` leaves its follow-up at `LEAD − 1`, not `LEAD`.** Deadlines
+>    run first, then the follow-up pass decrements **every** entry including the one just appended.
+>    An assertion written from the "keeps the FULL lead" prose **passed the mutant and would have failed
+>    the correct port.** Measured on the oracle: `ticks_left = 19` where `LEAD = 20`.
+> 2. **The dedupe-before-cap ORDER is not a behavior and no test can pin it.** Both guards are
+>    side-effect-free predicates returning `false`, so swapping them is observationally identical —
+>    proved exhaustively. In Godot the order decides only which `print()` fires. Keep the oracle's order
+>    because it is free to keep; do **not** add an assertion chasing it.
+> 3. **A non-numeric tick in a job id does not fail — it rebuilds as `0`** (Godot's silent `int()`), and
+>    `-5` round-trips cleanly. A port that *validates* here rejects ids the oracle accepts.
 
 ---
 
@@ -222,20 +241,46 @@ Godot **drops** them; reproduce that. ⛔ Clamping outcome dimensions per-term i
 
 **Depends on:** S3.
 
-**Creates.** `BMSim`: `UBMSaveSubsystem`, `UBMSaveGame`, `FBMJobSave`, `UBMContentRegistry`.
+**Creates.** `[V]` **Corrected after S4 — the original list was wrong twice.**
+`BMCore`: **`FBMSaveCodec`** (the format, pure, `FArchive`), `BMSaveTypes.h` (`FBMSaveMeta`,
+`FBMJobSave`, `FBMSaveLoadReport`, `EBMLoadResult`). `BMSim`: `UBMSaveSubsystem` (the file + the rebuild
+loop).
 
-**Tests.** `Test_Save_FloatExactRoundTrip`, `Test_Save_RebuildContract`,
-`Test_Save_JobRebuildByteIdentical`, `Test_Save_VersionRefusal`, `Test_Save_AdditiveField`,
-`Test_Save_LoadLeavesPaused`, `Test_Save_ReplayAfterLoad`, `Test_Save_NoUIStateInCampaign`.
+- ⛔ ~~`UBMSaveGame`~~ — **cannot compile.** `UPROPERTY` needs reflection, reflection needs
+  `CoreUObject`, and `BMCore` depends on `Core` alone. See `04` §8 and `05` §7, which both carried the
+  sketch and disagreed with each other about its shape.
+- ⛔ ~~`UBMContentRegistry`~~ — **redundant.** `FBMJobTemplates::ById` + `FBMJobGenerator::Rebuild`
+  *are* the registry contract's two halves (D-S3-4). A third type would be a second source of truth.
+
+**Tests.** `[V]` **Shipped as 18, not 8.** `07`'s eight plus `08` §8's five migration tests (which this
+list omitted) merge to eleven, and `04` §8.1 / `04` §2 demand two more guards
+(`FixtureStillLoads`, `NoFileIoInBMCore`) that no document had asked for. Actual roster in
+`Docs/gates/S4.md`. Notable renames: `FloatExactRoundTrip` → `RoundTripIsExact`,
+`RebuildContract` → `RebuildThenOverlay` + `RegistryHalvesAreDisjoint`.
+
+⚠️ **`Test_Save_LoadLeavesPaused` shipped with NO automated coverage, and that was measured, not
+assumed** — moving the pause after the restore leaves the suite green. Reaching `UBMTimeSubsystem` needs
+a live `GameInstance`, which trips the S2 `ClassWithin` ensure. Protected by review and a header comment
+only; closure is `08` §7's `FT_Save_*` family. **Do not tick this test off as done.**
 
 **Gate.** Save → diverge → load → **byte-identical state**; replay after load reproduces the same
 trajectory; a bad version is refused with state untouched. `[V]` This mirrors
 `save_roundtrip_runner`, which passes in the Godot build.
 
+⚠️ **"byte-identical state" is CONDITIONAL — it holds only when every saved job id still resolves.**
+A load that cannot rebuild a job **drops it and still SUCCEEDS** (the oracle `continue`s and returns
+true; measured, 3 saved / 1 restored), so the restored campaign legitimately differs from the snapshot.
+Two contracts, and conflating them produces a false pass or a false fail. See `05` §7.2.
+
 **Rollback.** Tag `s3-jobs`.
 
 **Prohibited.** ⛔ Serializing authored job content. ⛔ Writing a migration path — refusal is the
 design. ⛔ Holding pointers across a load; re-resolve by Id (`[V]` the P16 probe lesson).
+⛔ `[V]` **Adding S5/S6/S8/S11 state to make the save look "complete"** (D-S4-2) — the absences are the
+design; the slice ships early so later slices stay save-safe, and a struct S6 will reshape breaks the
+format S4 exists to protect. ⛔ `[V]` **Inserting or reordering a field in any `Serialize*` function** —
+append only (`04` §8.1). ⛔ `[V]` **Regenerating `Tests/Fixtures/Saves/v1.bmsav` to make its test
+pass** — that is the act that destroys its value.
 
 ---
 

@@ -165,11 +165,36 @@ affected systems and narrows what §5 equivalence can check.
 | `GV-RIVAL-*` | All five scoring formulas, threshold, landing effects | `1e-4` on scores; **exact** on the chosen action |
 | `GV-LOYAL-*` | Betrayal pressure, opportunity, candidate order, driving motive | `1e-5`; **exact** on ordering |
 | `GV-JOB-*` | Outcome accumulation, clamping, expiry, follow-up threshold | `1e-5`; **exact** on stage |
+| `GV-SAVE-*` `[V]` | Round trip, version refusal, additive defaults, job rebuild, registry split | **EXACT (`==`) on floats too** — a round trip, not a formula. Fixture floats are **decimal strings**; see below |
 
 `[P]` **Float tolerance is `1e-5` for state values** — far tighter than any gameplay-visible
 difference, loose enough for a double→float transition. **Discrete outcomes are exact**: which action,
 which candidate, which stage, which variant, which case. *A tolerance on a decision is not a
 tolerance, it is a bug.*
+
+`[V]` **One vector set does NOT use `1e-5`: `GV-SAVE-*` compares floats with `==`.** A save/load
+round trip is not a formula comparison — `FArchive` on a `float` is a bit-exact 4-byte copy, so *a
+tolerance on a round trip is not a tolerance either; it is a bug that hides truncation.*
+
+> ⛔ **THE FIXTURE-ENCODING RULE, added after S4 and it applies to every extractor written from here on.**
+>
+> **`JSON.stringify` truncates float64 to ~15 significant digits.** `0.1 + 0.2` is written as `"0.3"` —
+> **a different number** — and `1.0/3.0` loses two digits. `var_to_str` emits up to 17 and round-trips
+> exactly (verified 20/20 on the adversarial set, including through a JSON round trip).
+>
+> **So any fixture that will be compared at EXACT equality must carry its floats as DECIMAL STRINGS,
+> never as JSON numbers,** and the reader must parse them with a full-precision parser
+> (`FCString::Atod`). The S4 extractor emits `"float_encoding": "decimal_string"` and its test
+> **refuses** a numeric field outright, so a regenerated fixture fails loudly instead of silently losing
+> two digits.
+>
+> **`hash_vectors.json`, `sim_vectors.json`, `job_vectors.json` and `trajectory.json` all use JSON
+> numbers and are SAFE ONLY BECAUSE they compare at `1e-5`** — looser than the truncation. Do not
+> tighten any of them to `==` without re-emitting the fixture as strings first.
+>
+> Same failure class as S1's 64-bit avalanche values rounding through a double, and the same lesson in a
+> new costume: **GDScript's own `print()` and `%s` truncate to 14 digits, so the printed value is not
+> evidence.** `var_to_str` is the only writer in the engine that tells the truth about a float.
 
 ### 5.2 Behavioral equivalence — the real bar
 
@@ -248,8 +273,19 @@ GenerationTriggers · IdRoundTrip · OriginBranches
 
 **Narrative (5):** ChainOrder · BeatSurvivesCap · DebtBranches · EndingLatch · FlagsRoundTrip
 
-**Save (8):** FloatExactRoundTrip · RebuildContract · JobRebuildByteIdentical · VersionRefusal ·
-AdditiveField · LoadLeavesPaused · ReplayAfterLoad · NoUIStateInCampaign
+**Save (18 shipped, not 8) `[V]`:** RoundTripIsExact · OutcomeEmptyIsNotAllZeros ·
+OutcomeFloatsMatchOracle · VersionMismatchIsRefused · CorruptFileIsRefused · AdditiveFieldDefaults ·
+JobRebuildByteIdentical · RebuildThenOverlay · RegistryHalvesAreDisjoint ·
+MissingJobDefinitionIsDropped · StaleCaseReferenceFailsRebuild · RestoreRefusalLeavesStateUntouched ·
+ReplayAfterLoadMatches · LoadIsNotAffectedByPriorState · FixtureStillLoads · NoUIStateInCampaign ·
+SubsystemIsAThinFacade · NoFileIoInBMCore
+
+> `[V]` **The "8" was this document disagreeing with itself.** `07` §S4 named eight and §8 below named
+> five migration tests that this line omitted; merged and deduped that is eleven. The other seven came
+> out of execution: `04` §8.1's field-order finding needs `FixtureStillLoads`, `04` §2's file-I/O ban
+> needs `NoFileIoInBMCore`, and the registry-order and replace-not-merge properties each needed their
+> own test. **`LoadLeavesPaused` is NOT in this list** — it has no automated coverage and cannot have
+> one at this layer; see §8.
 
 **Architecture (5):** NoStateWritesFromPresentation · NoRandomInSimModule · SingleHashImplementation ·
 StableOrdering · Shipping_NoCheats
@@ -291,8 +327,33 @@ StableOrdering · Shipping_NoCheats
 5. `Test_Save_StaleCaseReference` — a `burycase` job whose case is gone fails to rebuild and is
    dropped `[V]` ("the job can't be rebuilt honestly").
 
-**Fixture policy `[P]`:** commit a real `.sav` per shipped version under `Tests/Fixtures/Saves/`.
-When the version bumps, the old fixture stays and its test flips to expecting refusal.
+6. `[V]` **`Test_Save_LoadLeavesPaused` belongs in this list and CANNOT be written at this layer.**
+   Measured in S4: moving the pause after the restore leaves the suite green. Reaching
+   `UBMTimeSubsystem` needs a live `GameInstance`, and `NewObject`'ing a `UGameInstanceSubsystem` into
+   the transient package trips the CoreUObject `ClassWithin` ensure the framework promotes to a failure.
+   Every *other* load assertion escaped that by moving to static `RestoreInto` / `RebuildJob`; a pause
+   has nothing to assert on outside a `GameInstance`. **Closure is §7's `FT_Save_*` family**, in the
+   slice that first stands up a real world.
+
+**Fixture policy `[P]` → `[V]`, and it survived contact:** commit a real `.sav` per shipped version
+under `Tests/Fixtures/Saves/`. When the version bumps, the old fixture stays and its test flips to
+expecting refusal. Shipped in S4 as `v1.bmsav` (782 B, deliberately **not** LFS-routed so it stays
+diffable and versioned inline).
+
+⛔ **The policy needs one rule it did not state: NEVER REGENERATE A FIXTURE TO MAKE ITS TEST PASS.**
+Regenerating it is precisely the act that destroys its value — the new bytes agree with the new field
+order **by construction**. If the format changed deliberately, bump `BMSave::CurrentVersion` and add a
+new fixture *alongside* the old one.
+
+> `[V]` **Why this fixture is not optional, and why no other test can replace it (S4 Finding 3).** Field
+> order **is** the binary format, and the failure is silent: `FArchive::operator<<` is bidirectional, so
+> the reader and the writer are **the same function body** and a reorder moves both together. Measured —
+> swapping two **same-type** fields in `SerializeVenue` turns **exactly one test red and leaves 55
+> green**, and because the types match the byte *count* is unchanged, so even a size check misses it.
+>
+> The Godot build has no counterpart because `var_to_str` **SORTS dictionary keys**: field order is not
+> part of the oracle's format at all, and its own round-trip runner *could not* have caught this. **The
+> port's gate is therefore STRICTER than the oracle's**, and needed a test the oracle never had.
 
 ---
 

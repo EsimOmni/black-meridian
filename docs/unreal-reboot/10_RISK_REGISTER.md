@@ -174,8 +174,8 @@ Tags: `[V]` Verified from repository · `[I]` Inferred · `[P]` Proposed
 | **Probability** | **Medium** |
 | **Impact** | **Medium** |
 | **Why** | `[V]` The policy is **hard refusal, no migration** — correct and simple, but it means a careless field change invalidates every existing save, including playtesters' |
-| **Detection** | `Test_Save_AdditiveField`; committed `.sav` fixtures per version; version-bump checklist ([05](05_DATA_MODEL.md) §7) |
-| **Mitigation** | Additive-only within a version; append-only enums; save/load built early (S4) so every later slice is tested against it; jobs store runtime state only |
+| **Detection** | `[V]` **S4, as built:** `Test_Save_AdditiveField` + `Test_Save_FixtureStillLoads` against the committed `Tests/Fixtures/Saves/v1.bmsav` (extension is `.bmsav`, not `.sav`), which is **never regenerated** — regenerating it is what turns the guard into theatre. Plus the version-bump checklist ([05](05_DATA_MODEL.md) §7). **A binary archive's field ORDER is the format**, so an insertion is a silent break the fixture is the only thing that sees — proved by mutation, see `Docs/gates/S4.md` |
+| **Mitigation** | Additive-only within a version; **append-only enums AND append-only struct fields** — `[V]` S4 proved the second half by mutation: swapping two same-type fields inside `Serialize()` left 55 of 56 tests green and was caught by the committed fixture alone. Save/load built early (S4) so every later slice is tested against it; jobs store runtime state only. ⚠️ **S5 is the first test of this**: the seven rival faction fields must be APPENDED to `SerializeFaction`, never inserted |
 | **Owner** | Architect |
 | **Trigger** | Two version bumps within one slice |
 | **Fallback** | Accept save invalidation during development (playtests are short); never after a public build |

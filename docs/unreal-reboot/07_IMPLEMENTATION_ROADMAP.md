@@ -412,9 +412,15 @@ same-type fields left **55 of 56 tests green** — only the committed
 `Tests/Fixtures/Saves/v1.bmsav` saw it, and that fixture is **never regenerated**. Append, bump
 `BMSave::CurrentVersion`, add a `v<n>.bmsav`, keep the old one loading. ⚠️ The fixture catches an
 *insertion*; it does **not** catch a field you forget entirely (`Docs/gates/S4.md`).
-⚠️ **`Test_Save_NarrativeFlagsRoundTrip` and this gate's "mid-chain save/load is byte-identical"
-both need narrative state IN the save — but D-S4-2 and `05` §7 schedule `NarrativeFlags` for S11,
-two stages later.** One of the two must move. Resolve it before writing the test, not at the gate.
+⚠️ **`NarrativeFlags` is SAVED IN THIS SLICE — decided 2026-09-19.** D-S4-2 and `05` §7 originally
+scheduled it to S11, which would have left this gate's *"mid-chain save/load is byte-identical"*
+unmeasurable for two stages. The oracle settles it: `narrative_flags` lives in **`SaveService`'s
+meta**, not in `SaveCodec` (`save_service.gd:30`, `:79`), read back additively with
+`meta.get("narrative_flags", {})`. Both documents are corrected to S8.
+
+**The rule, stated once and applying to S5/S6/S7 as well:** *the stage that adds campaign state owns
+appending it to the save in the same slice.* So this slice also adds `SerializeNarrative` — appended,
+never inserted, per the Prohibited line above.
 
 ---
 

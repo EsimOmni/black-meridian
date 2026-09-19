@@ -567,10 +567,23 @@ early only on the former. A port that inferred the flag from the values would sk
 legitimately-zero resolution. Pinned by the fixture's `fresh` and `resolved_all_zeros` rows.
 
 ⚠️ **`FBMSaveMeta` deliberately omits four of the oracle's meta keys (D-S4-2):** `night_cycle`, `phase`,
-`phase_ticks` (→ **S8**; `phase == COUNCIL` gates the rival) and `narrative_flags` (→ **S11**). Plus
+`phase_ticks` (→ **S8**; `phase == COUNCIL` gates the rival) and `narrative_flags` (→ **S8**). Plus
 `saved_at_unix`, which nothing reads. **These are the design, not omissions** — S4 ships early precisely
 so later slices stay save-safe, and inventing a struct S6/S8 will reshape would break the format S4
 exists to protect. `EBMPhase` stays declared and unused until S8.
+
+> `[V]` **`narrative_flags` was scheduled to S11 and is corrected to S8 (2026-09-19).** The original
+> reading left S8 producing state that nothing saved for two stages, while S8's own gate demands
+> *"mid-chain save/load is byte-identical"* — a condition unmeasurable without it. The oracle settles
+> it: `narrative_flags` lives in **`SaveService`'s meta**, not in `SaveCodec`
+> (`save_service.gd:30`, `:79`), and is read back with `meta.get("narrative_flags", {})` — *additive,
+> like every other meta key*. The stage that creates the state appends its own field. S8 creates
+> `FBMNarrativeState`; S8 serializes it.
+>
+> **The rule this makes explicit:** a stage that adds campaign state owns appending it to the save in
+> the same slice. S5 (rival fields), S6 (characters) and S7/S8 (phase, narrative) all follow it.
+> S11's remaining save obligation is unrelated and stands: add the P16 roster ids to
+> `FBMJobTemplates::ById` so a mid-chain load stops dropping the chain (D-S3-4, `07` §S11).
 
 **Versioning policy `[V]`, carried verbatim from the verified build:**
 

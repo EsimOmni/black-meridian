@@ -162,8 +162,8 @@ bool BeginJob(FBMJobId);  bool ChoosePrep(FBMJobId, FName);
 bool ChooseApproach(FBMJobId, FName);  bool ChooseCoverUp(FBMJobId, FName);
 // UBMRelationshipSubsystem
 bool Reassure(FBMCharacterId);
-// UBMHeatSubsystem
-bool RemoveEvidenceCase(FBMDistrictId, FBMCaseId);
+// UBMHeatSubsystem — `[V]` NOT A PLAYER VERB; see the note below. Never built, never needed.
+// bool RemoveEvidenceCase(FBMDistrictId, FBMCaseId);
 // UBMTimeSubsystem
 void SetSpeed(EBMSpeed);  void TogglePause();  void CycleSpeed();
 // UBMTransitionComponent
@@ -172,6 +172,30 @@ void EnterConfrontation(FBMCharacterId);  void EnterCrimeScene(FBMDistrictId);
 
 Each returns success/failure and **never** partially applies. `[V]` This matches the Godot verbs,
 which refuse cleanly (e.g. `pressure_front` returns false on insufficient capital).
+
+> ⚠️ `[V]` **The signatures above are a SKETCH, not the built surface — corrected 2026-09-19.** Two
+> things a porter must not take from them:
+>
+> **1. The `FBM*Id` wrapper types were never built.** Ids are plain `FString` throughout (§2, S4
+> Correction 4). And `AssignOperatives` as built takes live struct references
+> (`FBMVenueState&`, `FBMFactionState&`), not ids at all — which sits oddly against §6's
+> *"events carry Ids, not pointers"* rule and is worth revisiting when S9 builds the UI against it.
+>
+> **2. `RemoveEvidenceCase` is NOT a player verb, and the right thing already exists.** The oracle
+> has exactly two callers of `EvidenceMath.remove_case`, and neither is the player reaching for a
+> subsystem:
+>
+> | Caller | What it is | Owner |
+> |---|---|---|
+> | `job_director.gd:166` | the EVIDENCE_CHAIN post-outcome branch — a *job result*, origin-gated, only when the burn netted negative evidence | **already shipped in S3** as `FBMEvidence::RemoveCase`, called from `FBMJobDirector::ApplyAndFinalize` |
+> | `cinematic_transition.gd:118` | an in-scene consequence of an embodied interaction | **S11/S13**, through the interaction, not through a HUD button |
+>
+> So no stage's "Creates" list needs to own it: the strategic half is done, and the embodied half is
+> an interaction S11 builds anyway. **S9's gate — *"every strategic verb is reachable from the UI"* —
+> must not be read as requiring a button for this**, and `S13`'s `FT_Embodied_AllVerbs` exercises it
+> through the scene. `03`'s `Test_Evidence_ErodeVsRemove` is covered by S3's
+> `BM.Jobs.PostOutcomeOriginBranches`, which asserts the targeted case is removed while the
+> strongest survives.
 
 ---
 

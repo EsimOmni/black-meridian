@@ -321,8 +321,38 @@ Telegraph→land window exact. **Plus: `BM.Equivalence.TrajectoryMatchesOracle` 
 **Rollback.** Tag `s4-save`.
 
 **Prohibited.** ⛔ Behavior Trees (Locked; it is a scored argmax). ⛔ Adding RNG "for variety" —
-jitter is hash-derived. ⛔ Implementing the 5 unscored actions in this slice.
-⛔ **Inserting rival fields anywhere but the END of the faction serializer** (see item 3).
+jitter is hash-derived. ⛔ Implementing the **six** unscored actions in this slice `[V]` (this line
+said "5"; there are six — `BRIBE`, `RETALIATE`, `NEGOTIATE`, `REDUCE_HEAT`, `DEFEND`,
+`EXPLOIT_GRIEVANCE`). ⛔ **Inserting rival fields anywhere but the END of the faction serializer**
+(see item 3). ⛔ `[V]` **Reordering, renumbering OR DELETING any `RivalAction` enumerator, including
+an unused one.** `TieJitter` hashes the action's INTEGER value, and the enum is SPARSE: the scored
+actions are 0,1,2,3 and **7**, so the six unread enumerators between them are the only thing holding
+`FRAME` at 7. Measured — `FRAME` 7→4 reverses the tie-break order of two real targets. "Dead code
+cleanup" is the realistic way this breaks.
+
+> `[V]` **S5 AS BUILT — three corrections to this section, all measured.** Full evidence:
+> `Docs/gates/S5.md`.
+>
+> 1. **This gate is unachievable as written.** It demands the full 1800-tick trajectory while
+>    assigning the night cycle to S7 — but `RivalDirector` opens no new telegraph during COUNCIL, and
+>    the oracle's own extractor instantiates `NightCycle` for exactly that reason. **S5 ships the
+>    phase COUNTER; S7 keeps the SYSTEM.** S7 must build on that counter, not introduce a second one.
+> 2. **Item 3's "bump `BMSave::CurrentVersion`, add a `v2.bmsav`, keep `v1.bmsav` loading" is
+>    self-contradictory** — the version check is `!=`, so a bump refuses v1 by construction. And the
+>    append itself needed **no** bump: the oracle appended fields eleven times without ever bumping.
+>    What *did* need one was the **container reshape**: S4's additive contract was documented and
+>    **never implemented**, because the oracle's format is self-describing (`var_to_str`) and ours is
+>    positional. Appending made `v1.bmsav` fail to load outright. S5 added `FRecordScope` (a
+>    per-record byte-length prefix — the binary equivalent of `d.get(key, default)`), bumped to 2 for
+>    the reshape, deleted `v1.bmsav` and made `v2.bmsav` the baseline. **From S5 onward an appended
+>    field genuinely keeps old saves loading.**
+> 3. **`Test_Rival_GrudgeSingleWriter` is misnamed** — there are two writers *by design*, and the
+>    oracle says so: *"Single writer of grudge upward; RivalDirector decays it."* S3 already shipped
+>    the up-writer. The invariant is the **split**.
+>
+> Also: **"the seven fields" needs a footnote** — `Grudge` was already ported and serialized in S2.
+> The seven are `Aggression`, `Caution`, `Cunning`, `IntentAction`, `IntentTargetId`,
+> `IntentTicksUntilLand`, `IntentsCommitted`.
 
 ---
 
@@ -350,9 +380,30 @@ same-type fields left **55 of 56 tests green** — only the committed
 `BMSave::CurrentVersion`, add a `v<n>.bmsav`, keep the old one loading. ⚠️ The fixture catches an
 *insertion*; it does **not** catch a field you forget entirely (`Docs/gates/S4.md`).
 ⚠️ **This slice adds the largest insertion surface in the project** — an 18-field
-`FBMCharacterState` plus a new `Characters` array on `FBMCampaignState` (D-S4-2) — and it runs
-**concurrently with S5** (§14), which is appending to the same file. Coordinate, or one of you
-rebases onto a changed format.
+`FBMCharacterState` plus a new `Characters` array on `FBMCampaignState` (D-S4-2).
+
+> `[V]` **UPDATED AFTER S5 SHIPPED (2026-09-19).** Two things changed:
+>
+> - **The concurrency warning no longer applies.** S5 is complete, so nobody is appending to
+>   `SerializeFaction` concurrently. Nothing to coordinate.
+> - **Appending is now genuinely safe, and it was NOT before.** S4's additive contract was
+>   documented but never implemented; S5 measured it (appending made the committed fixture fail to
+>   load) and added `FRecordScope`, a per-record byte-length prefix. **An appended field now needs
+>   no version bump and old saves keep loading.** Bump only for a removal, a reorder or a change of
+>   meaning. See `Docs/gates/S5.md` Finding 6.
+>
+> ⚠️ Still true, and the discipline S6 must keep: the committed fixture catches a **reorder** and
+> **not** a field you forget entirely. Give every one of the 18 new fields a **non-default value**
+> in `FixtureCampaign()`, or the byte comparison cannot see an omission.
+>
+> `[V]` **Beware a near-collision:** `BMConst::TelegraphLeadRivalTicks` = **6** is S6's (betrayal),
+> while `BMConst::RivalTelegraphLeadTicks` = **3** is S5's (the rival). Not a duplicate — the oracle
+> really does define `TELEGRAPH_LEAD_RIVAL_TICKS` in *two* classes with *different* values
+> (`LoyaltyScoring` 6, `RivalScoring` 3).
+>
+> `[V]` **The rival tick order `Rival → Relationships` has now been RUN** (S5, first slice to do so).
+> `FBMSimulation::AdvanceTick` marks the exact slot for this slice's pass — immediately **after**
+> `FBMRivalDirector::AdvanceRivalTick`.
 
 ---
 

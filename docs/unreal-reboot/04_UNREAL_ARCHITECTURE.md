@@ -127,7 +127,7 @@ hazards the current design does not have.
    │   drives, in declared order:   │   │   FBMCityViewModel        │
    │   Economy→Heat→Pressure→Jobs   │   │   FBMHudViewModel         │
    │   →NightCycle→Narrative        │   │   FBMRosterViewModel      │
-   │   (rival ticks: Rel→Rival)     │   └───────────┬───────────────┘
+   │   (rival ticks: Rival→Rel) [V] │   └───────────┬───────────────┘
    └────────────┬───────────────────┘               │ read-only
                 │ calls pure functions              ▼
                 ▼                          ┌──────────────────────┐

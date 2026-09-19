@@ -28,7 +28,21 @@ Tags: `[V]` = Verified from repository · `[I]` = Inferred · `[P]` = Proposed
 **Port note `[P]`:** the single most important change in this table is the last row. Godot's ordering
 was *incidental*; Unreal's must be **declared in one place** and asserted by a test. Order:
 `Economy → Heat → CentralPressure → Jobs → NightCycle → Narrative`, then on rival ticks
-`Relationships → Rival`. See [04_UNREAL_ARCHITECTURE.md](04_UNREAL_ARCHITECTURE.md) §5.
+**`Rival → Relationships`**. See [04_UNREAL_ARCHITECTURE.md](04_UNREAL_ARCHITECTURE.md) §5.
+
+> ⚠️ **`[V]` CORRECTED IN S2 — this line said `Relationships → Rival`, which is backwards.**
+> Measured at runtime by enumerating `TimeService.rival_tick.get_connections()`: `0: RivalDirector`,
+> `1: RelationshipService`. `RivalDirector` is an autoload and connects at engine init;
+> `RelationshipService` is bootstrap-wired and therefore always connects later.
+>
+> This is a **decision order, not a formula.** `RivalDirector::_land` can flip a venue's owner
+> (EXPAND) and add district heat (FRAME); `RelationshipService` then re-checks its betrayal gates
+> **against that state**. Running Relationships first means betrayal decisions cannot see the rival
+> action that landed on the same tick — *"a different, still-deterministic game"* (`Docs/gates/S2.md`
+> Finding 1).
+>
+> **S5 wires step 7 and S6 wires step 8, and `07` §14 lets them run concurrently.** Both read this
+> row. Getting it backwards here would have been reproduced by two stages at once.
 
 ---
 

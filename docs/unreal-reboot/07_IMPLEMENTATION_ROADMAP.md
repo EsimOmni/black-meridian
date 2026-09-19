@@ -343,6 +343,16 @@ jitter is hash-derived. ⛔ Implementing the 5 unscored actions in this slice.
 
 **Prohibited.** ⛔ Any untelegraphed betrayal path (brief §7.6 — non-negotiable).
 ⛔ Exposing hidden motives to the rival scorer or the UI.
+⛔ **Inserting a field anywhere but the END of an existing `FBMSaveCodec::Serialize*` function.**
+`[V]` A binary archive's field ORDER is the format. S4 proved by mutation that swapping two
+same-type fields left **55 of 56 tests green** — only the committed
+`Tests/Fixtures/Saves/v1.bmsav` saw it, and that fixture is **never regenerated**. Append, bump
+`BMSave::CurrentVersion`, add a `v<n>.bmsav`, keep the old one loading. ⚠️ The fixture catches an
+*insertion*; it does **not** catch a field you forget entirely (`Docs/gates/S4.md`).
+⚠️ **This slice adds the largest insertion surface in the project** — an 18-field
+`FBMCharacterState` plus a new `Characters` array on `FBMCampaignState` (D-S4-2) — and it runs
+**concurrently with S5** (§14), which is appending to the same file. Coordinate, or one of you
+rebases onto a changed format.
 
 ---
 
@@ -361,6 +371,16 @@ telegraphs but not open ones.
 **Rollback.** Tag `s4-save`.
 
 **Prohibited.** ⛔ StateTree (four states on a tick budget). ⛔ Hardcoding a district id.
+⛔ **Inserting a field anywhere but the END of an existing `FBMSaveCodec::Serialize*` function.**
+`[V]` A binary archive's field ORDER is the format. S4 proved by mutation that swapping two
+same-type fields left **55 of 56 tests green** — only the committed
+`Tests/Fixtures/Saves/v1.bmsav` saw it, and that fixture is **never regenerated**. Append, bump
+`BMSave::CurrentVersion`, add a `v<n>.bmsav`, keep the old one loading. ⚠️ The fixture catches an
+*insertion*; it does **not** catch a field you forget entirely (`Docs/gates/S4.md`).
+⚠️ **`NightCycle` / `Phase` / `PhaseTicks` go into `FBMSaveMeta`, which is the FIRST struct in the
+archive** — an insertion there shifts every byte that follows. D-S4-2 schedules those fields in
+**S8**, so a save taken during S7 restores `Phase = Council` regardless of where the player was, and
+`phase == COUNCIL` gates the rival. If S7 and S8 do not ship together, say so at the S7 gate.
 
 ---
 
@@ -386,6 +406,15 @@ See `05` §7.2.
 **Rollback.** Tag `s7-nightcycle`.
 
 **Prohibited.** ⛔ Letting a beat fire out of order. ⛔ Marking a beat fired when the cap blocked it.
+⛔ **Inserting a field anywhere but the END of an existing `FBMSaveCodec::Serialize*` function.**
+`[V]` A binary archive's field ORDER is the format. S4 proved by mutation that swapping two
+same-type fields left **55 of 56 tests green** — only the committed
+`Tests/Fixtures/Saves/v1.bmsav` saw it, and that fixture is **never regenerated**. Append, bump
+`BMSave::CurrentVersion`, add a `v<n>.bmsav`, keep the old one loading. ⚠️ The fixture catches an
+*insertion*; it does **not** catch a field you forget entirely (`Docs/gates/S4.md`).
+⚠️ **`Test_Save_NarrativeFlagsRoundTrip` and this gate's "mid-chain save/load is byte-identical"
+both need narrative state IN the save — but D-S4-2 and `05` §7 schedule `NarrativeFlags` for S11,
+two stages later.** One of the two must move. Resolve it before writing the test, not at the gate.
 
 ---
 
@@ -460,10 +489,30 @@ a ~35-tick session and the note says so itself — that debt is repaid here, not
 save/load taken before, during and after. Checkpoint written before any mutation. City and embodied
 level never co-resident.
 
+**Inherits — two obligations recorded elsewhere that this gate silently depends on:**
+
+1. ⚠️ **The P16 narrative ids must be in the authored registry, or this gate passes on a lie.**
+   D-S3-4 (`Docs/gates/S3.md`): `FBMJobTemplates::ById` resolves **one** authored id
+   (`InterceptedShipment`); the oracle resolves four. And a load that cannot resolve a job id
+   **drops that job and returns Success** — S4 Finding 5, measured, 3 saved → 1 restored.
+   `FT_Save_DuringEmbodied` is a save taken inside CRISIS, i.e. **mid-chain by construction**
+   (`06` §4). So a load there deletes the narrative beat and this gate's *"survives save/load"*
+   goes green over a chain that is no longer there. **Add the roster ids to `FBMJobTemplates` in
+   this slice, or the gate cannot mean what it says.** (S8's gate block states the obligation;
+   until now it was written only there.)
+2. ⚠️ **`Test_Save_LoadLeavesPaused` has NO automated coverage and this slice is where it can
+   finally be written.** S4's known hole (`Docs/gates/S4.md`): mutation 11 moved the pause after
+   the restore and left the suite green at **56/56**; reaching `UBMTimeSubsystem` needs a live
+   `GameInstance`, which trips the S2 `ClassWithin` ensure. `08` §7 assigns the closure here —
+   *"the first place a real `GameInstance` exists"*. Add `FT_Save_LoadLeavesPaused` to the test
+   list above. Until it exists the ordering is protected by a header comment and review only.
+
 **Rollback.** Tag `s10-greybox`.
 
 **Prohibited.** ⛔ Simulation logic inside the scene — verbs only. ⛔ Authoritative state in the Level
-Blueprint. ⛔ Art before persistence passes.
+Blueprint. ⛔ Art before persistence passes. ⛔ **Claiming this gate while `ById` still resolves one
+id** (see Inherits 1) — a green "survives save/load" over a dropped chain is the exact false pass
+this slice exists to prevent.
 
 ---
 

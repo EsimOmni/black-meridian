@@ -651,29 +651,49 @@ visuals, and any derived value.
 with a comment demanding they stay identical. `[P]` One implementation, explicit unsigned arithmetic:
 
 ```cpp
-namespace FBMHash
+namespace BMHash   // `[V]` the namespace is BMHash, not FBMHash
 {
-    // Godot String.hash() — DJB2 over UTF-8 bytes. MUST match exactly. See 08 §4.
-    uint32 StringHash(const FString& S);
+    // `[V]` Godot String.hash() is DJB2 (seed 5381, uint32) over UTF-32 CODE POINTS, not
+    // UTF-8 bytes. A non-BMP character is ONE code point, so FString's UTF-16 surrogate
+    // pair must be recombined. Bytes match 1712/1715; code points match 1715/1715.
+    BMCORE_API uint32 StringHash(const FString& Value);
 
-    // splitmix64 finalizer. Godot ints wrap mod 2^64; uint64 makes that explicit and defined.
-    inline uint64 Avalanche(uint64 X)
-    {
-        X = (X ^ (X >> 30)) * 0xBF58476D1CE4E5B9ULL;
-        X = (X ^ (X >> 27)) * 0x94D049BB133111EBULL;
-        return X ^ (X >> 31);
-    }
+    // `[V]` MurmurHash3 fmix64 — NOT splitmix64, despite every Godot comment saying so.
+    // Signed (arithmetic, sign-extending) shifts on int64. Doing it in uint64 with
+    // logical shifts matches 0 of 3123 vectors.
+    BMCORE_API uint64 Avalanche(uint32 StringHashValue);
 
-    float TieJitter(FName RivalId, FName TargetId, EBMRivalAction Action, int32 Salt);
-    int32 VariantIndex(const FString& SeedString, int32 Count);
+    BMCORE_API double TieJitter(const FString& RivalId, const FString& TargetId,
+                                int32 Action, int64 Salt);
+    BMCORE_API int32  VariantIndex(const FString& SeedString, int32 Count);
 }
 ```
 
-`[V]` The Godot literals are the *signed* renderings of these constants: `-49064778989728563` is
-`0xBF58476D1CE4E5B9`, `-4265267296055464877` is `0x94D049BB133111EB`. Confirming that correspondence
-numerically — and confirming Godot's `String.hash()` — is **mandatory before any golden vector is
-trusted**; see [08_TEST_STRATEGY.md](08_TEST_STRATEGY.md) §4. This is the highest-risk detail in the
-entire port.
+> ⚠️ **`[V]` CORRECTED IN S1 — the block above replaces one that was wrong in three independent,
+> each-individually-fatal ways.** The original was sketched from the algorithm's *name* and from an
+> arithmetic claim nobody had evaluated. Every error below cost, or would have cost, a red gate:
+>
+> | The old sketch said | Measured truth | Cost if trusted |
+> |---|---|---|
+> | DJB2 over **UTF-8 bytes** | UTF-32 **code points** | 1712/1715 — a near-miss, the worst kind |
+> | **splitmix64** constants `0xBF58476D1CE4E5B9` / `0x94D049BB133111EB` | **MurmurHash3 fmix64** `0xFF51AFD7ED558CCD` / `0xC4CEB9FE1A85EC53` | hash 1719/1719 **while avalanche 0/1719** |
+> | `uint64` with **logical** `>>` | `int64` with **arithmetic** `>>` | **0 of 3123** |
+>
+> And the prose claim that *"`-49064778989728563` is `0xBF58476D1CE4E5B9`"* is **arithmetically
+> false**. Re-evaluated 2026-09-19:
+>
+> ```
+> -49064778989728563   as uint64 = 0xFF51AFD7ED558CCD   (NOT 0xBF58476D1CE4E5B9)
+> -4265267296055464877 as uint64 = 0xC4CEB9FE1A85EC53   (NOT 0x94D049BB133111EB)
+> ```
+>
+> **The decimal literals in the GDScript are authoritative. The algorithm name is not evidence, and
+> neither was that sentence.** Full account: `Docs/gates/S1.md` Findings 1, 2 and 4.
+>
+> `[V]` Signatures above are as **built** (`BMCore/Public/BMHash.h`), not as sketched: ids are
+> `FString` (the `FBM*Id` wrappers were never built — §2), `TieJitter` returns **`double`** and takes
+> an `int64` salt, and `Avalanche` takes the 32-bit hash rather than a 64-bit value. S5 writes
+> against these.
 
 ---
 
